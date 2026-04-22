@@ -115,6 +115,35 @@ const firebaseConfig = {
             return totalMemorias + contarMemoriasDestino(pais);
         }
 
+        function convertirIsoA2AEmojiBandera(isoA2 = "") {
+            const codigo = String(isoA2 || "").trim().toUpperCase();
+            if (!/^[A-Z]{2}$/.test(codigo)) return "";
+            return [...codigo]
+                .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+                .join("");
+        }
+
+        function obtenerEmojiBanderaPorPais(idPais = "") {
+            const fallbackIsoA2 = {
+                ARG: "AR",
+                BRA: "BR",
+                CHL: "CL",
+                USA: "US",
+                GBR: "GB"
+            };
+
+            const paisesMapa = d3.selectAll('.pais').data() || [];
+            const featurePais = paisesMapa.find((d) => d?.id === idPais);
+            const isoA2 =
+                featurePais?.properties?.iso_a2 ||
+                featurePais?.properties?.wb_a2 ||
+                fallbackIsoA2[idPais] ||
+                "";
+
+            if (isoA2 === "-99") return "";
+            return convertirIsoA2AEmojiBandera(isoA2);
+        }
+
         function serializarEstable(valor) {
             if (Array.isArray(valor)) {
                 return valor.map(item => serializarEstable(item));
@@ -1296,10 +1325,14 @@ const firebaseConfig = {
                 idsPaises.forEach(id => {
                     const pais = paisesVisitados[id];
                     const numMemorias = contarMemoriasPais(id);
+                    const emojiBandera = obtenerEmojiBanderaPorPais(id);
+                    const iconoBanderaHTML = emojiBandera
+                        ? `<div class="icono-bandera" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBandera}</div>`
+                        : '';
                     listaHTML.innerHTML += `
                         <div class="tarjeta-pais">
                             <div class="info-pais">
-                                <div class="icono-bandera"><i data-lucide="map-pin"></i></div>
+                                ${iconoBanderaHTML}
                                 <div><h3 class="nombre-pais-lista">${pais.nombre}</h3><span class="zonas-badge">${numMemorias} memorias</span></div>
                             </div>
                             <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Galería</button>

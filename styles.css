@@ -206,9 +206,11 @@
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* === SECCIÓN DE RECUERDOS Y SOÑADOS === */
-        .encabezado-seccion { padding: 20px 30px; border-bottom: 4px dashed #E1F5FE; background: #FFFFFF; z-index: 5; }
+        .encabezado-seccion { padding: 20px 30px; border-bottom: 4px dashed #8edcff; background: #d6f4ff; z-index: 5; }
         .encabezado-seccion.encabezado-galeria-recuerdos {
-            background: linear-gradient(180deg, #ffffff 0%, #f8fdff 65%, #f4fbff 100%);
+            background:
+                linear-gradient(180deg, #e4f7ff 0%, #cbf0ff 48%, #b8e9ff 100%),
+                repeating-linear-gradient(130deg, rgba(255, 255, 255, 0.35) 0 8px, rgba(150, 220, 255, 0.2) 8px 16px);
         }
         h2 {
             color: #ffe57f;
@@ -225,17 +227,19 @@
         .titulo-galeria-recuerdos {
             font-family: 'Luckiest Guy', cursive;
             letter-spacing: 0.03em;
-            background: linear-gradient(160deg, #f8feff 0%, #dce8f0 20%, #ffffff 40%, #b9cad7 56%, #eef7ff 70%, #7f92a4 84%, #dbe8f4 100%);
+            background:
+                linear-gradient(160deg, #ffffff 0%, #c6dbec 18%, #f4fbff 34%, #8badc5 54%, #1f4d73 72%, #5d84a0 84%, #c5d9ea 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 6px, rgba(15, 70, 112, 0.2) 6px 12px);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            -webkit-text-stroke: 2px #0a9dca;
+            -webkit-text-stroke: 2px #0b4f88;
             text-shadow:
                 0 1px 0 #f7fcff,
-                0 2px 0 #9ec0d6,
-                0 3px 0 #6f8fa7,
-                0 5px 8px rgba(11, 91, 131, 0.35),
-                0 0 16px rgba(98, 224, 255, 0.42);
+                0 2px 0 #96b9d4,
+                0 3px 0 #4f7292,
+                0 5px 8px rgba(8, 58, 98, 0.45),
+                0 0 16px rgba(22, 121, 200, 0.34);
         }
         .titulo-galeria-recuerdos i {
             color: #3fd4ff;
@@ -288,10 +292,15 @@
         .nombre-pais-lista {
             font-size: 1.5rem;
             font-weight: 800;
-            color: #d7f9ff;
+            color: transparent;
             margin: 0;
             font-family: 'Baloo 2', sans-serif;
-            -webkit-text-stroke: 1.6px #048bb2;
+            background:
+                linear-gradient(155deg, #f3fbff 0%, #c7dae7 26%, #ffffff 38%, #89a4b8 54%, #294359 72%, #5f7d93 86%, #d7e7f2 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0 5px, rgba(13, 47, 72, 0.22) 5px 10px);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-stroke: 1.3px #0d4f7d;
             text-shadow: 2px 2px 0 rgba(1, 132, 168, 0.23);
         }
         .destino-principal { margin: 0; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; }
@@ -310,11 +319,11 @@
             filter: saturate(1.1);
         }
         .destino-principal.rosa {
-            color: #ff2f2f;
+            color: #8a0303;
             font-size: 1.85rem;
             text-shadow:
-                1px 1px 0 #ffc1c1,
-                0 0 12px rgba(255, 48, 48, 0.25);
+                1px 1px 0 #ffb0b0,
+                0 0 12px rgba(123, 0, 0, 0.35);
         }
         .destino-escalas { margin-top: 4px; font-size: 0.95rem; color: #90A4AE; font-weight: 600; }
         .zonas-badge { background: #FCE4EC; color: #D81B60; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-top: 5px; display: inline-block; }
@@ -391,23 +400,24 @@
         .btn-nueva-aventura {
             border: 1px solid rgba(191, 232, 255, 0.95);
             border-radius: 18px;
-            background: linear-gradient(150deg, #b0ccff 0%, #3d8bff 32%, #0f5bd7 62%, #89e6ff 100%);
+            background: linear-gradient(150deg, #e1f8ff 0%, #98e6ff 36%, #54c8f1 70%, #def8ff 100%);
             color: #ffffff;
             font-family: 'Baloo 2', sans-serif;
             box-shadow:
                 inset 0 2px 0 rgba(255, 255, 255, 0.88),
-                inset 0 -7px 12px rgba(3, 45, 133, 0.45),
-                0 7px 0 #0a45b4,
-                0 12px 24px rgba(15, 91, 215, 0.45);
+                inset 0 -7px 12px rgba(0, 92, 133, 0.38),
+                0 7px 0 #1895c1,
+                0 12px 24px rgba(28, 174, 214, 0.45);
             transition: all 0.25s ease;
+            text-shadow: 0 1px 0 rgba(5, 78, 112, 0.65);
         }
         .btn-nueva-aventura:hover {
             transform: translateY(-2px);
             box-shadow:
                 inset 0 2px 0 rgba(255, 255, 255, 0.92),
-                inset 0 -7px 12px rgba(3, 45, 133, 0.45),
-                0 9px 0 #0a45b4,
-                0 16px 26px rgba(15, 91, 215, 0.5);
+                inset 0 -7px 12px rgba(0, 92, 133, 0.4),
+                0 9px 0 #1895c1,
+                0 16px 26px rgba(28, 174, 214, 0.5);
         }
         .btn-nueva-aventura.activo-form {
             box-shadow:
