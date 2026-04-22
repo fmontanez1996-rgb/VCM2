@@ -1359,20 +1359,25 @@
         }
         .titulo-destino-itinerario-wrap .destino-escalas {
             margin-top: 8px;
-            color: #111111;
+            color: #1f2730;
             font-size: 1.02rem;
             font-weight: 900;
             letter-spacing: 0.06em;
             text-transform: uppercase;
             text-shadow:
-                0 1px 0 rgba(255,255,255,0.45),
-                0 2px 2px rgba(0,0,0,0.55);
-            background: linear-gradient(145deg, rgba(245,245,245,0.2), rgba(20,20,20,0.6));
+                0 1px 0 rgba(255,255,255,0.72),
+                0 2px 3px rgba(49, 64, 78, 0.45);
+            background:
+                radial-gradient(circle at 18% 16%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0) 30%),
+                linear-gradient(135deg, #f8fcff 0%, #cfd8e2 38%, #8d99a8 52%, #e5edf5 76%, #adb8c5 100%);
             display: inline-block;
-            padding: 4px 12px;
-            border-radius: 12px;
-            border: 2px solid rgba(0,0,0,0.6);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 10px rgba(0,0,0,0.38);
+            padding: 6px 13px;
+            border-radius: 13px;
+            border: 2px solid #8a95a2;
+            box-shadow:
+                inset 0 2px 0 rgba(255,255,255,0.86),
+                inset 0 -2px 0 rgba(42, 56, 72, 0.22),
+                0 5px 12px rgba(0,0,0,0.3);
         }
         .titulo-destino-itinerario {
             margin: 0;
@@ -1385,16 +1390,23 @@
             background:
                 radial-gradient(circle at 20% 20%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%),
                 linear-gradient(135deg, #f9fcff 0%, #ccd4db 42%, #8f9ba7 52%, #e3e9ef 76%, #aeb9c5 100%);
-            color: #4F0000;
+            color: #5a0000;
             font-size: clamp(2rem, 3.2vw, 2.65rem);
-            font-weight: 900;
+            font-weight: 950;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.07em;
+            -webkit-text-stroke: 1.1px #300000;
             text-shadow:
-                0 -1px 0 #ffb8b8,
-                0 1px 0 #6d0000,
-                0 2px 0 #440000,
-                0 0 12px rgba(255, 66, 66, 0.4);
+                0 -1px 0 #ffc2c2,
+                0 1px 0 #8f0000,
+                0 2px 0 #5d0000,
+                0 3px 0 #3a0000,
+                0 0 12px rgba(208, 20, 20, 0.5);
+            background:
+                linear-gradient(180deg, #ffe4e4 0%, #e94a4a 28%, #9f1111 49%, #6b0000 66%, #bf1a1a 85%, #ffd2d2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
             box-shadow:
                 inset 0 2px 0 rgba(255,255,255,0.85),
                 inset 0 -2px 0 rgba(0,0,0,0.25),
@@ -1441,25 +1453,40 @@
             margin-bottom: 14px;
         }
         .btn-tipo-item {
-            background: linear-gradient(155deg, #F8FAFC, #CDD3DD);
-            border: 2px solid #6E7788;
-            color: #101010;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.75), 0 2px 2px rgba(0,0,0,0.35);
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 10px rgba(0,0,0,0.08);
+            border: 2px solid transparent;
+            color: #ffffff;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.45);
+            box-shadow: 0 5px 12px rgba(0,0,0,0.25);
         }
-        .btn-tipo-item.btn-tipo-viaje { border-color: #FFB300; color: #7A4D00; }
-        .btn-tipo-item.btn-tipo-hospedaje { border-color: #9C27B0; color: #5A1A67; }
-        .btn-tipo-item.btn-tipo-aventura { border-color: #4CAF50; color: #245A28; }
-        .btn-tipo-item.btn-tipo-restaurante { border-color: #FF5252; color: #831B1B; }
+        .btn-tipo-item.btn-tipo-viaje {
+            background: #ffb300;
+            border-color: #ffb300;
+            color: #3f2600;
+        }
+        .btn-tipo-item.btn-tipo-hospedaje {
+            background: #9c27b0;
+            border-color: #9c27b0;
+            color: #ffffff;
+        }
+        .btn-tipo-item.btn-tipo-aventura {
+            background: #4caf50;
+            border-color: #4caf50;
+            color: #ffffff;
+        }
+        .btn-tipo-item.btn-tipo-restaurante {
+            background: #ff5252;
+            border-color: #ff5252;
+            color: #ffffff;
+        }
         .btn-tipo-item:hover, .btn-tipo-item.seleccionado {
             transform: translateY(-2px);
-            filter: brightness(1.05);
-            box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 16px rgba(255,255,255,0.6), 0 8px 16px rgba(0,0,0,0.2);
+            filter: brightness(1.07) saturate(1.08);
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.28), 0 8px 16px rgba(0,0,0,0.32);
         }
-        .btn-tipo-item.btn-tipo-viaje.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(255,179,0,0.7), 0 8px 16px rgba(0,0,0,0.2); }
-        .btn-tipo-item.btn-tipo-hospedaje.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(156,39,176,0.65), 0 8px 16px rgba(0,0,0,0.2); }
-        .btn-tipo-item.btn-tipo-aventura.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(76,175,80,0.65), 0 8px 16px rgba(0,0,0,0.2); }
-        .btn-tipo-item.btn-tipo-restaurante.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(255,82,82,0.65), 0 8px 16px rgba(0,0,0,0.2); }
+        .btn-tipo-item.btn-tipo-viaje.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.35), 0 0 16px rgba(255,179,0,0.72), 0 8px 16px rgba(0,0,0,0.3); }
+        .btn-tipo-item.btn-tipo-hospedaje.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.35), 0 0 16px rgba(156,39,176,0.72), 0 8px 16px rgba(0,0,0,0.3); }
+        .btn-tipo-item.btn-tipo-aventura.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.35), 0 0 16px rgba(76,175,80,0.72), 0 8px 16px rgba(0,0,0,0.3); }
+        .btn-tipo-item.btn-tipo-restaurante.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.35), 0 0 16px rgba(255,82,82,0.75), 0 8px 16px rgba(0,0,0,0.3); }
 
         .modal-confirmacion-itinerario {
             position: fixed;
