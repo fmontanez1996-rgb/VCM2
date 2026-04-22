@@ -2008,6 +2008,23 @@ const firebaseConfig = {
             dibujarItinerario(idPais);
         }
 
+        window.moverItemItinerario = function(idPais, idItem, direccion) {
+            const items = destinosSonados[idPais]?.itinerario;
+            if (!Array.isArray(items)) return;
+
+            const indiceActual = items.findIndex(item => item.id === idItem);
+            if (indiceActual < 0) return;
+
+            const desplazamiento = direccion === 'arriba' ? -1 : direccion === 'abajo' ? 1 : 0;
+            if (desplazamiento === 0) return;
+
+            const nuevoIndice = indiceActual + desplazamiento;
+            if (nuevoIndice < 0 || nuevoIndice >= items.length) return;
+
+            [items[indiceActual], items[nuevoIndice]] = [items[nuevoIndice], items[indiceActual]];
+            dibujarItinerario(idPais);
+        }
+
         window.dibujarItinerario = function(idPais) {
             const timeline = document.getElementById(`linea-tiempo-${idPais}`);
             const items = destinosSonados[idPais].itinerario;
@@ -2016,7 +2033,7 @@ const firebaseConfig = {
                 timeline.innerHTML = `<p style="color:#90A4AE; padding-left: 20px;">Itinerario vacío.</p>`;
                 return;
             }
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = ''; let detalles = '';
                 if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
                 else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${item.noches} noches - Total: $${item.costo}`; }
@@ -2025,10 +2042,17 @@ const firebaseConfig = {
                 const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
                     ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
                     : '';
+                const deshabilitarSubir = index === 0;
+                const deshabilitarBajar = index === (items.length - 1);
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}<button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">
+                            ${miniaturaAventura}
+                            <button class="btn-mover-item ${deshabilitarSubir ? 'deshabilitado' : ''}" onclick="moverItemItinerario('${idPais}', ${item.id}, 'arriba')" ${deshabilitarSubir ? 'disabled' : ''} title="Subir"><i data-lucide="chevron-up"></i></button>
+                            <button class="btn-mover-item ${deshabilitarBajar ? 'deshabilitado' : ''}" onclick="moverItemItinerario('${idPais}', ${item.id}, 'abajo')" ${deshabilitarBajar ? 'disabled' : ''} title="Bajar"><i data-lucide="chevron-down"></i></button>
+                            <button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})" title="Eliminar"><i data-lucide="trash-2"></i></button>
+                        </div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
