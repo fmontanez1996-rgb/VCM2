@@ -2047,6 +2047,16 @@ const firebaseConfig = {
         }
 
         function obtenerMinutosHorario(item) {
+            if (typeof item?._horaOrden === 'string') {
+                const matchOrden = item._horaOrden.trim().match(/^(\d{1,2}):(\d{2})$/);
+                if (matchOrden) {
+                    const horasOrden = Number(matchOrden[1]);
+                    const minutosOrden = Number(matchOrden[2]);
+                    if (!Number.isNaN(horasOrden) && !Number.isNaN(minutosOrden)) {
+                        return (horasOrden * 60) + minutosOrden;
+                    }
+                }
+            }
             const candidatos = [item?.llegada, item?.partida];
             for (const horario of candidatos) {
                 if (typeof horario !== 'string') continue;
@@ -2276,21 +2286,42 @@ const firebaseConfig = {
                 grupos.set(dia.id, { ...dia, items: [] });
             });
 
-            items.forEach((item, indiceCreacion) => {
-                const dia = obtenerDiaDeItem(destino, item);
-                const diaNormalizado = normalizarDiaItinerario(dia ? `Día ${dia.numero}` : '');
-                const fechaDia = formatearFechaCortaItinerario(dia?.fecha);
-                const etiqueta = dia ? `DÍA ${dia.numero}${fechaDia ? ` (${fechaDia})` : ''}: ${dia.nombre}` : diaNormalizado.etiqueta;
-                const clave = dia?.id || `sin-dia-${diaNormalizado.orden}`;
+            const diaPorFecha = new Map();
+            dias.forEach((dia) => {
+                if (esFechaActividadValida(dia?.fecha)) {
+                    diaPorFecha.set(dia.fecha, dia);
+                }
+            });
+
+            const agregarItemEnDia = (diaDestino, item, indiceCreacion, extras = {}) => {
+                if (!diaDestino) return;
+                const diaNormalizado = normalizarDiaItinerario(`Día ${diaDestino.numero || 1}`);
+                const fechaDia = formatearFechaCortaItinerario(diaDestino?.fecha);
+                const etiqueta = `DÍA ${diaDestino.numero || 1}${fechaDia ? ` (${fechaDia})` : ''}: ${diaDestino.nombre || diaNormalizado.etiqueta}`;
+                const clave = diaDestino?.id || `sin-dia-${diaNormalizado.orden}`;
 
                 if (!grupos.has(clave)) {
                     grupos.set(clave, {
+                        ...diaDestino,
                         etiqueta,
-                        orden: dia?.numero || diaNormalizado.orden,
+                        orden: diaDestino?.numero || diaNormalizado.orden,
                         items: []
                     });
                 }
-                grupos.get(clave).items.push({ ...item, _ordenCreacion: indiceCreacion });
+                grupos.get(clave).items.push({ ...item, _ordenCreacion: indiceCreacion, ...extras });
+            };
+
+            items.forEach((item, indiceCreacion) => {
+                const diaInicio = obtenerDiaDeItem(destino, item);
+                agregarItemEnDia(diaInicio, item, indiceCreacion, { _horaOrden: item?.llegada || item?.partida || '' });
+
+                const { fechaFin, horaFin } = obtenerRangoTemporalItem(destino, item);
+                if (!esFechaActividadValida(fechaFin)) return;
+
+                const diaFin = diaPorFecha.get(fechaFin);
+                if (!diaFin || diaInicio?.id === diaFin.id) return;
+
+                agregarItemEnDia(diaFin, item, indiceCreacion, { _horaOrden: horaFin || item?.partida || item?.llegada || '' });
             });
 
             const columnas = Array.from(grupos.values())
