@@ -468,6 +468,34 @@
             border: 2px solid #F8BBD0;
             background: #ECEFF1;
         }
+        .acciones-portada-itinerario {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+        }
+        .btn-editar-portada {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid #F8BBD0;
+            background: #FFFFFF;
+            color: #D81B60;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .btn-editar-portada:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(216, 27, 96, 0.25);
+        }
+        .btn-editar-portada i {
+            width: 14px;
+            height: 14px;
+        }
         @media (max-width: 900px) {
             .calendario-itinerario { grid-auto-columns: clamp(250px, calc((100vw - 90px) / 2), 360px); }
             .columna-dia-itinerario { min-height: 140px; }
