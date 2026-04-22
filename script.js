@@ -208,9 +208,36 @@ const firebaseConfig = {
                 fechasItinerario.filter(esFechaActividadValida)
             )).sort((a, b) => a.localeCompare(b));
 
-            const dias = fechasUnicas.length
-                ? fechasUnicas.map((fecha, index) => ({ ...crearDia(index + 1, `Día ${index + 1}`), fecha }))
-                : [crearDia(1, 'Día 1')];
+            if (!fechasUnicas.length) {
+                const diasSinFechas = normalizarDiasDestino(destino);
+                const diaPorFechaVacio = new Map();
+                const fechaPorDiaIdVacio = new Map();
+                destino.dias = diasSinFechas;
+                return {
+                    dias: diasSinFechas,
+                    diaPorFecha: diaPorFechaVacio,
+                    fechaPorDiaId: fechaPorDiaIdVacio
+                };
+            }
+
+            const diasPrevios = Array.isArray(destino.dias) ? normalizarDiasDestino(destino) : [];
+            const diaPrevioPorFecha = new Map();
+            diasPrevios.forEach((dia) => {
+                if (esFechaActividadValida(dia?.fecha)) {
+                    diaPrevioPorFecha.set(dia.fecha, dia);
+                }
+            });
+
+            const dias = fechasUnicas.map((fecha, index) => {
+                const diaPrevio = diaPrevioPorFecha.get(fecha);
+                const diaBase = crearDia(index + 1, `Día ${index + 1}`);
+                return {
+                    ...diaBase,
+                    id: diaPrevio?.id || diaBase.id,
+                    nombre: (diaPrevio?.nombre || diaBase.nombre).trim() || diaBase.nombre,
+                    fecha
+                };
+            });
 
             const diaPorFecha = new Map();
             const fechaPorDiaId = new Map();
@@ -252,7 +279,7 @@ const firebaseConfig = {
                 destino.itinerario = Array.isArray(destino.itinerario) ? destino.itinerario : [];
                 destino.ciudadDestinoFinal = destino.ciudadDestinoFinal || "";
                 destino.portadaUrl = destino.portadaUrl || "";
-                destino.dias = normalizarDiasDestino(destino);
+                derivarDiasDesdeFechasItinerario(destino);
 
                 destino.itinerario.forEach(item => {
                     asegurarDiaIdEnItem(destino, item);
@@ -2330,6 +2357,7 @@ const firebaseConfig = {
             const destino = destinosSonados[idPais];
             if (!calendario || !destino) return;
 
+            derivarDiasDesdeFechasItinerario(destino);
             const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
             const dias = Array.isArray(destino.dias) ? destino.dias : [];
             calendario.innerHTML = '';
