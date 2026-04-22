@@ -1082,9 +1082,9 @@ const firebaseConfig = {
             const idsPaises = Object.keys(destinosSonados);
 
             contenedor.innerHTML = `
-                <div class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center;">
+                <div id="encabezado-sonados" class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center;">
                     <h2><i data-lucide="heart"></i> Destinos por Vivir</h2>
-                    <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoDestino()" style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);">
+                    <button id="btn-nueva-aventura-sonados" class="btn-nueva-aventura" onclick="mostrarSelectorNuevoDestino()" style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);">
                         <i data-lucide="plus-circle"></i> Nueva Aventura
                     </button>
                 </div>
@@ -2072,50 +2072,50 @@ const firebaseConfig = {
                 ? Boolean(estadoEdicionPortadaItinerario[idPais])
                 : !portadaActual;
             estadoVistaItinerario = { modo: 'lista', idPais };
+            const encabezadoSonados = document.getElementById('encabezado-sonados');
+            if (encabezadoSonados) encabezadoSonados.style.display = 'none';
+            const selectorNuevoDestino = document.getElementById('selector-nuevo-destino');
+            if (selectorNuevoDestino) selectorNuevoDestino.style.display = 'none';
 
             scrollArea.innerHTML = `
-                <div class="cabecera-detalle">
-                    <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="cabecera-itinerario-portada" style="background-image:url('${portadaActual || 'https://via.placeholder.com/1200x300?text=Sin+Portada'}')">
+                    <div class="cabecera-detalle cabecera-itinerario-contenido">
+                        <div style="display: flex; align-items: center; gap: 20px;">
                         <button class="btn-volver" onclick="renderizarPantallaSonados()" title="Volver a la lista">
                             <i data-lucide="arrow-left"></i>
                         </button>
-                        <div>
-                            <div style="display:flex; align-items:center; gap:8px; margin-bottom: 4px;">
-                                <span style="font-size: 1.6rem; font-weight: 900; color:#FF4081;">ITINERARIO:</span>
-                                <h2 class="destino-principal rosa" style="margin:0;">${nombrePrincipal}</h2>
-                                <span style="font-size: 1.4rem;">🌍</span>
-                            </div>
+                        <div class="titulo-destino-itinerario-wrap">
+                            <h2 class="titulo-destino-itinerario">${nombrePrincipal}</h2>
                             ${escalasResumen ? `<div class="destino-escalas">(${escalasResumen})</div>` : ''}
                         </div>
                     </div>
-                    
-                    <button id="btn-borrar-iti" class="btn-borrar-itinerario" onclick="borrarItinerarioCompleto('${idPais}')" data-confirm="false" title="Eliminar todo el itinerario de este país">
-                        <i data-lucide="trash-2"></i> Borrar Todo
-                    </button>
+                        
+                        <div class="acciones-itinerario-superior">
+                            <button class="btn-mini-accion-itinerario" onclick="activarEdicionPortadaItinerario('${idPais}')" title="Editar URL de portada">
+                                <i data-lucide="pencil"></i>
+                            </button>
+                            <button id="btn-borrar-iti" class="btn-mini-accion-itinerario peligro" onclick="borrarItinerarioCompleto('${idPais}')" data-confirm="false" title="Eliminar todo el itinerario de este país">
+                                <i data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="panel-creacion">
-                    <div class="portada-itinerario-wrap">
-                        <img class="portada-itinerario-preview" src="${portadaActual || 'https://via.placeholder.com/240x150?text=Sin+Portada'}" alt="Portada del itinerario">
-                        ${mostrarEditorPortada ? `
-                            <div style="display:flex; gap:10px; flex:1; min-width: 240px;">
-                                <input type="url" id="input-portada-itinerario" placeholder="URL de portada del itinerario..." value="${portadaActual}" style="flex:1; padding:10px 12px; border-radius:10px; border:2px solid #F8BBD0; font-family: inherit;">
-                                <button class="btn-tipo-item" style="border-color:#F48FB1; color:#D81B60;" onclick="guardarPortadaItinerario('${idPais}')"><i data-lucide="image-plus"></i> Guardar portada</button>
-                            </div>
-                        ` : `
-                            <div class="acciones-portada-itinerario">
-                                <button class="btn-editar-portada" onclick="activarEdicionPortadaItinerario('${idPais}')" title="Editar portada">
-                                    <i data-lucide="pencil"></i>
-                                </button>
-                            </div>
-                        `}
+                    ${mostrarEditorPortada ? `
+                    <div class="portada-itinerario-editor">
+                        <input type="url" id="input-portada-itinerario" placeholder="URL de portada del itinerario..." value="${portadaActual}" style="flex:1; padding:10px 12px; border-radius:10px; border:2px solid #F8BBD0; font-family: inherit;">
+                        <button class="btn-tipo-item" style="border-color:#F48FB1; color:#D81B60;" onclick="guardarPortadaItinerario('${idPais}')"><i data-lucide="image-plus"></i> Guardar portada</button>
                     </div>
-                    <h3 style="margin-top:0; color: #455A64;">Agregar nuevo paso:</h3>
-                    <div class="botones-tipos">
-                        <button class="btn-tipo-item" onclick="mostrarFormularioItinerario('viaje', this)"><i data-lucide="bus"></i> Viaje</button>
-                        <button class="btn-tipo-item" onclick="manual_Hospedaje(this)"><i data-lucide="hotel"></i> Hospedaje</button>
-                        <button class="btn-tipo-item" onclick="manual_Aventura(this)"><i data-lucide="mountain"></i> Aventura</button>
-                        <button class="btn-tipo-item" onclick="manual_Restaurante(this)"><i data-lucide="utensils"></i> Restaurante</button>
+                    ` : ''}
+                    <div>
+                        <h3 style="margin-top:0; color: #455A64;">Agregar nuevo paso:</h3>
+                        <div class="botones-tipos">
+                            <button class="btn-tipo-item btn-tipo-viaje" onclick="mostrarFormularioItinerario('viaje', this)"><i data-lucide="bus"></i> Viaje</button>
+                            <button class="btn-tipo-item btn-tipo-hospedaje" onclick="manual_Hospedaje(this)"><i data-lucide="hotel"></i> Hospedaje</button>
+                            <button class="btn-tipo-item btn-tipo-aventura" onclick="manual_Aventura(this)"><i data-lucide="mountain"></i> Aventura</button>
+                            <button class="btn-tipo-item btn-tipo-restaurante" onclick="manual_Restaurante(this)"><i data-lucide="utensils"></i> Restaurante</button>
+                        </div>
                     </div>
                     <div id="contenedor-formularios"></div>
                 </div>
@@ -2624,16 +2624,14 @@ const firebaseConfig = {
                 renderizarPantallaSonados();
             } else {
                 btn.dataset.confirm = 'true';
-                btn.innerHTML = '<i data-lucide="alert-triangle"></i> ¿Seguro?';
-                btn.style.background = '#F44336';
-                btn.style.color = 'white';
+                btn.classList.add('confirmando');
+                btn.innerHTML = '<i data-lucide="alert-triangle"></i>';
                 lucide.createIcons();
                 setTimeout(() => {
                     if(document.getElementById('btn-borrar-iti')) {
                         btn.dataset.confirm = 'false';
-                        btn.innerHTML = '<i data-lucide="trash-2"></i> Borrar Todo';
-                        btn.style.background = '#FFEBEE';
-                        btn.style.color = '#F44336';
+                        btn.classList.remove('confirmando');
+                        btn.innerHTML = '<i data-lucide="trash-2"></i>';
                         lucide.createIcons();
                     }
                 }, 3000);
@@ -2722,9 +2720,9 @@ const firebaseConfig = {
 
             formHTML += renderCampoFechaItinerario(fechaActual);
             if (esEdicion) {
-                formHTML += `<button class="btn-guardar-item" onclick="actualizarItemItinerario('${idPais}', ${itemExistente.id}, '${tipo}')">Guardar cambios ✨</button></div>`;
+                formHTML += `<div style="display:flex; gap:10px;"><button class="btn-guardar-item" onclick="actualizarItemItinerario('${idPais}', ${itemExistente.id}, '${tipo}')">Guardar cambios ✨</button><button class="btn-cancelar-item" onclick="cancelarFormularioItinerario()">Cancelar</button></div></div>`;
             } else {
-                formHTML += `<button class="btn-guardar-item" onclick="guardarItemItinerario('${idPais}', '${tipo}')">Añadir al Itinerario ✨</button></div>`;
+                formHTML += `<div style="display:flex; gap:10px;"><button class="btn-guardar-item" onclick="guardarItemItinerario('${idPais}', '${tipo}')">Añadir al Itinerario ✨</button><button class="btn-cancelar-item" onclick="cancelarFormularioItinerario()">Cancelar</button></div></div>`;
             }
             contenedor.innerHTML = formHTML;
 
@@ -2995,6 +2993,10 @@ const firebaseConfig = {
         window.activarEdicionPortadaItinerario = function(idPais) {
             estadoEdicionPortadaItinerario[idPais] = true;
             abrirPlanificador(idPais);
+        };
+        window.cancelarFormularioItinerario = function() {
+            document.getElementById('contenedor-formularios').innerHTML = '';
+            document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
         };
         document.addEventListener("DOMContentLoaded", iniciarSincronizacionFirebase);
     
