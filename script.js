@@ -2109,7 +2109,7 @@ const firebaseConfig = {
                 timeline.innerHTML = `<p style="color:#90A4AE; padding-left: 20px;">Itinerario vacío.</p>`;
                 return;
             }
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = ''; let detalles = '';
                 if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
                 else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${item.noches} noches - Total: $${item.costo}`; }
@@ -2118,6 +2118,8 @@ const firebaseConfig = {
                 const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
                     ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
                     : '';
+                const deshabilitarSubir = index === 0;
+                const deshabilitarBajar = index === (items.length - 1);
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
