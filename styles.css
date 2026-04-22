@@ -207,6 +207,14 @@
 
         /* === SECCIÓN DE RECUERDOS Y SOÑADOS === */
         .encabezado-seccion { padding: 20px 30px; border-bottom: 4px dashed #8edcff; background: #d6f4ff; z-index: 5; }
+        .encabezado-seccion.encabezado-sonados-metal {
+            background:
+                linear-gradient(160deg, #eefbff 0%, #d9f4ff 22%, #c8ebfa 48%, #b5def1 68%, #d8f1fb 84%, #f3fcff 100%);
+            border-bottom: 4px dashed #92d2ea;
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -8px 16px rgba(106, 160, 184, 0.32);
+        }
         .encabezado-seccion.encabezado-galeria-recuerdos {
             background:
                 linear-gradient(180deg, #e4f7ff 0%, #cbf0ff 48%, #b8e9ff 100%),
@@ -223,6 +231,24 @@
             gap: 15px;
             -webkit-text-stroke: 2px #ff4f9a;
             text-shadow: 3px 3px 0 rgba(255, 64, 129, 0.22);
+        }
+        .titulo-sonados-metal {
+            font-size: clamp(2.3rem, 4vw, 3.15rem);
+            font-weight: 900;
+            letter-spacing: 0.04em;
+            background:
+                linear-gradient(160deg, #ffd3d3 0%, #ff9696 28%, #ff5d5d 46%, #ae1414 66%, #ff9d9d 82%, #ffe1e1 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 6px, rgba(138, 15, 15, 0.2) 6px 12px);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-stroke: 2px #7d0c0c;
+            text-shadow:
+                0 1px 0 #ffdede,
+                0 2px 0 #ff9f9f,
+                0 3px 0 #d85050,
+                0 4px 0 #9f1d1d,
+                0 9px 14px rgba(104, 14, 14, 0.4);
         }
         .titulo-galeria-recuerdos {
             font-family: 'Luckiest Guy', cursive;
@@ -412,6 +438,21 @@
             -webkit-text-stroke: 0.5px rgba(255, 143, 0, 0.35);
             filter: saturate(1.1);
         }
+        .destino-principal.rojo-metal {
+            font-size: 1.55rem;
+            color: transparent;
+            background:
+                linear-gradient(155deg, #ffe3e3 0%, #ff9f9f 24%, #ff5a5a 42%, #a31212 65%, #ff8989 82%, #ffe1e1 100%),
+                repeating-linear-gradient(140deg, rgba(255, 255, 255, 0.18) 0 6px, rgba(133, 14, 14, 0.2) 6px 12px);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-stroke: 1.3px #7d0e0e;
+            text-shadow:
+                0 1px 0 #ffd8d8,
+                0 2px 0 #ff8d8d,
+                0 3px 0 #d14545,
+                0 5px 8px rgba(111, 8, 8, 0.36);
+        }
         .destino-principal.rosa {
             color: #8a0303;
             font-size: 1.85rem;
@@ -534,6 +575,36 @@
                 0 0 22px rgba(255, 118, 118, 0.95),
                 0 0 45px rgba(255, 151, 151, 0.92);
             filter: saturate(1.2) brightness(1.08);
+        }
+        #scroll-sonados {
+            background: #000000;
+        }
+        .lista-sonados {
+            grid-template-columns: repeat(auto-fit, minmax(260px, 260px));
+            justify-content: center;
+        }
+        .tarjeta-sonado {
+            width: 260px;
+            min-height: 260px;
+            border-radius: 14px;
+            padding: 14px;
+            gap: 10px;
+        }
+        .info-sonado {
+            gap: 6px;
+        }
+        .miniatura-portada-lista.imagen-sonado {
+            width: 100%;
+            height: 130px;
+            border-radius: 10px;
+            border: 2px solid #d5d5d5;
+            object-fit: cover;
+            object-position: center;
+            margin-bottom: 4px;
+        }
+        .tarjeta-sonado .acciones-itinerario-card {
+            width: 100%;
+            justify-content: center;
         }
         .acciones-itinerario-card { display: flex; align-items: center; gap: 12px; }
         .miniatura-portada-lista {
