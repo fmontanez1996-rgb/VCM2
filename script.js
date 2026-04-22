@@ -24,6 +24,7 @@ const firebaseConfig = {
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
         let estadoEdicionPortadaItinerario = {};
+        let banderasPorPais = {};
 
         const RUTA_ESTADO_COMPARTIDO = "nuestraHistoria/estadoCompartido";
 
@@ -123,6 +124,41 @@ const firebaseConfig = {
                 .join("");
         }
 
+        function normalizarTextoPais(valor = "") {
+            return String(valor || "")
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9]+/g, '');
+        }
+
+        async function cargarBanderasPaises() {
+            try {
+                const respuesta = await fetch('./country-flags.json');
+                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
+                const listado = await respuesta.json();
+                const indice = {};
+
+                listado.forEach((item) => {
+                    if (!item || typeof item !== "object") return;
+                    const bandera = String(item.flag || "").trim();
+                    const iso2 = String(item.iso2 || "").trim().toUpperCase();
+                    const iso3 = String(item.iso3 || "").trim().toUpperCase();
+                    const nombre = normalizarTextoPais(item.name);
+                    const nombreEs = normalizarTextoPais(item.nameEs);
+                    if (!bandera) return;
+                    if (iso2) indice[iso2] = bandera;
+                    if (iso3) indice[iso3] = bandera;
+                    if (nombre) indice[nombre] = bandera;
+                    if (nombreEs) indice[nombreEs] = bandera;
+                });
+
+                banderasPorPais = indice;
+            } catch (error) {
+                console.warn("No se pudo cargar country-flags.json. Se usarán banderas generadas por ISO-2.", error);
+            }
+        }
+
         function obtenerEmojiBanderaPorPais(idPais = "") {
             const fallbackIsoA2 = {
                 ARG: "AR",
@@ -152,15 +188,22 @@ const firebaseConfig = {
 
             const paisesMapa = d3.selectAll('.pais').data() || [];
             const featurePais = paisesMapa.find((d) => d?.id === idPais);
+            const nombrePais = String(paisesVisitados?.[idPais]?.nombre || "").trim();
             const isoA2 =
                 featurePais?.properties?.iso_a2 ||
                 featurePais?.properties?.wb_a2 ||
-                fallbackIsoA2PorNombre[String(paisesVisitados?.[idPais]?.nombre || "").trim().toLowerCase()] ||
+                fallbackIsoA2PorNombre[nombrePais.toLowerCase()] ||
                 fallbackIsoA2[idPais] ||
                 "";
 
             if (isoA2 === "-99") return "";
-            return convertirIsoA2AEmojiBandera(isoA2);
+
+            const banderaDesdeJson =
+                banderasPorPais[String(idPais || "").toUpperCase()] ||
+                banderasPorPais[String(isoA2 || "").toUpperCase()] ||
+                banderasPorPais[normalizarTextoPais(nombrePais)];
+
+            return banderaDesdeJson || convertirIsoA2AEmojiBandera(isoA2);
         }
 
         function serializarEstable(valor) {
@@ -2074,6 +2117,10 @@ const firebaseConfig = {
                 idsPaises.forEach(id => {
     const pais = paisesVisitados[id];
     const numMemorias = contarMemoriasPais(id);
+    const emojiBandera = obtenerEmojiBanderaPorPais(id);
+    const iconoBanderaHTML = emojiBandera
+        ? `<div class="icono-bandera" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBandera}</div>`
+        : `<div class="icono-bandera"><i data-lucide="map-pin"></i></div>`;
 
     let provinciasHTML = "";
 
@@ -2095,7 +2142,7 @@ const firebaseConfig = {
     listaHTML.innerHTML += `
         <div class="tarjeta-pais">
             <div class="info-pais">
-                <div class="icono-bandera"><i data-lucide="map-pin"></i></div>
+                ${iconoBanderaHTML}
                 <div>
                     <h3 class="nombre-pais-lista">${pais.nombre}</h3>
                     <span class="zonas-badge">${numMemorias} memorias</span>
@@ -3123,5 +3170,8 @@ const firebaseConfig = {
             document.getElementById('contenedor-formularios').innerHTML = '';
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
         };
-        document.addEventListener("DOMContentLoaded", iniciarSincronizacionFirebase);
+        document.addEventListener("DOMContentLoaded", async () => {
+            await cargarBanderasPaises();
+            iniciarSincronizacionFirebase();
+        });
     

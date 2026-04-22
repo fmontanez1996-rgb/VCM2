@@ -387,15 +387,15 @@
             margin: 0;
             font-family: 'Baloo 2', sans-serif;
             background:
-                linear-gradient(155deg, #ebf9ff 0%, #b8e0ff 20%, #f5fcff 35%, #7db9ea 52%, #1f6aa6 72%, #6ca8da 86%, #d4eeff 100%),
-                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 5px, rgba(12, 70, 128, 0.24) 5px 10px);
+                linear-gradient(160deg, #1f6aa6 0%, #2d82c7 28%, #0d4f88 52%, #3f96d8 74%, #0e5e9f 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.26) 0 5px, rgba(255, 255, 255, 0.1) 5px 10px);
             -webkit-background-clip: text;
             background-clip: text;
-            -webkit-text-stroke: 1.4px #0e4d86;
+            -webkit-text-stroke: 1.4px #ffffff;
             text-shadow:
-                0 1px 0 rgba(219, 243, 255, 0.9),
-                0 2px 0 rgba(95, 154, 206, 0.55),
-                0 3px 8px rgba(0, 89, 160, 0.34);
+                0 1px 0 rgba(255, 255, 255, 0.95),
+                0 2px 0 rgba(238, 249, 255, 0.8),
+                0 4px 10px rgba(5, 68, 120, 0.35);
         }
         .destino-principal { margin: 0; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; }
         .destino-principal.dorado {
