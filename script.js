@@ -1242,23 +1242,20 @@ const firebaseConfig = {
                     </div>
                 </div>
                 
-                <div id="selector-nuevo-recuerdo" style="display:none; background: #FDF2F5; margin: 15px; padding: 20px; border-radius: 15px; border: 2px dashed var(--primary); animation: fadeIn 0.3s ease;">
-                <h3 style="margin-top:0; color: var(--primary);">¿Donde estuvimos?</h3>
-                <p style="font-size: 0.9rem; color: #607D8B;">Elegí país</p>
-                
-                <select id="select-pais-recuerdo" onchange="cargarCiudadesRecuerdo()" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CFD8DC; margin-bottom: 15px; font-family: inherit; font-size: 1rem; background: white;">
+                <div id="selector-nuevo-recuerdo" class="selector-nuevo-recuerdo">
+                <select id="select-pais-recuerdo" class="select-recuerdo select-recuerdo-pais" onchange="cargarCiudadesRecuerdo()">
                     <option value="" disabled selected>Elegí un país...</option>
                 </select>
 
-                <div id="contenedor-ciudad-recuerdo" style="display:none; margin-bottom: 15px;">
-                    <select id="select-ciudad-recuerdo" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CFD8DC; font-family: inherit; font-size: 1rem; background: white;">
+                <div id="contenedor-ciudad-recuerdo" class="contenedor-ciudad-recuerdo">
+                    <select id="select-ciudad-recuerdo" class="select-recuerdo">
                         <option value="" disabled selected>¿Qué ciudad, bebé?</option>
                     </select>
                 </div>
 
-                <div style="display: flex; gap: 10px;">
-                    <button onclick="confirmarNuevoRecuerdo()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #4CAF50; color: white; font-weight: bold; cursor: pointer;">Guardar Recuerdo</button>
-                    <button onclick="ocultarSelectorNuevoRecuerdo()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
+                <div class="acciones-selector-recuerdo">
+                    <button onclick="confirmarNuevoRecuerdo()" class="btn-recuerdo btn-recuerdo-guardar">Guardar Recuerdo</button>
+                    <button onclick="ocultarSelectorNuevoRecuerdo()" class="btn-recuerdo btn-recuerdo-cancelar">Cancelar</button>
                 </div>
             </div>
 
