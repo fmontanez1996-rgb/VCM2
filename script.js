@@ -449,7 +449,21 @@ const firebaseConfig = {
             return etiquetaDia.replace(/^DÍA/i, 'Día');
         }
 
+        function obtenerOrigenViajePorDefecto(destino, indiceActual = -1) {
+            if (!destino || !Array.isArray(destino.itinerario)) return 'Mendoza, Argentina';
+            for (let i = indiceActual - 1; i >= 0; i--) {
+                const previo = destino.itinerario[i];
+                if (!previo || previo.tipo !== 'viaje') continue;
+                if (previo.ciudad && previo.destino) return `${previo.ciudad}, ${previo.destino}`;
+                if (previo.ciudad) return `${previo.ciudad}, Argentina`;
+                if (previo.destino) return `${previo.destino}, Argentina`;
+            }
+            return 'Mendoza, Argentina';
+        }
+
         function obtenerResumenTarjetaItinerario(destino, item = {}) {
+            const dia = obtenerDiaDeItem(destino, item);
+            const numeroDia = dia?.numero || 1;
             const diaLinea = obtenerLineaDiaItem(destino, item);
             const fechaInicio = formatearFechaCortaItinerario(obtenerFechaBaseItem(destino, item));
             const { fechaFin, horaFin } = obtenerRangoTemporalItem(destino, item);
@@ -459,39 +473,42 @@ const firebaseConfig = {
             const costoBase = formatearMonedaItinerario(item.costo ?? item.precio ?? 0);
 
             if (item.tipo === 'viaje') {
-                const origen = item.origen || 'Origen por definir';
-                const destinoViaje = `${item.destino || 'Destino por definir'}${item.ciudad ? `, ${item.ciudad}` : ''}`;
+                const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
+                const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
+                const destinoViaje = item.ciudad && item.destino
+                    ? `${item.ciudad}, ${item.destino}`
+                    : (item.ciudad || item.destino || 'Destino por definir');
                 return [
-                    `MEDIO: ${item.medio || 'Sin definir'}`,
-                    `${origen} - ${destinoViaje}`,
-                    `SALIDA: ${fechaInicio || 'Sin fecha'} ${horaSalida} · (${diaLinea})`,
-                    `LLEGADA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} ${horaLlegada} · (${diaLinea})`,
-                    `COSTO POR PERSONA: ${costoBase}`,
-                    `COSTO TOTAL: ${costoBase}`
+                    `Origen: ${origen}`,
+                    `Destino: ${destinoViaje}`,
+                    `Salida: ${fechaInicio || 'Sin fecha'}, ${horaSalida} (día ${numeroDia})`,
+                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada} (día ${numeroDia})`,
+                    `Costo por persona ${costoBase}`
                 ];
             }
 
             if (item.tipo === 'aventura') {
                 return [
-                    `NOMBRE DE AVENTURA: ${item.lugar || 'Aventura'}`,
-                    `INICIO-FIN: ${horaSalida} - ${horaLlegada} · ${diaLinea}`,
-                    `PRECIO POR PERSONA: ${costoBase}`,
-                    `PRECIO TOTAL: ${costoBase}`
+                    `DÍA ${numeroDia}`,
+                    `${fechaInicio || 'Sin fecha'}, ${horaSalida} - ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada}`,
+                    `PRECIO POR PERSONA: ${costoBase}`
                 ];
             }
 
             if (item.tipo === 'hospedaje') {
                 const noches = Number(item.noches) || 1;
                 const precioPorNoche = formatearMonedaItinerario(noches > 0 ? Number(item.costo || 0) / noches : item.costo || 0);
+                const diaSalida = (esFechaActividadValida(fechaInicio) && esFechaActividadValida(fechaFin))
+                    ? (Math.max(numeroDia, numeroDia + Math.max(0, Math.round((new Date(`${fechaFin}T00:00:00Z`) - new Date(`${fechaInicio}T00:00:00Z`)) / 86400000))))
+                    : numeroDia;
                 return [
-                    `NOMBRE DE HOSPEDAJE: ${item.hotel || 'Hospedaje'}`,
-                    `CANTIDAD DE NOCHES: ${noches}`,
-                    `FECHA DE LLEGADA: ${fechaInicio || 'Sin fecha'} · (${diaLinea})`,
-                    `HORARIO CHECK-IN: ${horaSalida}`,
-                    `FECHA DE SALIDA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} · (${diaLinea})`,
-                    `HORARIO CHECK-OUT: ${horaLlegada}`,
-                    `PRECIO POR NOCHE: ${precioPorNoche}`,
-                    `PRECIO TOTAL: ${costoBase}`
+                    `Cantidad de Noches: ${noches}`,
+                    `Fecha de Llegada: ${fechaInicio || 'Sin fecha'} (día ${numeroDia})`,
+                    `Check in: ${horaSalida}`,
+                    `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${diaSalida})`,
+                    `Check out: ${horaLlegada}`,
+                    `Precio por noche ${precioPorNoche}`,
+                    `Precio total ${costoBase}`
                 ];
             }
 
@@ -3294,19 +3311,19 @@ const firebaseConfig = {
             }
 
             const dibujarBotonesOrden = (item, deshabilitarSubir, deshabilitarBajar) => `
-                <button class="btn-editar-item" onclick="moverItemItinerario('${idPais}', ${item.id}, 'arriba')" ${deshabilitarSubir ? 'disabled' : ''} title="Subir">
+                <button class="btn-editar-item btn-icono-metal subir" onclick="moverItemItinerario('${idPais}', ${item.id}, 'arriba')" ${deshabilitarSubir ? 'disabled' : ''} title="Subir">
                     <i data-lucide="arrow-up"></i>
                 </button>
-                <button class="btn-editar-item" onclick="moverItemItinerario('${idPais}', ${item.id}, 'abajo')" ${deshabilitarBajar ? 'disabled' : ''} title="Bajar">
+                <button class="btn-editar-item btn-icono-metal bajar" onclick="moverItemItinerario('${idPais}', ${item.id}, 'abajo')" ${deshabilitarBajar ? 'disabled' : ''} title="Bajar">
                     <i data-lucide="arrow-down"></i>
                 </button>
             `;
 
             items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = '';
-                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; }
-                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; }
-                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; }
+                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `${item.medio || 'Micro'}`.toUpperCase(); }
+                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = (item.hotel || 'Hospedaje').toUpperCase(); }
+                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = (item.lugar || 'Aventura').toUpperCase(); }
                 else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; }
                 const detalles = obtenerResumenTarjetaItinerario(destino, item)
                     .map(linea => `<p>${linea}</p>`)
@@ -3319,7 +3336,7 @@ const firebaseConfig = {
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}" data-itinerario-item-id="${item.id}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
@@ -3351,7 +3368,7 @@ const firebaseConfig = {
                         return `
                             <div class="item-timeline ${item.tipo}" style="margin:8px 0;" data-itinerario-item-id="${item.id}">
                                 <div class="item-header">
-                                    <h4 class="item-titulo"><i data-lucide="${item.tipo === 'viaje' ? 'bus' : item.tipo === 'hospedaje' ? 'hotel' : item.tipo === 'aventura' ? 'mountain' : 'utensils'}"></i> ${item.lugar || item.hotel || item.plato || `Viaje en ${item.medio}`}</h4>
+                                    <h4 class="item-titulo"><i data-lucide="${item.tipo === 'viaje' ? 'bus' : item.tipo === 'hospedaje' ? 'hotel' : item.tipo === 'aventura' ? 'mountain' : 'utensils'}"></i> ${item.tipo === 'viaje' ? `${item.medio || 'Micro'}`.toUpperCase() : (item.tipo === 'hospedaje' ? (item.hotel || 'Hospedaje').toUpperCase() : (item.tipo === 'aventura' ? (item.lugar || 'Aventura').toUpperCase() : (item.plato || 'Restaurante')))}</h4>
                                     <div class="item-header-actions">
                                         ${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}
                                     </div>
