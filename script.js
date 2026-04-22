@@ -54,30 +54,8 @@ const firebaseConfig = {
         }
 
 
-        // Sube tu archivo SVG como: assets/avatar-viajera.svg (fallback: avatar-viajera.svg en la raíz).
-        const MENU_AVATAR_CANDIDATOS = [
-            "assets/avatar-viajera.svg",
-            "./assets/avatar-viajera.svg",
-            "avatar-viajera.svg",
-            "./avatar-viajera.svg"
-        ];
-        const MENU_AVATAR_SRC = MENU_AVATAR_CANDIDATOS[0];
-
-        function manejarErrorAvatarMenu(img) {
-            if (!img) return;
-
-            const indiceActual = Number(img.dataset.avatarIndice || '0');
-            const siguienteIndice = indiceActual + 1;
-
-            if (siguienteIndice < MENU_AVATAR_CANDIDATOS.length) {
-                img.dataset.avatarIndice = String(siguienteIndice);
-                img.src = MENU_AVATAR_CANDIDATOS[siguienteIndice];
-                return;
-            }
-
-            const contenedor = img.closest('.avatar-dialogo');
-            if (contenedor) contenedor.style.display = 'none';
-        }
+        // Sube tu archivo SVG en: assets/avatar-viajera.svg
+        const MENU_AVATAR_SRC = "assets/avatar-viajera.svg";
 
         function obtenerAvatarMenuHtml() {
             return `
