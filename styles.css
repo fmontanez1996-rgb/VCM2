@@ -428,19 +428,16 @@
             border-color: #93a7bb;
         }
         .info-pais { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .icono-bandera {
-            width: 50px;
-            height: 50px;
-            background: #e9f0f6;
-            color: #002395;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 1.55rem;
-            line-height: 1;
-            font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
-            font-variant-emoji: emoji;
+        .portada-tarjeta {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            object-fit: cover;
+            border-radius: 16px;
+            border: 2px solid #d9e5ef;
+            box-shadow: 0 8px 16px rgba(46, 86, 119, 0.2);
+        }
+        .portada-tarjeta-pais {
+            margin-bottom: 14px;
         }
         .nombre-pais-lista {
             font-size: 1.95rem;
@@ -972,15 +969,8 @@
                 inset 0 -8px 14px rgba(121, 133, 145, 0.28),
                 0 10px 22px rgba(120, 133, 147, 0.36);
         }
-        .tarjeta-agregar.tarjeta-ciudad i,
-        .tarjeta-agregar.tarjeta-ciudad .emoji-ciudad {
-            width: 42px;
-            height: 42px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.28));
+        .portada-tarjeta-ciudad {
+            margin-bottom: 8px;
         }
         .nombre-ciudad-tarjeta {
             margin-top: 10px;

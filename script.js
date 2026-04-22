@@ -24,7 +24,6 @@ const firebaseConfig = {
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
         let estadoEdicionPortadaItinerario = {};
-        let banderasPorPais = {};
 
         const RUTA_ESTADO_COMPARTIDO = "nuestraHistoria/estadoCompartido";
 
@@ -116,94 +115,21 @@ const firebaseConfig = {
             return totalMemorias + contarMemoriasDestino(pais);
         }
 
-        function convertirIsoA2AEmojiBandera(isoA2 = "") {
-            const codigo = String(isoA2 || "").trim().toUpperCase();
-            if (!/^[A-Z]{2}$/.test(codigo)) return "";
-            return [...codigo]
-                .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
-                .join("");
+        function normalizarPortadaUrl(valor = "") {
+            const url = String(valor || "").trim();
+            if (!url) return "";
+            if (!/^https?:\/\//i.test(url)) return "";
+            return url;
         }
 
-        function normalizarTextoPais(valor = "") {
-            return String(valor || "")
-                .toLowerCase()
-                .normalize('NFD')
-                .replace(/[̀-ͯ]/g, '')
-                .replace(/[^a-z0-9]+/g, '');
+        function obtenerPortadaPais(idPais = "") {
+            const portadaPais = paisesVisitados?.[idPais]?.portadaUrl;
+            return normalizarPortadaUrl(portadaPais);
         }
 
-        async function cargarBanderasPaises() {
-            try {
-                const respuesta = await fetch('./country-flags.json');
-                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
-                const listado = await respuesta.json();
-                const indice = {};
-
-                listado.forEach((item) => {
-                    if (!item || typeof item !== "object") return;
-                    const bandera = String(item.flag || "").trim();
-                    const iso2 = String(item.iso2 || "").trim().toUpperCase();
-                    const iso3 = String(item.iso3 || "").trim().toUpperCase();
-                    const nombre = normalizarTextoPais(item.name);
-                    const nombreEs = normalizarTextoPais(item.nameEs);
-                    if (!bandera) return;
-                    if (iso2) indice[iso2] = bandera;
-                    if (iso3) indice[iso3] = bandera;
-                    if (nombre) indice[nombre] = bandera;
-                    if (nombreEs) indice[nombreEs] = bandera;
-                });
-
-                banderasPorPais = indice;
-            } catch (error) {
-                console.warn("No se pudo cargar country-flags.json. Se usarán banderas generadas por ISO-2.", error);
-            }
-        }
-
-        function obtenerEmojiBanderaPorPais(idPais = "") {
-            const fallbackIsoA2 = {
-                ARG: "AR",
-                BRA: "BR",
-                CHL: "CL",
-                USA: "US",
-                GBR: "GB"
-            };
-            const fallbackIsoA2PorNombre = {
-                argentina: "AR",
-                brazil: "BR",
-                brasil: "BR",
-                chile: "CL",
-                uruguay: "UY",
-                paraguay: "PY",
-                bolivia: "BO",
-                peru: "PE",
-                perú: "PE",
-                mexico: "MX",
-                méxico: "MX",
-                colombia: "CO",
-                ecuador: "EC",
-                venezuela: "VE",
-                spain: "ES",
-                españa: "ES"
-            };
-
-            const paisesMapa = d3.selectAll('.pais').data() || [];
-            const featurePais = paisesMapa.find((d) => d?.id === idPais);
-            const nombrePais = String(paisesVisitados?.[idPais]?.nombre || "").trim();
-            const isoA2 =
-                featurePais?.properties?.iso_a2 ||
-                featurePais?.properties?.wb_a2 ||
-                fallbackIsoA2PorNombre[nombrePais.toLowerCase()] ||
-                fallbackIsoA2[idPais] ||
-                "";
-
-            if (isoA2 === "-99") return "";
-
-            const banderaDesdeJson =
-                banderasPorPais[String(idPais || "").toUpperCase()] ||
-                banderasPorPais[String(isoA2 || "").toUpperCase()] ||
-                banderasPorPais[normalizarTextoPais(nombrePais)];
-
-            return banderaDesdeJson || convertirIsoA2AEmojiBandera(isoA2);
+        function obtenerPortadaCiudad(idPais = "", idProvincia = "") {
+            const portadaCiudad = provinciasVisitadas?.[idPais]?.[idProvincia]?.portadaUrl;
+            return normalizarPortadaUrl(portadaCiudad) || obtenerPortadaPais(idPais);
         }
 
         function serializarEstable(valor) {
@@ -1118,11 +1044,11 @@ const firebaseConfig = {
                             const pathElem = d3.select(selectorPath);
 
                             if (!provinciasVisitadas[idPais][idProvincia]) {
-                                provinciasVisitadas[idPais][idProvincia] = { nombre: nombreProvincia };
+                                provinciasVisitadas[idPais][idProvincia] = { nombre: nombreProvincia, portadaUrl: "" };
                                 pathElem.classed('visitada', true).style("fill", "#FF6B9D");
 
                                 if (!paisesVisitados[idPais]) {
-                                    paisesVisitados[idPais] = { nombre: nombrePais, albumes: [], historias: [], musica: null };
+                                    paisesVisitados[idPais] = { nombre: nombrePais, albumes: [], historias: [], musica: null, portadaUrl: "" };
                                 }
                                 d3.select(`.pais[id="${idPais}"]`).classed('visitado', true);
                             } else {
@@ -1383,20 +1309,23 @@ const firebaseConfig = {
                 idsPaises.forEach(id => {
                     const pais = paisesVisitados[id];
                     const numMemorias = contarMemoriasPais(id);
-                    const emojiBandera = obtenerEmojiBanderaPorPais(id);
-                    const iconoBanderaHTML = emojiBandera
-                        ? `<div class="icono-bandera" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBandera}</div>`
+                    const portadaPais = obtenerPortadaPais(id);
+                    const portadaHTML = portadaPais
+                        ? `<img class="portada-tarjeta portada-tarjeta-pais" src="${portadaPais}" alt="Portada de ${pais.nombre}" loading="lazy">`
                         : '';
                     listaHTML.innerHTML += `
-                        <div class="tarjeta-pais">
+                        <div class="tarjeta-pais" data-pais-id="${id}">
+                            ${portadaHTML}
                             <div class="info-pais">
-                                ${iconoBanderaHTML}
                                 <div><h3 class="nombre-pais-lista">${pais.nombre}</h3><span class="zonas-badge">${numMemorias} memorias</span></div>
                             </div>
                             <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Galería</button>
                         </div>`;
                 });
                 scrollArea.appendChild(listaHTML);
+                scrollArea.querySelectorAll('.tarjeta-pais[data-pais-id]').forEach((tarjeta) => {
+                    tarjeta.addEventListener('contextmenu', (event) => abrirMenuContextualPortada(event, tarjeta.dataset.paisId));
+                });
             }
             lucide.createIcons();
             actualizarVisibilidadEncabezadoRecuerdos(false);
@@ -1407,6 +1336,80 @@ const firebaseConfig = {
             if (!encabezado) return;
             encabezado.style.display = ocultar ? 'none' : 'flex';
         }
+
+        function cerrarMenuContextualPortada() {
+            const menu = document.getElementById('menu-contextual-portada');
+            if (menu) menu.remove();
+        }
+
+        function abrirMenuContextualPortada(event, idPais, idProvincia = null) {
+            event.preventDefault();
+            event.stopPropagation();
+            cerrarMenuContextualPortada();
+
+            const menu = document.createElement('div');
+            menu.id = 'menu-contextual-portada';
+            menu.className = 'menu-contextual-itinerario menu-visible';
+            const etiqueta = idProvincia ? 'Editar portada' : 'Agregar portada';
+
+            menu.innerHTML = `
+                <ul class="menu-itinerario-lista">
+                    <li id="opc-portada-editar"><i data-lucide="image-plus"></i> ${etiqueta}</li>
+                </ul>
+            `;
+            document.body.appendChild(menu);
+            lucide.createIcons();
+
+            const margen = 12;
+            const ancho = menu.offsetWidth || 220;
+            const alto = menu.offsetHeight || 84;
+            const maxX = window.scrollX + window.innerWidth - ancho - margen;
+            const maxY = window.scrollY + window.innerHeight - alto - margen;
+            menu.style.left = `${Math.max(window.scrollX + margen, Math.min(event.pageX, maxX))}px`;
+            menu.style.top = `${Math.max(window.scrollY + margen, Math.min(event.pageY, maxY))}px`;
+
+            document.getElementById('opc-portada-editar')?.addEventListener('click', () => {
+                cerrarMenuContextualPortada();
+                window.editarPortadaTarjeta(idPais, idProvincia);
+            });
+
+            const manejarClick = (ev) => {
+                if (!menu.contains(ev.target)) {
+                    cerrarMenuContextualPortada();
+                    document.removeEventListener('mousedown', manejarClick);
+                    document.removeEventListener('keydown', manejarEscape);
+                }
+            };
+            const manejarEscape = (ev) => {
+                if (ev.key === 'Escape') {
+                    cerrarMenuContextualPortada();
+                    document.removeEventListener('mousedown', manejarClick);
+                    document.removeEventListener('keydown', manejarEscape);
+                }
+            };
+            document.addEventListener('mousedown', manejarClick);
+            document.addEventListener('keydown', manejarEscape);
+        }
+
+        window.editarPortadaTarjeta = function(idPais, idProvincia = null) {
+            if (idProvincia) {
+                const ciudad = provinciasVisitadas?.[idPais]?.[idProvincia];
+                if (!ciudad) return;
+                const valorInicial = normalizarPortadaUrl(ciudad.portadaUrl) || obtenerPortadaPais(idPais) || "";
+                const nuevaUrl = window.prompt(`Editar portada para ${ciudad.nombre}`, valorInicial);
+                if (nuevaUrl === null) return;
+                ciudad.portadaUrl = normalizarPortadaUrl(nuevaUrl);
+                window.abrirAlbum(idPais);
+                return;
+            }
+
+            const pais = paisesVisitados?.[idPais];
+            if (!pais) return;
+            const nuevaUrl = window.prompt(`Agregar portada para ${pais.nombre}`, obtenerPortadaPais(idPais));
+            if (nuevaUrl === null) return;
+            pais.portadaUrl = normalizarPortadaUrl(nuevaUrl);
+            window.renderizarPantallaRecuerdos();
+        };
 
         window.mostrarSelectorNuevoRecuerdo = function() {
             const selector = document.getElementById('selector-nuevo-recuerdo');
@@ -1500,14 +1503,14 @@ const firebaseConfig = {
             if (idPais && idProv) {
                 // 1. Guardar y pintar País
                 if (!paisesVisitados[idPais]) {
-                    paisesVisitados[idPais] = { nombre: nombrePais, albumes: [], historias: [], musica: null };
+                    paisesVisitados[idPais] = { nombre: nombrePais, albumes: [], historias: [], musica: null, portadaUrl: "" };
                 }
                 d3.select(`.pais[id="${idPais}"]`).classed('visitado', true);
 
                 // 2. Guardar y pintar Ciudad
                 if (!provinciasVisitadas[idPais]) provinciasVisitadas[idPais] = {};
                 if (!provinciasVisitadas[idPais][idProv]) {
-                    provinciasVisitadas[idPais][idProv] = { nombre: nombreProv, albumes: [], historias: [] };
+                    provinciasVisitadas[idPais][idProv] = { nombre: nombreProv, albumes: [], historias: [], portadaUrl: "" };
                 }
 
                 // Forzar el pintado de la ciudad (por si el mapa detallado está cargado)
@@ -1537,10 +1540,6 @@ const firebaseConfig = {
                 estadoVistaRecuerdos = { modo: 'provincias', idPais, idProvincia: null, submodo: 'ver', seccionNuevo: 'drive' };
                 const provs = provinciasVisitadas[idPais] || {};
                 const idsProvincias = Object.keys(provs);
-                const emojiBanderaPais = obtenerEmojiBanderaPorPais(idPais);
-                const iconoCiudadHTML = emojiBanderaPais
-                    ? `<span class="emoji-ciudad" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBanderaPais}</span>`
-                    : `<i data-lucide="map-pin" style="width: 40px; height: 40px; color: #02252d;"></i>`;
 
                 contenedor.innerHTML = `
                     <div class="contenedor-scroll" id="scroll-recuerdos">
@@ -1555,8 +1554,8 @@ const firebaseConfig = {
                         <div class="galeria-grid">
                         ${idsProvincias.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; color: #90A4AE; padding: 30px; font-style: italic; background: white; border-radius: 12px; border: 1px dashed #CFD8DC;">Aún no has agregado ninguna ciudad a este país. Toca "Agregar ciudad" para empezar.</div>' : ''}
                         ${idsProvincias.map(pid => `
-                            <div class="tarjeta-agregar tarjeta-ciudad" onclick="window.abrirAlbumDetalle('${idPais}', '${pid}')">
-                                ${iconoCiudadHTML}
+                            <div class="tarjeta-agregar tarjeta-ciudad" data-pais-id="${idPais}" data-prov-id="${pid}" onclick="window.abrirAlbumDetalle('${idPais}', '${pid}')">
+                                ${obtenerPortadaCiudad(idPais, pid) ? `<img class="portada-tarjeta portada-tarjeta-ciudad" src="${obtenerPortadaCiudad(idPais, pid)}" alt="Portada de ${provs[pid].nombre}" loading="lazy">` : ''}
                                 <span class="nombre-ciudad-tarjeta">${provs[pid].nombre}</span>
                             </div>
                         `).join('')}
@@ -1564,6 +1563,11 @@ const firebaseConfig = {
                     </div>
                 `;
                 lucide.createIcons();
+                contenedor.querySelectorAll('.tarjeta-ciudad[data-prov-id]').forEach((tarjeta) => {
+                    tarjeta.addEventListener('contextmenu', (event) => {
+                        abrirMenuContextualPortada(event, tarjeta.dataset.paisId, tarjeta.dataset.provId);
+                    });
+                });
                 return;
             }
 
@@ -2125,10 +2129,10 @@ const firebaseConfig = {
                 idsPaises.forEach(id => {
     const pais = paisesVisitados[id];
     const numMemorias = contarMemoriasPais(id);
-    const emojiBandera = obtenerEmojiBanderaPorPais(id);
-    const iconoBanderaHTML = emojiBandera
-        ? `<div class="icono-bandera" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBandera}</div>`
-        : `<div class="icono-bandera"><i data-lucide="map-pin"></i></div>`;
+    const portadaPais = obtenerPortadaPais(id);
+    const portadaHTML = portadaPais
+        ? `<img class="portada-tarjeta portada-tarjeta-pais" src="${portadaPais}" alt="Portada de ${pais.nombre}" loading="lazy">`
+        : ``;
 
     let provinciasHTML = "";
 
@@ -2149,8 +2153,8 @@ const firebaseConfig = {
 
     listaHTML.innerHTML += `
         <div class="tarjeta-pais">
+            ${portadaHTML}
             <div class="info-pais">
-                ${iconoBanderaHTML}
                 <div>
                     <h3 class="nombre-pais-lista">${pais.nombre}</h3>
                     <span class="zonas-badge">${numMemorias} memorias</span>
@@ -3190,7 +3194,6 @@ const firebaseConfig = {
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
         };
         document.addEventListener("DOMContentLoaded", async () => {
-            await cargarBanderasPaises();
             iniciarSincronizacionFirebase();
         });
     
