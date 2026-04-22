@@ -624,6 +624,9 @@
             gap: 15px;
             margin-bottom: 20px;
         }
+        .cabecera-destinos-pais .btn-agregar-ciudad {
+            margin-left: auto;
+        }
         .titulo-destinos-pais {
             color: transparent;
             margin: 0;
@@ -672,40 +675,47 @@
 
         .galeria-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
         .panel-acciones-ciudad {
-            background: linear-gradient(145deg, #f4fdff, #ccf4ff);
-            padding: 15px;
-            border-radius: 14px;
             margin-bottom: 20px;
             display: flex;
             justify-content: flex-end;
         }
         .btn-agregar-ciudad {
             background:
-                linear-gradient(150deg, #f9feff 0%, #b2efff 20%, #33caef 45%, #0580a0 66%, #b9f6ff 100%),
-                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.35) 0 6px, rgba(0, 84, 116, 0.3) 6px 12px);
-            color: #02212d;
-            border: 2px solid #9ff3ff;
+                linear-gradient(160deg, #ffd1d1 0%, #ff7a7a 24%, #f02d2d 48%, #940000 72%, #ff9f9f 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.33) 0 5px, rgba(110, 0, 0, 0.3) 5px 10px);
+            color: #fff9f9;
+            border: 2px solid #ffc3c3;
             padding: 11px 16px;
-            border-radius: 10px;
+            border-radius: 12px;
             cursor: pointer;
             font-weight: 900;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             white-space: nowrap;
-            box-shadow: 0 4px 8px rgba(0, 79, 109, 0.35);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.78),
+                inset 0 -8px 10px rgba(92, 0, 0, 0.5),
+                0 7px 0 #7d0000,
+                0 13px 20px rgba(122, 0, 0, 0.42);
             transition: all 0.25s ease;
+            text-shadow: 0 1px 0 rgba(67, 0, 0, 0.8);
         }
         .btn-agregar-ciudad:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 15px rgba(0, 160, 212, 0.45), 0 0 16px rgba(150, 240, 255, 0.55);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.85),
+                inset 0 -8px 10px rgba(92, 0, 0, 0.5),
+                0 9px 0 #7d0000,
+                0 16px 26px rgba(122, 0, 0, 0.5),
+                0 0 16px rgba(255, 120, 120, 0.6);
         }
         .btn-agregar-ciudad.btn-agregar-ciudad-activo {
-            border-color: #d9feff;
+            border-color: #ffd9d9;
             box-shadow:
-                0 0 0 2px rgba(217, 254, 255, 0.5),
-                0 0 20px rgba(130, 236, 255, 0.95),
-                0 0 40px rgba(52, 204, 235, 0.65);
+                0 0 0 2px rgba(255, 217, 217, 0.5),
+                0 0 20px rgba(255, 126, 126, 0.95),
+                0 0 40px rgba(212, 52, 52, 0.65);
             animation: pulsoMetal 1.3s ease-in-out infinite;
         }
         .tarjeta-agregar { 
@@ -716,11 +726,15 @@
         .tarjeta-agregar.tarjeta-ciudad {
             height: auto;
             padding: 20px;
-            border: 3px solid #00bcd4;
+            border: 3px solid #7dcff2;
             background:
-                linear-gradient(160deg, #b8fff8 0%, #5af5e7 40%, #17c5c9 100%);
-            color: #06191d;
-            box-shadow: 0 10px 20px rgba(0, 121, 131, 0.28);
+                linear-gradient(160deg, #f2fbff 0%, #c8eaff 24%, #9fd9f8 48%, #77b9df 72%, #e3f5ff 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0 6px, rgba(75, 123, 155, 0.2) 6px 12px);
+            color: #020406;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.86),
+                inset 0 -8px 14px rgba(56, 97, 126, 0.35),
+                0 10px 20px rgba(53, 103, 135, 0.3);
         }
         .tarjeta-agregar.tarjeta-ciudad i,
         .tarjeta-agregar.tarjeta-ciudad .emoji-ciudad {
@@ -737,25 +751,30 @@
             text-align: center;
             font-weight: 900;
             font-size: 1.28rem;
-            color: #020a0d;
+            color: transparent;
             letter-spacing: 0.03em;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.55), 0 2px 4px rgba(3, 61, 72, 0.35);
-            -webkit-text-stroke: 0.4px rgba(255, 255, 255, 0.45);
+            font-family: 'Luckiest Guy', cursive;
+            background:
+                linear-gradient(170deg, #f2f2f2 0%, #8f98a1 18%, #f8f8f8 33%, #5c6369 54%, #171a1f 72%, #5a6168 87%, #eceff3 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-stroke: 1px #050505;
+            text-shadow: 0 2px 0 rgba(255,255,255,0.22), 0 4px 8px rgba(0, 0, 0, 0.5);
         }
         .tarjeta-agregar.tarjeta-ciudad:hover {
             transform: scale(1.03) translateY(-4px);
             box-shadow:
-                0 15px 24px rgba(0, 130, 141, 0.4),
-                0 0 18px rgba(125, 255, 241, 0.75);
+                0 15px 24px rgba(59, 118, 158, 0.4),
+                0 0 18px rgba(182, 229, 255, 0.75);
         }
         .tarjeta-agregar.tarjeta-ciudad:hover .nombre-ciudad-tarjeta {
             background:
-                linear-gradient(155deg, #f4f9ff 0%, #b9ccd8 32%, #ffffff 45%, #8ca6b6 64%, #3e576a 86%, #e7f1f6 100%);
+                linear-gradient(155deg, #ffffff 0%, #adb5bf 32%, #f7f9fb 45%, #4d555d 64%, #0f1216 86%, #edf0f4 100%);
             color: transparent;
             -webkit-background-clip: text;
             background-clip: text;
-            -webkit-text-stroke: 0.8px #0f2c3f;
-            text-shadow: 0 0 10px rgba(169, 236, 255, 0.6);
+            -webkit-text-stroke: 0.9px #07090b;
+            text-shadow: 0 0 10px rgba(208, 220, 230, 0.6);
         }
         @keyframes pulsoMetal {
             0%, 100% { transform: translateY(0); }

@@ -1480,7 +1480,7 @@ const firebaseConfig = {
                 renderizarPantallaRecuerdos();
                 return;
             }
-            const scrollArea = document.getElementById('scroll-recuerdos');
+            const contenedor = document.getElementById('vista-vividas');
 
             // Si NO hay provincia seleccionada, siempre mostramos el menú de provincias (eliminamos el acceso general)
             if (!idProvincia) {
@@ -1492,19 +1492,17 @@ const firebaseConfig = {
                     ? `<span class="emoji-ciudad" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBanderaPais}</span>`
                     : `<i data-lucide="map-pin" style="width: 40px; height: 40px; color: #02252d;"></i>`;
 
-                scrollArea.innerHTML = `
-                    <div class="cabecera-detalle cabecera-destinos-pais">
-                        <button class="btn-volver" onclick="renderizarPantallaRecuerdos()" title="Volver"><i data-lucide="arrow-left"></i></button>
-                        <h2 class="titulo-destinos-pais"><i data-lucide="map" class="icono-mapa-destino"></i> Destinos en ${pais.nombre}</h2>
-                    </div>
-                    
-                    <div class="panel-acciones-ciudad">
-                        <button id="btn-agregar-ciudad-${idPais}" class="btn-agregar-ciudad" onclick="mostrarSelectorNuevaCiudad('${idPais}')">
-                            <i data-lucide="plus-circle" style="width: 18px;"></i> Agregar ciudad
-                        </button>
-                    </div>
-                    
-                    <div class="galeria-grid">
+                contenedor.innerHTML = `
+                    <div class="contenedor-scroll" id="scroll-recuerdos">
+                        <div class="cabecera-detalle cabecera-destinos-pais">
+                            <button class="btn-volver" onclick="renderizarPantallaRecuerdos()" title="Volver"><i data-lucide="arrow-left"></i></button>
+                            <h2 class="titulo-destinos-pais"><i data-lucide="map" class="icono-mapa-destino"></i> Destinos en ${pais.nombre}</h2>
+                            <button id="btn-agregar-ciudad-${idPais}" class="btn-agregar-ciudad" onclick="mostrarSelectorNuevaCiudad('${idPais}')">
+                                <i data-lucide="plus-circle" style="width: 18px;"></i> Agregar ciudad
+                            </button>
+                        </div>
+
+                        <div class="galeria-grid">
                         ${idsProvincias.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; color: #90A4AE; padding: 30px; font-style: italic; background: white; border-radius: 12px; border: 1px dashed #CFD8DC;">Aún no has agregado ninguna ciudad a este país. Toca "Agregar ciudad" para empezar.</div>' : ''}
                         ${idsProvincias.map(pid => `
                             <div class="tarjeta-agregar tarjeta-ciudad" onclick="window.abrirAlbumDetalle('${idPais}', '${pid}')">
@@ -1512,9 +1510,9 @@ const firebaseConfig = {
                                 <span class="nombre-ciudad-tarjeta">${provs[pid].nombre}</span>
                             </div>
                         `).join('')}
+                        </div>
                     </div>
                 `;
-                scrollArea.scrollTop = 0;
                 lucide.createIcons();
                 return;
             }
