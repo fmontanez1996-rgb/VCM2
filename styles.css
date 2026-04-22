@@ -367,6 +367,13 @@
             font-weight: 900;
             letter-spacing: 0.01em;
         }
+        .cabecera-dia-fecha {
+            font-size: 0.58rem;
+            font-weight: 600;
+            color: rgba(13, 71, 161, 0.45);
+            margin-left: 4px;
+            vertical-align: middle;
+        }
         .cabecera-dia-nombre {
             margin-top: 3px;
             font-size: 0.78rem;
