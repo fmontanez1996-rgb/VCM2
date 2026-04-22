@@ -263,7 +263,13 @@ const firebaseConfig = {
                 destino.ciudadDestinoFinal = destino.ciudadDestinoFinal || "";
                 destino.portadaUrl = destino.portadaUrl || "";
                 destino.dias = normalizarDiasDestino(destino);
-                derivarDiasDesdeFechasItinerario(destino);
+
+                destino.itinerario.forEach(item => {
+                    asegurarDiaIdEnItem(destino, item);
+                    if (item && item.diaId && Object.prototype.hasOwnProperty.call(item, 'dia')) {
+                        delete item.dia;
+                    }
+                });
             });
         }
 
@@ -1969,6 +1975,20 @@ const firebaseConfig = {
             }
         };
 
+        function normalizarDiaItinerario(dia) {
+            const texto = (dia || '').toString().trim();
+            if (!texto) {
+                return { etiqueta: 'Día 1', orden: 1 };
+            }
+            const sinAcentos = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const matchDia = sinAcentos.match(/dia\s*(\d+)/i);
+            if (matchDia) {
+                const nroDia = Number(matchDia[1]);
+                return { etiqueta: `Día ${nroDia}`, orden: nroDia };
+            }
+            return { etiqueta: texto, orden: Number.MAX_SAFE_INTEGER - 1 };
+        }
+
         function obtenerMinutosHorario(item) {
             const candidatos = [item?.llegada, item?.partida];
             for (const horario of candidatos) {
@@ -1983,39 +2003,66 @@ const firebaseConfig = {
             return Number.POSITIVE_INFINITY;
         }
 
+        function normalizarHoraItinerario(valor = '') {
+            if (typeof valor !== 'string') return '';
+            const texto = valor.trim();
+            const match = texto.match(/^(\d{1,2}):(\d{2})$/);
+            if (!match) return '';
+            const horas = Number(match[1]);
+            const minutos = Number(match[2]);
+            if (Number.isNaN(horas) || Number.isNaN(minutos) || horas < 0 || horas > 23 || minutos < 0 || minutos > 59) {
+                return '';
+            }
+            return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
+        }
+
+        function formatearHorarioItinerario(llegada = '', partida = '') {
+            const llegadaNormalizada = normalizarHoraItinerario(llegada);
+            const partidaNormalizada = normalizarHoraItinerario(partida);
+            if (!llegadaNormalizada && !partidaNormalizada) return 'Sin horario';
+            if (llegadaNormalizada && partidaNormalizada) return `${llegadaNormalizada} - ${partidaNormalizada}`;
+            return llegadaNormalizada || partidaNormalizada;
+        }
+
         function obtenerMetaItinerario(item = {}) {
+            const horario = formatearHorarioItinerario(item.llegada, item.partida);
             if (item.tipo === 'viaje') {
                 return {
                     icono: 'bus',
                     titulo: `Viaje en ${item.medio || 'transporte'}`,
-                    detalle: `Escala: ${item.destino || 'Sin destino'}${item.ciudad ? `, ${item.ciudad}` : ''}`
+                    detalle: `Escala: ${item.destino || 'Sin destino'}${item.ciudad ? `, ${item.ciudad}` : ''}`,
+                    horario
                 };
             }
             if (item.tipo === 'hospedaje') {
                 return {
                     icono: 'hotel',
                     titulo: item.hotel || 'Hospedaje',
-                    detalle: `${item.noches || '1'} noches · Total: $${item.costo || '0'}`
+                    detalle: `${item.noches || '1'} noches · Total: $${item.costo || '0'}`,
+                    horario
                 };
             }
             if (item.tipo === 'aventura') {
                 return {
                     icono: 'mountain',
                     titulo: item.lugar || 'Aventura',
-                    detalle: `Costo: $${item.costo || '0'}`
+                    detalle: `Costo: $${item.costo || '0'}`,
+                    horario
                 };
             }
             if (item.tipo === 'restaurante') {
                 return {
                     icono: 'utensils',
                     titulo: item.plato || 'Restaurante',
-                    detalle: `Gasto estimado: $${item.precio || '0'}`
+                    detalle: `Gasto estimado: $${item.precio || '0'}`,
+                    horario
                 };
             }
             return {
                 icono: 'circle',
                 titulo: item.tipo || 'Actividad',
-                detalle: ''
+                detalle: '',
+                horario
             };
         }
 
@@ -2025,52 +2072,55 @@ const firebaseConfig = {
             if (!calendario || !destino) return;
 
             const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
-            const { fechaPorDiaId } = derivarDiasDesdeFechasItinerario(destino);
+            const dias = Array.isArray(destino.dias) ? destino.dias : [];
             calendario.innerHTML = '';
 
-            if (items.length === 0) {
+            if (items.length === 0 && dias.length === 0) {
                 calendario.innerHTML = `<div class="calendario-vacio">No hay actividades para mostrar.</div>`;
                 lucide.createIcons();
                 return;
             }
 
             const grupos = new Map();
+            dias.forEach(dia => {
+                grupos.set(dia.id, { ...dia, items: [] });
+            });
+
             items.forEach((item, indiceCreacion) => {
-                const dia = obtenerDiaDeItem(destino, item) || crearDia(1, 'Día 1');
-                const etiqueta = `DÍA ${dia.numero}: ${dia.nombre}`;
-                const fecha = fechaPorDiaId.get(dia.id) || '';
-                const ordenFecha = fecha || '9999-12-31';
-                const clave = `${ordenFecha}-${dia.numero}`;
+                const dia = obtenerDiaDeItem(destino, item);
+                const diaNormalizado = normalizarDiaItinerario(dia ? `Día ${dia.numero}` : '');
+                const etiqueta = dia ? `DÍA ${dia.numero}: ${dia.nombre}` : diaNormalizado.etiqueta;
+                const clave = dia?.id || `sin-dia-${diaNormalizado.orden}`;
+
                 if (!grupos.has(clave)) {
                     grupos.set(clave, {
                         etiqueta,
-                        fecha,
-                        ordenFecha,
-                        ordenDia: dia.numero,
+                        orden: dia?.numero || diaNormalizado.orden,
                         items: []
                     });
                 }
-                grupos.get(clave).items.push({ ...item, _ordenCreacion: indiceCreacion });
+                grupos.get(claveDia).items.push({ ...item, _ordenCreacion: indiceCreacion });
             });
 
             const columnas = Array.from(grupos.values())
-                .sort((a, b) => a.ordenFecha.localeCompare(b.ordenFecha) || a.ordenDia - b.ordenDia)
-                .map(grupo => {
-                    grupo.items.sort((a, b) => {
+                .sort((a, b) => (a.numero || 0) - (b.numero || 0))
+                .map(dia => {
+                    const itemsDia = Array.isArray(dia.items) ? dia.items : [];
+                    const nombreDia = (dia.nombre || `Día ${dia.numero || 1}`).trim();
+                    itemsDia.sort((a, b) => {
                         const minutosA = obtenerMinutosHorario(a);
                         const minutosB = obtenerMinutosHorario(b);
                         if (minutosA !== minutosB) return minutosA - minutosB;
                         return a._ordenCreacion - b._ordenCreacion;
                     });
 
-                    const tarjetas = grupo.items.map(item => {
+                    const tarjetas = itemsDia.map(item => {
                         const meta = obtenerMetaItinerario(item);
-                        const horario = [item.llegada, item.partida].filter(Boolean).join(' - ') || 'Sin horario';
                         return `
                             <article class="tarjeta-calendario-itinerario ${item.tipo || ''}">
                                 <div class="tarjeta-calendario-header">
                                     <h4><i data-lucide="${meta.icono}"></i> ${meta.titulo}</h4>
-                                    <span class="badge-horario"><i data-lucide="clock-3"></i> ${horario}</span>
+                                    <span class="badge-horario"><i data-lucide="clock-3"></i> ${meta.horario}</span>
                                 </div>
                                 <p>${meta.detalle || 'Sin detalle.'}</p>
                             </article>
@@ -2079,14 +2129,39 @@ const firebaseConfig = {
 
                     return `
                         <section class="columna-dia-itinerario">
-                            <header>${grupo.etiqueta}${grupo.fecha ? ` · ${grupo.fecha}` : ''}</header>
-                            <div class="columna-dia-lista">${tarjetas}</div>
+                            <header class="cabecera-columna-dia-itinerario">
+                                <div class="cabecera-dia-contenido">
+                                    <span class="cabecera-dia-numero">Día ${dia.numero || 1}</span>
+                                    <span class="cabecera-dia-nombre">${nombreDia}</span>
+                                </div>
+                                <button class="btn-editar-dia-calendario" onclick="editarNombreDia('${idPais}', '${dia.id}')" title="Editar nombre del día">
+                                    <i data-lucide="pencil"></i>
+                                </button>
+                            </header>
+                            <div class="columna-dia-lista">${tarjetas || '<div class="estado-dia-vacio">Sin actividades para este día.</div>'}</div>
                         </section>
                     `;
                 }).join('');
 
             calendario.innerHTML = columnas;
             lucide.createIcons();
+        };
+
+        window.editarNombreDia = function(idPais, diaId) {
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.dias)) return;
+
+            const dia = destino.dias.find(d => d.id === diaId);
+            if (!dia) return;
+
+            const nombreActual = (dia.nombre || '').trim() || `Día ${dia.numero || 1}`;
+            const nuevoNombre = window.prompt(`Nombre para Día ${dia.numero}:`, nombreActual);
+            if (nuevoNombre === null) return;
+
+            const nombreLimpio = nuevoNombre.trim();
+            dia.nombre = nombreLimpio || `Día ${dia.numero || 1}`;
+            sincronizacionLocalEnCurso = true;
+            dibujarItinerario(idPais);
         };
 
         window.manual_Hospedaje = (btn) => mostrarFormularioItinerario('hospedaje', btn);
@@ -2222,6 +2297,10 @@ const firebaseConfig = {
                         <div class="campo-form" style="flex: 1;"><label>Horas</label><input type="number" id="input-viaje-horas" placeholder="0" value="${horas}"></div>
                         <div class="campo-form" style="flex: 1;"><label>Minutos</label><input type="number" id="input-viaje-minutos" placeholder="0" value="${minutos}"></div>
                     </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-viaje-llegada" value="${itemExistente?.llegada || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-viaje-partida" value="${itemExistente?.partida || ''}"></div>
+                    </div>
                     <div class="campo-form"><label>Costo Pasaje ($)</label><input type="number" id="input-viaje-costo" placeholder="Ej. 150000" value="${costo}"></div>
                 `;
             } else if (tipo === 'hospedaje') {
@@ -2230,6 +2309,10 @@ const firebaseConfig = {
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Noches</label><input type="number" id="input-hospedaje-noches" placeholder="Ej. 5" value="${itemExistente?.noches || ''}"></div>
                         <div class="campo-form" style="flex: 1;"><label>Precio Total ($)</label><input type="number" id="input-hospedaje-costo" placeholder="Ej. 80000" value="${itemExistente?.costo || ''}"></div>
+                    </div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-hospedaje-llegada" value="${itemExistente?.llegada || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-hospedaje-partida" value="${itemExistente?.partida || ''}"></div>
                     </div>
                 `;
             } else if (tipo === 'aventura') {
@@ -2248,6 +2331,10 @@ const firebaseConfig = {
                 formHTML += `
                     <div class="campo-form"><label>Plato o Lugar</label><input type="text" id="input-rest-plato" placeholder="Ej. Feijoada" value="${itemExistente?.plato || ''}"></div>
                     <div class="campo-form"><label>Precio estimado ($)</label><input type="number" id="input-rest-precio" placeholder="Ej. 25000" value="${itemExistente?.precio || ''}"></div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-rest-llegada" value="${itemExistente?.llegada || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-rest-partida" value="${itemExistente?.partida || ''}"></div>
+                    </div>
                 `;
             }
 
@@ -2276,7 +2363,12 @@ const firebaseConfig = {
             if (!dataPais.destinoFinal) dataPais.destinoFinal = dataPais.nombre;
             if (!dataPais.escalas) dataPais.escalas = [];
             if (!dataPais.escalasCiudades) dataPais.escalasCiudades = [];
-            nuevoItem.fechaActividad = document.getElementById('input-item-fecha')?.value || '';
+                        const diaSeleccionado = document.getElementById('input-item-dia')?.value;
+            nuevoItem.diaId = diaSeleccionado || dataPais.dias?.[0]?.id || crearDia(1, 'Llegada').id;
+            if (!dataPais.dias?.length) {
+                dataPais.dias = [crearDia(1, 'Llegada')];
+                nuevoItem.diaId = dataPais.dias[0].id;
+            }
 
             if (tipo === 'viaje') {
                 nuevoItem.medio = document.getElementById('input-viaje-medio').value;
@@ -2291,6 +2383,8 @@ const firebaseConfig = {
                 nuevoItem.horas = document.getElementById('input-viaje-horas').value || '0';
                 nuevoItem.minutos = document.getElementById('input-viaje-minutos').value || '0';
                 nuevoItem.costo = document.getElementById('input-viaje-costo').value || '0';
+                nuevoItem.llegada = document.getElementById('input-viaje-llegada').value;
+                nuevoItem.partida = document.getElementById('input-viaje-partida').value;
                 const escN = escalaNombre ? escalaNombre.toUpperCase() : "";
                 if (escN && escN !== dataPais.destinoFinal.toUpperCase() && !dataPais.escalas.includes(escN)) {
                     dataPais.escalas.push(escN);
@@ -2303,6 +2397,8 @@ const firebaseConfig = {
                 nuevoItem.hotel = document.getElementById('input-hospedaje-nombre').value || 'Alojamiento';
                 nuevoItem.noches = document.getElementById('input-hospedaje-noches').value || '1';
                 nuevoItem.costo = document.getElementById('input-hospedaje-costo').value || '0';
+                nuevoItem.llegada = document.getElementById('input-hospedaje-llegada').value;
+                nuevoItem.partida = document.getElementById('input-hospedaje-partida').value;
             } else if (tipo === 'aventura') {
                 nuevoItem.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 nuevoItem.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
@@ -2312,6 +2408,8 @@ const firebaseConfig = {
             } else if (tipo === 'restaurante') {
                 nuevoItem.plato = document.getElementById('input-rest-plato').value || 'Restaurante';
                 nuevoItem.precio = document.getElementById('input-rest-precio').value || '0';
+                nuevoItem.llegada = document.getElementById('input-rest-llegada').value;
+                nuevoItem.partida = document.getElementById('input-rest-partida').value;
             }
 
             destinosSonados[idPais].itinerario.push(nuevoItem);
@@ -2359,10 +2457,14 @@ const firebaseConfig = {
                 itemActualizado.horas = document.getElementById('input-viaje-horas').value || '0';
                 itemActualizado.minutos = document.getElementById('input-viaje-minutos').value || '0';
                 itemActualizado.costo = document.getElementById('input-viaje-costo').value || '0';
+                itemActualizado.llegada = document.getElementById('input-viaje-llegada').value;
+                itemActualizado.partida = document.getElementById('input-viaje-partida').value;
             } else if (tipo === 'hospedaje') {
                 itemActualizado.hotel = document.getElementById('input-hospedaje-nombre').value || 'Alojamiento';
                 itemActualizado.noches = document.getElementById('input-hospedaje-noches').value || '1';
                 itemActualizado.costo = document.getElementById('input-hospedaje-costo').value || '0';
+                itemActualizado.llegada = document.getElementById('input-hospedaje-llegada').value;
+                itemActualizado.partida = document.getElementById('input-hospedaje-partida').value;
             } else if (tipo === 'aventura') {
                 itemActualizado.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 itemActualizado.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
@@ -2372,6 +2474,8 @@ const firebaseConfig = {
             } else if (tipo === 'restaurante') {
                 itemActualizado.plato = document.getElementById('input-rest-plato').value || 'Restaurante';
                 itemActualizado.precio = document.getElementById('input-rest-precio').value || '0';
+                itemActualizado.llegada = document.getElementById('input-rest-llegada').value;
+                itemActualizado.partida = document.getElementById('input-rest-partida').value;
             }
 
             destino.itinerario[idx] = itemActualizado;
@@ -2405,8 +2509,8 @@ const firebaseConfig = {
             const timeline = document.getElementById(`linea-tiempo-${idPais}`);
             const calendario = document.getElementById(`placeholder-calendario-${idPais}`);
             if (!timeline || !calendario || !destinosSonados[idPais]) return;
-            const items = destinosSonados[idPais].itinerario;
-            derivarDiasDesdeFechasItinerario(destinosSonados[idPais]);
+            const destino = destinosSonados[idPais];
+            const items = destino.itinerario;
             timeline.innerHTML = '';
             calendario.innerHTML = '';
             if (items.length === 0) {
@@ -2427,10 +2531,11 @@ const firebaseConfig = {
             items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = ''; let detalles = '';
                 const etiquetaDia = obtenerEtiquetaDia(destino, item);
-                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `${etiquetaDia}<br>Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
-                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${etiquetaDia}<br>${item.noches} noches - Total: $${item.costo}`; }
-                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; detalles = `${etiquetaDia} ($${item.costo})<br>${item.llegada || ''} - ${item.partida || ''}`; }
-                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; detalles = `${etiquetaDia}<br>Gasto: $${item.precio}`; }
+                const horario = formatearHorarioItinerario(item.llegada, item.partida);
+                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `${etiquetaDia}<br>Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Horario: ${horario}<br>Costo: $${item.costo}`; }
+                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${etiquetaDia}<br>${item.noches} noches - Total: $${item.costo}<br>Horario: ${horario}`; }
+                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; detalles = `${etiquetaDia} ($${item.costo})<br>Horario: ${horario}`; }
+                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; detalles = `${etiquetaDia}<br>Gasto: $${item.precio}<br>Horario: ${horario}`; }
                 const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
                     ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
                     : '';
@@ -2445,15 +2550,25 @@ const firebaseConfig = {
             });
 
             const agrupadosPorDia = items.reduce((acumulado, item, index) => {
-                const claveDia = obtenerEtiquetaDia(destinosSonados[idPais], item);
-                if (!acumulado[claveDia]) acumulado[claveDia] = [];
-                acumulado[claveDia].push({ item, index });
+                const dia = obtenerDiaDeItem(destino, item);
+                const claveDia = dia?.id || 'sin-dia';
+                if (!acumulado[claveDia]) {
+                    const diaNormalizado = normalizarDiaItinerario(dia ? `Día ${dia.numero}` : '');
+                    acumulado[claveDia] = {
+                        etiqueta: dia ? `DÍA ${dia.numero}: ${dia.nombre}` : diaNormalizado.etiqueta,
+                        orden: dia?.numero || diaNormalizado.orden,
+                        lista: []
+                    };
+                }
+                acumulado[claveDia].lista.push({ item, index });
                 return acumulado;
             }, {});
 
-            calendario.innerHTML = Object.entries(agrupadosPorDia).map(([dia, lista]) => `
+            calendario.innerHTML = Object.values(agrupadosPorDia)
+                .sort((a, b) => a.orden - b.orden || a.etiqueta.localeCompare(b.etiqueta))
+                .map(({ etiqueta, lista }) => `
                 <div class="cal-dia">
-                    <h4 style="margin:0 0 8px; color:#D81B60;">${dia}</h4>
+                    <h4 style="margin:0 0 8px; color:#D81B60;">${etiqueta}</h4>
                     ${lista.map(({ item, index }) => {
                         const deshabilitarSubir = index === 0;
                         const deshabilitarBajar = index === (items.length - 1);
