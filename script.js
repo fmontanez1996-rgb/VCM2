@@ -53,6 +53,34 @@ const firebaseConfig = {
             return totalAlbumes + totalHistorias + totalDrives + totalNotas;
         }
 
+        function resolverUrlDriveAlbum(album = {}) {
+            if (!album || typeof album !== "object") return "";
+
+            const portada = typeof album.portada === "string" ? album.portada.trim() : "";
+            const candidatos = [
+                album.driveUrl,
+                album.url,
+                album.link,
+                album.enlace,
+                album.carpetaUrl,
+                album.carpeta
+            ]
+                .map((valor) => typeof valor === "string" ? valor.trim() : "")
+                .filter(Boolean);
+
+            if (!candidatos.length) return "";
+
+            const esDrive = (valor) => valor.includes("drive.google.com");
+
+            const urlDriveDistintaPortada = candidatos.find((valor) => esDrive(valor) && (!portada || valor !== portada));
+            if (urlDriveDistintaPortada) return urlDriveDistintaPortada;
+
+            const urlDrive = candidatos.find(esDrive);
+            if (urlDrive) return urlDrive;
+
+            return candidatos.find((valor) => !portada || valor !== portada) || candidatos[0];
+        }
+
 
         function posicionarMenuContextual(menu, x, y, contenedorMapa) {
             const menuWidth = menu.node().offsetWidth;
@@ -1661,6 +1689,7 @@ const firebaseConfig = {
                 html = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i data-lucide="camera-off" style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;"></i><p>Aún no hay recuerdos guardados para este destino.</p></div>';
             } else {
                 albumes.forEach((album, index) => {
+                    const urlDrive = resolverUrlDriveAlbum(album);
                     html += `
                         <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary);">
                             <div style="height:120px; background: #eee url('${album.portada || 'https://via.placeholder.com/300x150?text=Sin+Portada'}') center/cover no-repeat;"></div>
@@ -1669,7 +1698,7 @@ const firebaseConfig = {
                                     <h3 style="margin:0; font-size: 1rem;">${album.nombre}</h3>
                                     <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'drive')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
                                 </div>
-                                <a href="${album.url}" target="_blank" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
+                                <a href="${urlDrive || '#'}" target="_blank" rel="noopener noreferrer" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
                             </div>
                         </div>`;
                 });
@@ -1707,6 +1736,7 @@ const firebaseConfig = {
                     contenedor.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i data-lucide="folder-x" style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;"></i><p>No hay carpetas compartidas aún.</p></div>';
                 } else {
                     albumes.forEach((album, index) => {
+                        const urlDrive = resolverUrlDriveAlbum(album);
                         contenedor.innerHTML += `
                             <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary);">
                                 <div style="height:120px; background: #eee url('${album.portada || 'https://via.placeholder.com/300x150?text=Sin+Portada'}') center/cover no-repeat;"></div>
@@ -1715,7 +1745,7 @@ const firebaseConfig = {
                                         <h3 style="margin:0; font-size: 1rem;">${album.nombre}</h3>
                                         <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'drive')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
                                     </div>
-                                    <a href="${album.url}" target="_blank" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
+                                    <a href="${urlDrive || '#'}" target="_blank" rel="noopener noreferrer" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
                                 </div>
                             </div>`;
                     });
@@ -1829,7 +1859,7 @@ const firebaseConfig = {
             }
 
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
-            objDestino.albumes.push({ nombre, url, portada });
+            objDestino.albumes.push({ nombre, url, driveUrl: url, portada });
             actualizarVistaAlbumes(idPais, idProvincia, 'drive');
         };
 
