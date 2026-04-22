@@ -2388,10 +2388,10 @@ const firebaseConfig = {
                     </div>
                         
                         <div class="acciones-itinerario-superior">
-                            <button class="btn-mini-accion-itinerario" onclick="activarEdicionPortadaItinerario('${idPais}')" title="Editar URL de portada">
+                            <button id="btn-editar-portada-iti" class="btn-mini-accion-itinerario ${mostrarEditorPortada ? 'activo' : ''}" onclick="activarEdicionPortadaItinerario('${idPais}')" title="Editar URL de portada">
                                 <i data-lucide="pencil"></i>
                             </button>
-                            <button id="btn-borrar-iti" class="btn-mini-accion-itinerario peligro" onclick="borrarItinerarioCompleto('${idPais}')" data-confirm="false" title="Eliminar todo el itinerario de este país">
+                            <button id="btn-borrar-iti" class="btn-mini-accion-itinerario peligro" onclick="borrarItinerarioCompleto('${idPais}')" title="Eliminar todo el itinerario de este país">
                                 <i data-lucide="trash-2"></i>
                             </button>
                         </div>
@@ -2403,6 +2403,7 @@ const firebaseConfig = {
                     <div class="portada-itinerario-editor">
                         <input type="url" id="input-portada-itinerario" placeholder="URL de portada del itinerario..." value="${portadaActual}" style="flex:1; padding:10px 12px; border-radius:10px; border:2px solid #F8BBD0; font-family: inherit;">
                         <button class="btn-tipo-item" style="border-color:#F48FB1; color:#D81B60;" onclick="guardarPortadaItinerario('${idPais}')"><i data-lucide="image-plus"></i> Guardar portada</button>
+                        <button class="btn-tipo-item" style="border-color:#9AA4B2; color:#263238;" onclick="cancelarEdicionPortadaItinerario('${idPais}')"><i data-lucide="x"></i> Cancelar</button>
                     </div>
                     ` : ''}
                     <div>
@@ -2915,24 +2916,41 @@ const firebaseConfig = {
 
         window.borrarItinerarioCompleto = function(idPais) {
             const btn = document.getElementById('btn-borrar-iti');
-            if (btn.dataset.confirm === 'true') {
+            if (btn) btn.classList.add('activo');
+
+            const previo = document.getElementById('modal-confirmacion-itinerario');
+            if (previo) previo.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-confirmacion-itinerario';
+            modal.id = 'modal-confirmacion-itinerario';
+            modal.innerHTML = `
+                <div class="modal-confirmacion-itinerario-contenido" role="dialog" aria-modal="true" aria-label="Precaución al eliminar itinerario">
+                    <h3>⚠️ Precaución</h3>
+                    <p>¿Está seguro que desea eliminar el itinerario completo?</p>
+                    <div class="modal-confirmacion-itinerario-botones">
+                        <button type="button" class="btn-modal-metal cancelar" id="btn-cancelar-eliminacion-itinerario">Cancelar</button>
+                        <button type="button" class="btn-modal-metal eliminar" id="btn-confirmar-eliminacion-itinerario">Eliminar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const cerrarModal = () => {
+                modal.remove();
+                if (btn) btn.classList.remove('activo');
+            };
+
+            document.getElementById('btn-cancelar-eliminacion-itinerario')?.addEventListener('click', cerrarModal);
+            document.getElementById('btn-confirmar-eliminacion-itinerario')?.addEventListener('click', () => {
                 delete destinosSonados[idPais];
                 d3.selectAll('.pais').classed('sonado', function(d) { return destinosSonados[d.id] ? true : false; });
+                cerrarModal();
                 renderizarPantallaSonados();
-            } else {
-                btn.dataset.confirm = 'true';
-                btn.classList.add('confirmando');
-                btn.innerHTML = '<i data-lucide="alert-triangle"></i>';
-                lucide.createIcons();
-                setTimeout(() => {
-                    if(document.getElementById('btn-borrar-iti')) {
-                        btn.dataset.confirm = 'false';
-                        btn.classList.remove('confirmando');
-                        btn.innerHTML = '<i data-lucide="trash-2"></i>';
-                        lucide.createIcons();
-                    }
-                }, 3000);
-            }
+            });
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModal();
+            });
         };
 
         window.mostrarFormularioItinerario = function(tipo, btn, config = {}) {
@@ -3289,6 +3307,10 @@ const firebaseConfig = {
 
         window.activarEdicionPortadaItinerario = function(idPais) {
             estadoEdicionPortadaItinerario[idPais] = true;
+            abrirPlanificador(idPais);
+        };
+        window.cancelarEdicionPortadaItinerario = function(idPais) {
+            estadoEdicionPortadaItinerario[idPais] = false;
             abrirPlanificador(idPais);
         };
         window.cancelarFormularioItinerario = function() {
