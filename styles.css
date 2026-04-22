@@ -313,10 +313,8 @@
         .item-titulo { font-size: 1.2rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 8px; }
         .item-detalles { color: #546E7A; font-weight: 600; font-size: 0.95rem; display: flex; flex-direction: column; gap: 5px; }
         .badge-horario { background: #F5F5F5; padding: 3px 8px; border-radius: 10px; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 5px; color: #78909C; }
-        .btn-mover-item { background: none; border: none; color: #90A4AE; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; justify-content: center; }
-        .btn-mover-item:hover { color: #00ACC1; transform: translateY(-1px); }
-        .btn-mover-item.deshabilitado,
-        .btn-mover-item:disabled { color: #CFD8DC; cursor: not-allowed; opacity: 0.8; transform: none; }
+        .btn-editar-item { background: none; border: none; color: #C5CAE9; cursor: pointer; transition: 0.2s; }
+        .btn-editar-item:hover { color: #5C6BC0; transform: scale(1.1); }
         .btn-eliminar-item { background: none; border: none; color: #FFCDD2; cursor: pointer; transition: 0.2s; }
         .btn-eliminar-item:hover { color: #F44336; transform: scale(1.1); }
         .item-header-actions { display: flex; align-items: center; gap: 12px; }
