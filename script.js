@@ -1831,6 +1831,7 @@ const firebaseConfig = {
             if (!idPais) return;
 
             estadoVistaItinerario.modo = modoNormalizado;
+            dibujarItinerario(idPais);
 
             const btnLista = document.getElementById(`btn-modo-lista-${idPais}`);
             const btnCalendario = document.getElementById(`btn-modo-calendario-${idPais}`);
@@ -2132,14 +2133,48 @@ const firebaseConfig = {
             dibujarItinerario(idPais);
         };
 
+        window.moverItemItinerario = function(idPais, idItem, direccion) {
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.itinerario)) return;
+
+            const indiceActual = destino.itinerario.findIndex(item => item.id === idItem);
+            if (indiceActual === -1) return;
+
+            const desplazamiento = direccion === 'arriba' ? -1 : 1;
+            const nuevoIndice = indiceActual + desplazamiento;
+            if (nuevoIndice < 0 || nuevoIndice >= destino.itinerario.length) return;
+
+            [destino.itinerario[indiceActual], destino.itinerario[nuevoIndice]] = [destino.itinerario[nuevoIndice], destino.itinerario[indiceActual]];
+
+            sincronizacionLocalEnCurso = true;
+
+            const modoActivo = estadoVistaItinerario?.modo === 'calendario' ? 'calendario' : 'lista';
+            dibujarItinerario(idPais);
+            cambiarModoItinerario(modoActivo);
+        };
+
         window.dibujarItinerario = function(idPais) {
             const timeline = document.getElementById(`linea-tiempo-${idPais}`);
+            const calendario = document.getElementById(`placeholder-calendario-${idPais}`);
+            if (!timeline || !calendario || !destinosSonados[idPais]) return;
             const items = destinosSonados[idPais].itinerario;
             timeline.innerHTML = '';
+            calendario.innerHTML = '';
             if (items.length === 0) {
                 timeline.innerHTML = `<p style="color:#90A4AE; padding-left: 20px;">Itinerario vacío.</p>`;
+                calendario.innerHTML = `<p style="color:#90A4AE; margin:0;">Itinerario vacío.</p>`;
                 return;
             }
+
+            const dibujarBotonesOrden = (item, deshabilitarSubir, deshabilitarBajar) => `
+                <button class="btn-editar-item" onclick="moverItemItinerario('${idPais}', ${item.id}, 'arriba')" ${deshabilitarSubir ? 'disabled' : ''} title="Subir">
+                    <i data-lucide="arrow-up"></i>
+                </button>
+                <button class="btn-editar-item" onclick="moverItemItinerario('${idPais}', ${item.id}, 'abajo')" ${deshabilitarBajar ? 'disabled' : ''} title="Bajar">
+                    <i data-lucide="arrow-down"></i>
+                </button>
+            `;
+
             items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = ''; let detalles = '';
                 if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
@@ -2154,10 +2189,37 @@ const firebaseConfig = {
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}<button class="btn-editar-item" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
+
+            const agrupadosPorDia = items.reduce((acumulado, item, index) => {
+                const claveDia = (item.dia || 'Sin día').trim() || 'Sin día';
+                if (!acumulado[claveDia]) acumulado[claveDia] = [];
+                acumulado[claveDia].push({ item, index });
+                return acumulado;
+            }, {});
+
+            calendario.innerHTML = Object.entries(agrupadosPorDia).map(([dia, lista]) => `
+                <div class="cal-dia">
+                    <h4 style="margin:0 0 8px; color:#D81B60;">${dia}</h4>
+                    ${lista.map(({ item, index }) => {
+                        const deshabilitarSubir = index === 0;
+                        const deshabilitarBajar = index === (items.length - 1);
+                        return `
+                            <div class="item-timeline ${item.tipo}" style="margin:8px 0;">
+                                <div class="item-header">
+                                    <h4 class="item-titulo"><i data-lucide="${item.tipo === 'viaje' ? 'bus' : item.tipo === 'hospedaje' ? 'hotel' : item.tipo === 'aventura' ? 'mountain' : 'utensils'}"></i> ${item.lugar || item.hotel || item.plato || `Viaje en ${item.medio}`}</h4>
+                                    <div class="item-header-actions">
+                                        ${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `).join('');
             lucide.createIcons();
         };
 
