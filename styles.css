@@ -128,7 +128,7 @@
                 drop-shadow(0 0 24px rgba(206, 249, 255, 0.86))
                 drop-shadow(0 7px 10px rgba(0, 188, 212, 0.48));
         }
-        .pais.visitado { fill: #9fa8b3 !important; }
+        .pais.visitado { fill: #ff6b9d !important; }
         .pais.sonado { fill: #ffd166; stroke: #ffffff; stroke-width: 2px; }
         .pais.visitado.sonado { fill: #ff8c66; }
 
