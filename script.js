@@ -472,6 +472,38 @@ const firebaseConfig = {
             const horaLlegada = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
             const costoBase = formatearMonedaItinerario(item.costo ?? item.precio ?? 0);
 
+            if (item._esSalidaViajeVirtual) {
+                return [
+                    `ORIGEN ${item.origen || 'POR DEFINIR'}:`,
+                    `SALIDA: ${fechaInicio || 'Sin fecha'} ${horaSalida}`
+                ];
+            }
+
+            if (item._esLlegadaViajeVirtual) {
+                return [
+                    `DESTINO ${item.destino || 'POR DEFINIR'}`,
+                    `LLEGADA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} ${horaLlegada}`
+                ];
+            }
+
+            if (item._esCheckinHospedajeVirtual) {
+                const noches = Number(item.noches) || 1;
+                return [
+                    `${fechaInicio || 'Sin fecha'}-${fechaFinTexto || fechaInicio || 'Sin fecha'}`,
+                    `(${noches === 1 ? 'UNA NOCHE' : `${noches} NOCHES`})`,
+                    `CHECK-IN: ${horaSalida}`
+                ];
+            }
+
+            if (item._esCheckoutVirtual) {
+                const noches = Number(item.noches) || 1;
+                return [
+                    `${fechaInicio || 'Sin fecha'}-${fechaFinTexto || fechaInicio || 'Sin fecha'}`,
+                    `(${noches === 1 ? 'UNA NOCHE' : `${noches} NOCHES`})`,
+                    `CHECK-OUT: ${horaLlegada}`
+                ];
+            }
+
             if (item.tipo === 'viaje') {
                 const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
                 const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
@@ -514,12 +546,10 @@ const firebaseConfig = {
 
             return [
                 `NOMBRE DE RESTAURANTE: ${item.plato || 'Restaurante'}`,
-                `UBICACIÓN: ${item.ubicacion || item.ciudad || item.destino || 'No especificada'}`,
-                `PLATO SUGERIDO: ${item.plato || 'No especificado'}`,
-                `FECHA: ${fechaInicio || 'Sin fecha'} · (${diaLinea})`,
-                `HORARIO ENTRADA-SALIDA: ${horaSalida} - ${horaLlegada}`,
-                `PRECIO POR PERSONA: ${costoBase}`,
-                `PRECIO TOTAL: ${costoBase}`
+                `HORARIO DE LLEGADA: ${horaSalida}`,
+                `HORARIO DE SALIDA: ${horaLlegada}`,
+                `COMIDA: ${item.plato || 'No especificada'}`,
+                `PRECIO: ${costoBase}`
             ];
         }
 
@@ -2648,12 +2678,39 @@ const firebaseConfig = {
         }
 
         function obtenerMetaItinerario(item = {}, destino = null) {
+            if (item._esSalidaViajeVirtual) {
+                return {
+                    icono: 'bus',
+                    titulo: `${item.medio || 'Viaje'}`.toUpperCase(),
+                    detalle: `ORIGEN ${item.origen || 'POR DEFINIR'}`,
+                    horario: `Salida: ${normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
+                };
+            }
+
+            if (item._esLlegadaViajeVirtual) {
+                return {
+                    icono: 'bus',
+                    titulo: `${item.medio || 'Viaje'}`.toUpperCase(),
+                    detalle: `DESTINO ${item.destino || 'POR DEFINIR'}`,
+                    horario: `Llegada: ${normalizarHoraItinerario(item.partida) || normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
+                };
+            }
+
+            if (item._esCheckinHospedajeVirtual) {
+                return {
+                    icono: 'hotel',
+                    titulo: (item.hotel || 'Hospedaje').toUpperCase(),
+                    detalle: '',
+                    horario: `Check-in: ${normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
+                };
+            }
+
             if (item._esCheckoutVirtual) {
                 const horaCheckout = normalizarHoraItinerario(item.partida) || 'Sin horario';
                 return {
                     icono: 'hotel',
-                    titulo: 'Hotel',
-                    detalle: item.hotel || 'Sin nombre de hotel',
+                    titulo: (item.hotel || 'Hospedaje').toUpperCase(),
+                    detalle: '',
                     horario: `Check-out: ${horaCheckout}`
                 };
             }
@@ -2843,15 +2900,26 @@ const firebaseConfig = {
 
             items.forEach((item, indiceCreacion) => {
                 const diaInicio = obtenerDiaDeItem(destino, item);
-                agregarItemEnDia(diaInicio, item, indiceCreacion, { _horaOrden: item?.llegada || item?.partida || '' });
-
                 const { fechaFin, horaFin } = obtenerRangoTemporalItem(destino, item);
-                if (!esFechaActividadValida(fechaFin)) return;
+                const diaFin = diaPorFecha.get(fechaFin) || diaInicio;
 
-                const diaFin = diaPorFecha.get(fechaFin);
-                if (!diaFin) return;
+                if (item?.tipo === 'viaje') {
+                    agregarItemEnDia(diaInicio, item, indiceCreacion, {
+                        _horaOrden: item?.llegada || '',
+                        _esSalidaViajeVirtual: true
+                    });
+                    agregarItemEnDia(diaFin, item, indiceCreacion, {
+                        _horaOrden: horaFin || item?.partida || item?.llegada || '',
+                        _esLlegadaViajeVirtual: true
+                    });
+                    return;
+                }
 
                 if (item?.tipo === 'hospedaje') {
+                    agregarItemEnDia(diaInicio, item, indiceCreacion, {
+                        _horaOrden: item?.llegada || '',
+                        _esCheckinHospedajeVirtual: true
+                    });
                     agregarItemEnDia(diaFin, item, indiceCreacion, {
                         _horaOrden: horaFin || item?.partida || '',
                         _esCheckoutVirtual: true
@@ -2859,8 +2927,7 @@ const firebaseConfig = {
                     return;
                 }
 
-                if (diaInicio?.id === diaFin.id) return;
-                agregarItemEnDia(diaFin, item, indiceCreacion, { _horaOrden: horaFin || item?.partida || item?.llegada || '' });
+                agregarItemEnDia(diaInicio, item, indiceCreacion, { _horaOrden: item?.llegada || item?.partida || '' });
             });
 
             const columnas = Array.from(grupos.values())
