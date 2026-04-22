@@ -1137,7 +1137,7 @@ const firebaseConfig = {
                     <h2><i data-lucide="camera"></i> Galería de Recuerdos</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);">
-                            <i data-lucide="plus-circle"></i> + Nuevo Recuerdo
+                            <i data-lucide="plus-circle"></i> NUEVO RECUERDO
                         </button>
                     </div>
                 </div>
@@ -1508,9 +1508,6 @@ const firebaseConfig = {
             // Lógica de navegación: si estamos dentro de una ciudad, "Volver" nos lleva a la lista de ciudades.
             const btnVolverAccion = idProvincia ? `abrirAlbum('${idPais}')` : `renderizarPantallaRecuerdos()`;
             const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
-            const botonVerEstilo = submodoActual === 'ver'
-                ? 'background: #4f46e5; color: white; box-shadow: 0 4px 10px rgba(79,70,229,0.25);'
-                : 'background: #EEF2FF; color: #4f46e5;';
             const botonNuevoEstilo = submodoActual === 'nuevo'
                 ? 'background: var(--secondary); color: white; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);'
                 : 'background: #E0F7FA; color: #00838F;';
@@ -1578,11 +1575,8 @@ const firebaseConfig = {
                     </div>
                 </div>
                 <div style="display:flex; gap:10px; margin-bottom:20px;">
-                    <button onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonVerEstilo}">
-                        <i data-lucide="eye" style="width:16px;"></i> Ver recuerdo
-                    </button>
                     <button onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonNuevoEstilo}">
-                        <i data-lucide="plus-circle" style="width:16px;"></i> + Nuevo recuerdo
+                        <i data-lucide="plus-circle" style="width:16px;"></i> AGREGAR MEMORIAS
                     </button>
                 </div>
 
