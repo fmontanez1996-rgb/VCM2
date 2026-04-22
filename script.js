@@ -60,7 +60,7 @@ const firebaseConfig = {
         function obtenerAvatarMenuHtml() {
             return `
                 <div class="avatar-dialogo" aria-hidden="true">
-                    <img src="${MENU_AVATAR_SRC}" alt="" class="avatar-dialogo-img" loading="lazy" decoding="async">
+                    <img src="${MENU_AVATAR_SRC}" alt="" class="avatar-dialogo-img" loading="lazy" decoding="async" data-avatar-indice="0" onerror="manejarErrorAvatarMenu(this)">
                 </div>
             `;
         }
