@@ -30,60 +30,6 @@ const firebaseConfig = {
             return RUTA_ESTADO_COMPARTIDO;
         }
         const ESTADOS_PROVINCIAS_URL = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson";
-        const lugaresInteresPorPais = {
-            FRA: ["Torre Eiffel", "Museo del Louvre", "Mont Saint-Michel", "Palacio de Versalles", "Costa Azul"],
-            ESP: ["Sagrada Familia", "Alhambra", "Museo del Prado", "Camino de Santiago", "Playa de la Concha"],
-            ITA: ["Coliseo Romano", "Canales de Venecia", "Costa Amalfitana", "Galería Uffizi", "Pompeya"],
-            DEU: ["Puerta de Brandeburgo", "Castillo de Neuschwanstein", "Isla de los Museos", "Selva Negra", "Catedral de Colonia"],
-            GBR: ["Big Ben", "British Museum", "Stonehenge", "Castillo de Edimburgo", "Lake District"],
-            USA: ["Estatua de la Libertad", "Gran Cañón", "Parque Yellowstone", "Smithsonian", "Hawaii (Waikiki)"],
-            ARG: ["Cataratas del Iguazú", "Glaciar Perito Moreno", "Teatro Colón", "Quebrada de Humahuaca", "Ruta de los Siete Lagos"],
-            BRA: ["Cristo Redentor", "Pan de Azúcar", "Lençóis Maranhenses", "Museo de Arte de São Paulo", "Playa de Ipanema"],
-            MEX: ["Chichén Itzá", "Teotihuacán", "Palacio de Bellas Artes", "Museo Nacional de Antropología", "Tulum"],
-            JPN: ["Monte Fuji", "Templo Sensō-ji", "Fushimi Inari", "Museo Ghibli", "Miyajima"],
-            CHN: ["Gran Muralla China", "Ciudad Prohibida", "Guerreros de Terracota", "Bund de Shanghái", "Parque de Zhangjiajie"],
-            IND: ["Taj Mahal", "Fuerte Amber", "Ghats de Varanasi", "Kerala Backwaters", "Museo Nacional de Nueva Delhi"],
-            EGY: ["Pirámides de Giza", "Museo Egipcio", "Valle de los Reyes", "Templo de Karnak", "Mar Rojo (Hurghada)"],
-            TUR: ["Santa Sofía", "Capadocia", "Pamukkale", "Palacio Topkapi", "Playa de Ölüdeniz"],
-            GRC: ["Acrópolis de Atenas", "Santorini", "Meteora", "Museo Arqueológico Nacional", "Palacio de Knossos"],
-            PRT: ["Torre de Belém", "Palacio da Pena", "Ribeira de Oporto", "Museo Calouste Gulbenkian", "Algarve"],
-            NLD: ["Museo Van Gogh", "Rijksmuseum", "Canales de Ámsterdam", "Kinderdijk", "Keukenhof"],
-            BEL: ["Grand Place", "Atomium", "Brujas histórica", "Museos Reales de Bellas Artes", "Ardenas"],
-            CHE: ["Matterhorn", "Lago de Ginebra", "Jungfraujoch", "Museo Nacional Suizo", "Interlaken"],
-            AUT: ["Palacio de Schönbrunn", "Centro histórico de Salzburgo", "Museo Belvedere", "Hallstatt", "Innsbruck alpino"],
-            IRL: ["Acantilados de Moher", "Castillo de Dublín", "Trinity College", "Anillo de Kerry", "Calzada del Gigante"],
-            CAN: ["Cataratas del Niágara", "Parque Banff", "Vieux-Québec", "Museo Real de Ontario", "Whistler"],
-            AUS: ["Ópera de Sídney", "Gran Barrera de Coral", "Uluru", "Great Ocean Road", "Museo de Melbourne"],
-            NZL: ["Milford Sound", "Hobbiton", "Aoraki/Mount Cook", "Museo Te Papa", "Waitomo Caves"],
-            ZAF: ["Table Mountain", "Kruger National Park", "Robben Island", "Museo del Apartheid", "Garden Route"],
-            MAR: ["Plaza Jemaa el-Fna", "Medina de Fez", "Chefchaouen", "Volubilis", "Essaouira"],
-            PER: ["Machu Picchu", "Valle Sagrado", "Museo Larco", "Lago Titicaca", "Líneas de Nazca"],
-            CHL: ["Torres del Paine", "Desierto de Atacama", "Valparaíso", "Museo de la Memoria", "Isla de Pascua"],
-            COL: ["Ciudad amurallada de Cartagena", "Museo del Oro", "Parque Tayrona", "Guatapé", "Caño Cristales"],
-            ECU: ["Islas Galápagos", "Quito histórico", "Mitad del Mundo", "Baños de Agua Santa", "Cuenca colonial"],
-            BOL: ["Salar de Uyuni", "Lago Titicaca", "Sucre colonial", "Tiwanaku", "Parque Madidi"],
-            URY: ["Casco histórico de Colonia", "Rambla de Montevideo", "Punta del Este", "Cabo Polonio", "Teatro Solís"],
-            PRY: ["Misión Jesuítica de Trinidad", "Salto del Monday", "Costanera de Asunción", "Itaipú", "Cerro Cora"],
-            VEN: ["Salto Ángel", "Médanos de Coro", "Parque Mochima", "Teleférico de Mérida", "Casco histórico de Caracas"],
-            CRI: ["Parque Manuel Antonio", "Arenal", "Monteverde", "Museo del Oro Precolombino", "Playa Conchal"],
-            PAN: ["Canal de Panamá", "Casco Viejo", "Bocas del Toro", "Biomuseo", "San Blas"],
-            CUB: ["La Habana Vieja", "Valle de Viñales", "Varadero", "Castillo del Morro", "Trinidad colonial"],
-            DOM: ["Zona Colonial de Santo Domingo", "Punta Cana", "Bahía de las Águilas", "Altos de Chavón", "Samaná"],
-            THA: ["Gran Palacio de Bangkok", "Wat Arun", "Ayutthaya", "Phuket", "Museo Nacional de Bangkok"],
-            VNM: ["Bahía de Ha Long", "Hoi An", "Mausoleo de Ho Chi Minh", "Museo de Etnología", "Sapa"],
-            IDN: ["Templo Borobudur", "Templo Prambanan", "Bali (Uluwatu)", "Parque de Komodo", "Museo Nacional de Indonesia"],
-            KOR: ["Palacio Gyeongbokgung", "Bukchon Hanok", "Museo Nacional de Corea", "Isla de Jeju", "Busan (Haeundae)"],
-            ARE: ["Burj Khalifa", "Mezquita Sheikh Zayed", "Louvre Abu Dhabi", "Palm Jumeirah", "Desierto de Dubái"]
-        };
-
-        const lugaresInteresFallback = [
-            "Museo nacional destacado",
-            "Monumento histórico principal",
-            "Parque natural imperdible",
-            "Barrio o centro histórico",
-            "Playa o costa recomendada"
-        ];
-
         function obtenerEstadoActual() {
             return {
                 paisesVisitados,
@@ -641,7 +587,6 @@ const firebaseConfig = {
 
                         const nombrePais = d.properties.name;
                         const idPais = d.id; 
-                        if (nombrePais) mostrarCartelInteres(nombrePais, idPais);
                         const [x, y] = d3.pointer(event, document.getElementById("world-map"));
                         const menu = d3.select("#menu-contextual");
                         const elementoPais = d3.select(this);
@@ -739,38 +684,6 @@ const firebaseConfig = {
                 .replace(/[^a-zA-Z0-9 ]/g, "")
                 .trim()
                 .toLowerCase();
-        }
-
-        function obtenerLugaresInteres(nombrePais, idPais) {
-            const lugaresConocidos = lugaresInteresPorPais[idPais] || [];
-            if (lugaresConocidos.length > 0) return lugaresConocidos.slice(0, 5);
-
-            return lugaresInteresFallback.map((item) => `${item} de ${nombrePais}`).slice(0, 5);
-        }
-
-        function mostrarCartelInteres(nombrePais, idPais) {
-            const panel = document.getElementById("cartel-interes");
-            if (!panel) return;
-
-            const lugares = obtenerLugaresInteres(nombrePais, idPais).slice(0, 5);
-            const lugaresValidos = lugares.length > 0 ? lugares : [`Centro histórico de ${nombrePais}`];
-
-            panel.innerHTML = `
-                <div class="cartel-interes-header">
-                    <div>
-                        <p class="cartel-interes-titulo">${nombrePais}</p>
-                        <p class="cartel-interes-subtitulo">Imperdibles para visitar:</p>
-                    </div>
-                    <button id="cerrar-cartel-interes" aria-label="Cerrar">✕</button>
-                </div>
-                <ul class="cartel-interes-lista">
-                    ${lugaresValidos.map(lugar => `<li>${lugar}</li>`).join("")}
-                </ul>
-            `;
-            panel.classList.remove("cartel-interes-oculto");
-
-            const botonCerrar = document.getElementById("cerrar-cartel-interes");
-            if (botonCerrar) botonCerrar.onclick = () => panel.classList.add("cartel-interes-oculto");
         }
 
         function obtenerClavesPais(nombrePais, idPais) {
