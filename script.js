@@ -1233,7 +1233,7 @@ const firebaseConfig = {
             const idsPaises = Object.keys(paisesVisitados);
 
             contenedor.innerHTML = `
-                <div class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div class="encabezado-seccion encabezado-galeria-recuerdos" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <h2 class="titulo-galeria-recuerdos"><i data-lucide="camera"></i> Galería de Recuerdos</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button id="btn-nuevo-recuerdo" class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="border: none; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
@@ -1302,7 +1302,7 @@ const firebaseConfig = {
                                 <div class="icono-bandera"><i data-lucide="map-pin"></i></div>
                                 <div><h3 class="nombre-pais-lista">${pais.nombre}</h3><span class="zonas-badge">${numMemorias} memorias</span></div>
                             </div>
-                            <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Galería <i data-lucide="chevron-right"></i></button>
+                            <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Galería</button>
                         </div>`;
                 });
                 scrollArea.appendChild(listaHTML);
