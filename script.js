@@ -181,10 +181,23 @@ const firebaseConfig = {
             }
 
             const itinerario = Array.isArray(destino.itinerario) ? destino.itinerario : [];
+            const fechasItinerario = [];
+
+            itinerario.forEach((item) => {
+                const fechaActividad = String(item?.fechaActividad || '').trim();
+                if (esFechaActividadValida(fechaActividad)) fechasItinerario.push(fechaActividad);
+
+                if (item?.tipo === 'hospedaje') {
+                    const fechaCheckout = obtenerFechaCheckoutHospedaje(item, fechaActividad);
+                    if (esFechaActividadValida(fechaCheckout)) {
+                        item.fechaCheckout = fechaCheckout;
+                        fechasItinerario.push(fechaCheckout);
+                    }
+                }
+            });
+
             const fechasUnicas = Array.from(new Set(
-                itinerario
-                    .map(item => String(item?.fechaActividad || '').trim())
-                    .filter(esFechaActividadValida)
+                fechasItinerario.filter(esFechaActividadValida)
             )).sort((a, b) => a.localeCompare(b));
 
             const dias = fechasUnicas.length
@@ -2113,6 +2126,16 @@ const firebaseConfig = {
             return llegadaNormalizada || partidaNormalizada;
         }
 
+        function obtenerFechaCheckoutHospedaje(item = {}, fechaCheckin = '') {
+            const fechaCheckoutExplicita = String(item?.fechaCheckout || '').trim();
+            if (esFechaActividadValida(fechaCheckoutExplicita)) return fechaCheckoutExplicita;
+
+            if (!esFechaActividadValida(fechaCheckin)) return '';
+            const noches = Math.max(0, Number(item?.noches) || 0);
+            if (!noches) return fechaCheckin;
+            return sumarDiasAFechaISO(fechaCheckin, noches);
+        }
+
         function obtenerFechaBaseItem(destino, item = {}) {
             const fechaItem = String(item.fechaActividad || '').trim();
             if (esFechaActividadValida(fechaItem)) return fechaItem;
@@ -2128,10 +2151,7 @@ const firebaseConfig = {
             let fechaFin = fechaInicio;
 
             if (item.tipo === 'hospedaje') {
-                const noches = Math.max(0, Number(item.noches) || 0);
-                if (fechaInicio && noches > 0) {
-                    fechaFin = sumarDiasAFechaISO(fechaInicio, noches);
-                }
+                fechaFin = obtenerFechaCheckoutHospedaje(item, fechaInicio) || fechaInicio;
             } else if (fechaInicio && horaInicio && horaFin && horaFin < horaInicio) {
                 fechaFin = sumarDiasAFechaISO(fechaInicio, 1);
             }
@@ -2152,6 +2172,15 @@ const firebaseConfig = {
         }
 
         function obtenerMetaItinerario(item = {}, destino = null) {
+            if (item._esCheckoutVirtual) {
+                return {
+                    icono: 'hotel',
+                    titulo: `Check-out hotel${item.hotel ? ` · ${item.hotel}` : ''}`,
+                    detalle: item.hotel ? `Salida de ${item.hotel}` : 'Salida de hospedaje',
+                    horario: normalizarHoraItinerario(item.partida) || 'Sin horario'
+                };
+            }
+
             const horario = formatearRangoTemporalItem(destino, item);
             if (item.tipo === 'viaje') {
                 return {
@@ -2341,8 +2370,17 @@ const firebaseConfig = {
                 if (!esFechaActividadValida(fechaFin)) return;
 
                 const diaFin = diaPorFecha.get(fechaFin);
-                if (!diaFin || diaInicio?.id === diaFin.id) return;
+                if (!diaFin) return;
 
+                if (item?.tipo === 'hospedaje') {
+                    agregarItemEnDia(diaFin, item, indiceCreacion, {
+                        _horaOrden: horaFin || item?.partida || '',
+                        _esCheckoutVirtual: true
+                    });
+                    return;
+                }
+
+                if (diaInicio?.id === diaFin.id) return;
                 agregarItemEnDia(diaFin, item, indiceCreacion, { _horaOrden: horaFin || item?.partida || item?.llegada || '' });
             });
 
@@ -2550,12 +2588,14 @@ const firebaseConfig = {
                     <div class="campo-form"><label>Costo Pasaje ($)</label><input type="number" id="input-viaje-costo" placeholder="Ej. 150000" value="${costo}"></div>
                 `;
             } else if (tipo === 'hospedaje') {
+                const fechaCheckoutExistente = itemExistente?.fechaCheckout || obtenerFechaCheckoutHospedaje(itemExistente, fechaActual);
                 formHTML += `
                     <div class="campo-form"><label>Nombre del Hotel</label><input type="text" id="input-hospedaje-nombre" placeholder="Ej. Hotel Copacabana" value="${itemExistente?.hotel || ''}"></div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Noches</label><input type="number" id="input-hospedaje-noches" placeholder="Ej. 5" value="${itemExistente?.noches || ''}"></div>
                         <div class="campo-form" style="flex: 1;"><label>Precio Total ($)</label><input type="number" id="input-hospedaje-costo" placeholder="Ej. 80000" value="${itemExistente?.costo || ''}"></div>
                     </div>
+                    <div class="campo-form"><label>Fecha de check-out</label><input type="date" id="input-hospedaje-checkout" value="${fechaCheckoutExistente || ''}"></div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-hospedaje-llegada" value="${itemExistente?.llegada || ''}"></div>
                         <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-hospedaje-partida" value="${itemExistente?.partida || ''}"></div>
@@ -2646,6 +2686,8 @@ const firebaseConfig = {
                 nuevoItem.costo = document.getElementById('input-hospedaje-costo').value || '0';
                 nuevoItem.llegada = document.getElementById('input-hospedaje-llegada').value;
                 nuevoItem.partida = document.getElementById('input-hospedaje-partida').value;
+                const fechaCheckoutIngresada = document.getElementById('input-hospedaje-checkout')?.value || '';
+                nuevoItem.fechaCheckout = obtenerFechaCheckoutHospedaje({ ...nuevoItem, fechaCheckout: fechaCheckoutIngresada }, nuevoItem.fechaActividad);
             } else if (tipo === 'aventura') {
                 nuevoItem.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 nuevoItem.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
@@ -2712,6 +2754,8 @@ const firebaseConfig = {
                 itemActualizado.costo = document.getElementById('input-hospedaje-costo').value || '0';
                 itemActualizado.llegada = document.getElementById('input-hospedaje-llegada').value;
                 itemActualizado.partida = document.getElementById('input-hospedaje-partida').value;
+                const fechaCheckoutIngresada = document.getElementById('input-hospedaje-checkout')?.value || '';
+                itemActualizado.fechaCheckout = obtenerFechaCheckoutHospedaje({ ...itemActualizado, fechaCheckout: fechaCheckoutIngresada }, itemActualizado.fechaActividad);
             } else if (tipo === 'aventura') {
                 itemActualizado.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 itemActualizado.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
