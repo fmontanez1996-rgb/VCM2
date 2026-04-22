@@ -131,12 +131,31 @@ const firebaseConfig = {
                 USA: "US",
                 GBR: "GB"
             };
+            const fallbackIsoA2PorNombre = {
+                argentina: "AR",
+                brazil: "BR",
+                brasil: "BR",
+                chile: "CL",
+                uruguay: "UY",
+                paraguay: "PY",
+                bolivia: "BO",
+                peru: "PE",
+                perú: "PE",
+                mexico: "MX",
+                méxico: "MX",
+                colombia: "CO",
+                ecuador: "EC",
+                venezuela: "VE",
+                spain: "ES",
+                españa: "ES"
+            };
 
             const paisesMapa = d3.selectAll('.pais').data() || [];
             const featurePais = paisesMapa.find((d) => d?.id === idPais);
             const isoA2 =
                 featurePais?.properties?.iso_a2 ||
                 featurePais?.properties?.wb_a2 ||
+                fallbackIsoA2PorNombre[String(paisesVisitados?.[idPais]?.nombre || "").trim().toLowerCase()] ||
                 fallbackIsoA2[idPais] ||
                 "";
 

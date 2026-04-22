@@ -214,7 +214,7 @@
         }
         h2 {
             color: #ffe57f;
-            font-size: 2rem;
+            font-size: 2.25rem;
             font-weight: 800;
             margin: 0;
             font-family: 'Baloo 2', sans-serif;
@@ -226,6 +226,7 @@
         }
         .titulo-galeria-recuerdos {
             font-family: 'Luckiest Guy', cursive;
+            font-size: 2.55rem;
             letter-spacing: 0.03em;
             background:
                 linear-gradient(160deg, #ffffff 0%, #c6dbec 18%, #f4fbff 34%, #8badc5 54%, #1f4d73 72%, #5d84a0 84%, #c5d9ea 100%),
@@ -380,18 +381,21 @@
         .info-pais { display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .icono-bandera { width: 50px; height: 50px; background: #E1F5FE; color: var(--secondary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; }
         .nombre-pais-lista {
-            font-size: 1.5rem;
+            font-size: 1.95rem;
             font-weight: 800;
             color: transparent;
             margin: 0;
             font-family: 'Baloo 2', sans-serif;
             background:
-                linear-gradient(155deg, #f3fbff 0%, #c7dae7 26%, #ffffff 38%, #89a4b8 54%, #294359 72%, #5f7d93 86%, #d7e7f2 100%),
-                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0 5px, rgba(13, 47, 72, 0.22) 5px 10px);
+                linear-gradient(155deg, #ebf9ff 0%, #b8e0ff 20%, #f5fcff 35%, #7db9ea 52%, #1f6aa6 72%, #6ca8da 86%, #d4eeff 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0 5px, rgba(12, 70, 128, 0.24) 5px 10px);
             -webkit-background-clip: text;
             background-clip: text;
-            -webkit-text-stroke: 1.3px #0d4f7d;
-            text-shadow: 2px 2px 0 rgba(1, 132, 168, 0.23);
+            -webkit-text-stroke: 1.4px #0e4d86;
+            text-shadow:
+                0 1px 0 rgba(219, 243, 255, 0.9),
+                0 2px 0 rgba(95, 154, 206, 0.55),
+                0 3px 8px rgba(0, 89, 160, 0.34);
         }
         .destino-principal { margin: 0; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; }
         .destino-principal.dorado {
@@ -416,7 +420,20 @@
                 0 0 12px rgba(123, 0, 0, 0.35);
         }
         .destino-escalas { margin-top: 4px; font-size: 0.95rem; color: #90A4AE; font-weight: 600; }
-        .zonas-badge { background: #FCE4EC; color: #D81B60; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-top: 5px; display: inline-block; }
+        .zonas-badge {
+            background: transparent;
+            color: #d81b60;
+            padding: 0;
+            border-radius: 0;
+            font-size: 0.98rem;
+            font-weight: 900;
+            margin-top: 8px;
+            display: inline-block;
+            text-shadow:
+                0 0 8px rgba(255, 110, 164, 0.45),
+                0 3px 8px rgba(140, 15, 75, 0.2);
+            letter-spacing: 0.02em;
+        }
 
         .btn-accion-pais {
             background: linear-gradient(160deg, #9cff8b 0%, #3fbf58 30%, #20913c 55%, #58e977 100%);
@@ -488,34 +505,34 @@
                 0 8px 14px rgba(31, 153, 63, 0.4);
         }
         .btn-nueva-aventura {
-            border: 1px solid rgba(191, 232, 255, 0.95);
+            border: 1px solid rgba(255, 201, 201, 0.95);
             border-radius: 18px;
-            background: linear-gradient(150deg, #e1f8ff 0%, #98e6ff 36%, #54c8f1 70%, #def8ff 100%);
+            background: linear-gradient(150deg, #ffe5e5 0%, #ff7f7f 36%, #d72222 70%, #ffc0c0 100%);
             color: #ffffff;
             font-family: 'Baloo 2', sans-serif;
             box-shadow:
                 inset 0 2px 0 rgba(255, 255, 255, 0.88),
-                inset 0 -7px 12px rgba(0, 92, 133, 0.38),
-                0 7px 0 #1895c1,
-                0 12px 24px rgba(28, 174, 214, 0.45);
+                inset 0 -7px 12px rgba(130, 19, 19, 0.46),
+                0 7px 0 #9f1f1f,
+                0 12px 24px rgba(177, 28, 28, 0.45);
             transition: all 0.25s ease;
-            text-shadow: 0 1px 0 rgba(5, 78, 112, 0.65);
+            text-shadow: 0 1px 0 rgba(96, 11, 11, 0.72);
         }
         .btn-nueva-aventura:hover {
             transform: translateY(-2px);
             box-shadow:
                 inset 0 2px 0 rgba(255, 255, 255, 0.92),
-                inset 0 -7px 12px rgba(0, 92, 133, 0.4),
-                0 9px 0 #1895c1,
-                0 16px 26px rgba(28, 174, 214, 0.5);
+                inset 0 -7px 12px rgba(130, 19, 19, 0.46),
+                0 9px 0 #9f1f1f,
+                0 16px 26px rgba(177, 28, 28, 0.5);
         }
         .btn-nueva-aventura.activo-form {
             box-shadow:
                 inset 0 2px 0 rgba(255, 255, 255, 0.95),
-                inset 0 -8px 14px rgba(0, 112, 126, 0.55),
-                0 9px 0 #058b9b,
-                0 0 22px rgba(0, 255, 251, 0.95),
-                0 0 45px rgba(87, 255, 243, 0.92);
+                inset 0 -8px 14px rgba(133, 20, 20, 0.6),
+                0 9px 0 #8f1b1b,
+                0 0 22px rgba(255, 118, 118, 0.95),
+                0 0 45px rgba(255, 151, 151, 0.92);
             filter: saturate(1.2) brightness(1.08);
         }
         .acciones-itinerario-card { display: flex; align-items: center; gap: 12px; }
