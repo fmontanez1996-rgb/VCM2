@@ -315,8 +315,63 @@
             color: #FFFFFF;
             box-shadow: 0 6px 14px rgba(0, 188, 212, 0.25);
         }
-        .placeholder-calendario-itinerario {
+        .calendario-itinerario {
             margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            align-items: flex-start;
+        }
+        .columna-dia-itinerario {
+            background: #F7FCFF;
+            border: 2px solid #E1F5FE;
+            border-radius: 16px;
+            min-height: 160px;
+            box-shadow: 0 5px 14px rgba(2, 136, 209, 0.08);
+            overflow: hidden;
+        }
+        .columna-dia-itinerario header {
+            background: linear-gradient(135deg, #81D4FA, #4FC3F7);
+            color: #0D47A1;
+            font-weight: 800;
+            text-align: center;
+            padding: 10px 12px;
+            border-bottom: 2px solid rgba(255,255,255,0.45);
+        }
+        .columna-dia-lista { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+        .tarjeta-calendario-itinerario {
+            background: #FFFFFF;
+            border: 2px solid #E1F5FE;
+            border-radius: 12px;
+            padding: 10px;
+        }
+        .tarjeta-calendario-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            align-items: flex-start;
+            margin-bottom: 6px;
+        }
+        .tarjeta-calendario-header h4 {
+            margin: 0;
+            font-size: 0.98rem;
+            color: #37474F;
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .tarjeta-calendario-itinerario p {
+            margin: 0;
+            color: #546E7A;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .tarjeta-calendario-itinerario.viaje { border-left: 5px solid #FFB300; }
+        .tarjeta-calendario-itinerario.hospedaje { border-left: 5px solid #9C27B0; }
+        .tarjeta-calendario-itinerario.aventura { border-left: 5px solid #4CAF50; }
+        .tarjeta-calendario-itinerario.restaurante { border-left: 5px solid #FF5252; }
+        .calendario-vacio {
+            grid-column: 1 / -1;
             padding: 24px;
             border: 2px dashed #B3E5FC;
             border-radius: 18px;
