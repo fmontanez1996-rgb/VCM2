@@ -53,6 +53,35 @@ const firebaseConfig = {
             return totalAlbumes + totalHistorias + totalDrives + totalNotas;
         }
 
+
+        const MENU_AVATAR_SRC = "assets/avatar-viajera.svg";
+
+        function obtenerAvatarMenuHtml() {
+            return `
+                <div class="avatar-dialogo" aria-hidden="true">
+                    <img src="${MENU_AVATAR_SRC}" alt="" class="avatar-dialogo-img" loading="lazy" decoding="async">
+                </div>
+            `;
+        }
+
+        function posicionarMenuContextual(menu, x, y, contenedorMapa) {
+            const menuWidth = menu.node().offsetWidth;
+            const menuHeight = menu.node().offsetHeight;
+            const mapWidth = contenedorMapa.offsetWidth;
+            const mapHeight = contenedorMapa.offsetHeight;
+
+            let finalX = x + 15;
+            let finalY = y + 15;
+
+            if (finalX + menuWidth > mapWidth) finalX = x - menuWidth - 15;
+            if (finalY + menuHeight > mapHeight) finalY = y - menuHeight - 15;
+
+            if (finalX < 80) finalX = 80;
+            if (finalY < 10) finalY = 10;
+
+            menu.style("left", finalX + "px").style("top", finalY + "px");
+        }
+
         function contarMemoriasPais(idPais) {
             const provinciasDelPais = provinciasVisitadas?.[idPais];
             let totalMemorias = 0;
@@ -694,24 +723,12 @@ const firebaseConfig = {
                                 ${idPais && idPais !== "-99" ? `<li id="opc-planear"><i data-lucide="map"></i> Planear Aventura</li>` : ''}
                                 ${idPais && idPais !== "-99" ? `<li id="opc-explorar"><i data-lucide="search"></i> Explorar Zonas</li>` : ''}
                             </ul>
+                            ${obtenerAvatarMenuHtml()}
                         `);
 
                         lucide.createIcons();
                         menu.classed("menu-oculto", false).classed("menu-visible", true);
-
-                        const menuWidth = menu.node().offsetWidth;
-                        const menuHeight = menu.node().offsetHeight;
-                        const mapWidth = document.getElementById("world-map").offsetWidth;
-                        const mapHeight = document.getElementById("world-map").offsetHeight;
-
-                        let finalX = x + 15; 
-                        let finalY = y + 15;
-                        if (finalX + menuWidth > mapWidth) finalX = x - menuWidth - 15;
-                        if (finalY + menuHeight > mapHeight) finalY = y - menuHeight - 15;
-                        if (finalX < 10) finalX = 10;
-                        if (finalY < 10) finalY = 10;
-
-                        menu.style("left", finalX + "px").style("top", finalY + "px");
+                        posicionarMenuContextual(menu, x, y, document.getElementById("world-map"));
 
                         if (idPais && idPais !== "-99") {
                             d3.select("#opc-visitado").on("click", function() {
@@ -980,13 +997,13 @@ const firebaseConfig = {
                                     Planear aventura
                                 </li>
                             </ul>
+                            ${obtenerAvatarMenuHtml()}
                         `);
 
                         lucide.createIcons();
                         menu.classed("menu-oculto", false)
-                            .classed("menu-visible", true)
-                            .style("left", x + "px")
-                            .style("top", y + "px");
+                            .classed("menu-visible", true);
+                        posicionarMenuContextual(menu, x, y, container.node());
 
                         d3.select("#opc-prov-visitado").on("click", function() {
                             if (!provinciasVisitadas[idPais]) provinciasVisitadas[idPais] = {};
