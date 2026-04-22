@@ -15,6 +15,7 @@ const firebaseConfig = {
         let provinciasVisitadas = {}; 
         let destinosSonados = {}; 
         let estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null };
+        let estadoVistaSonados = { modo: 'lista', idPais: null };
         let firebaseDb = null;
         let estadoInicialSincronizado = false;
         let ultimaHuellaSincronizada = "";
@@ -139,7 +140,11 @@ const firebaseConfig = {
             }
 
             if (vistaSonadosActiva) {
-                renderizarPantallaSonados();
+                if (estadoVistaSonados.modo === 'detalle' && estadoVistaSonados.idPais && destinosSonados[estadoVistaSonados.idPais]) {
+                    abrirPlanificador(estadoVistaSonados.idPais);
+                } else {
+                    renderizarPantallaSonados();
+                }
             }
         }
 
@@ -842,6 +847,7 @@ const firebaseConfig = {
         }
 
         function renderizarPantallaSonados() {
+            estadoVistaSonados = { modo: 'lista', idPais: null };
             normalizarDestinosSonados();
             const contenedor = document.getElementById('vista-por-vivir');
             const idsPaises = Object.keys(destinosSonados);
@@ -1735,6 +1741,7 @@ const firebaseConfig = {
         };
 
         window.abrirPlanificador = function(idPais) {
+            estadoVistaSonados = { modo: 'detalle', idPais };
             normalizarDestinosSonados();
             const pais = destinosSonados[idPais];
             const scrollArea = document.getElementById('scroll-sonados');
