@@ -19,6 +19,7 @@ const firebaseConfig = {
         let firebaseDb = null;
         let estadoInicialSincronizado = false;
         let ultimaHuellaSincronizada = "";
+        let sincronizacionLocalEnCurso = false;
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
 
@@ -210,6 +211,12 @@ const firebaseConfig = {
                         const estadoRemoto = snapshot.val();
                         if (estadoRemoto) {
                             const huellaRemota = calcularHuellaEstado(estadoRemoto);
+                            const huellaLocal = calcularHuellaEstado();
+                            if (sincronizacionLocalEnCurso && huellaRemota === huellaLocal) {
+                                sincronizacionLocalEnCurso = false;
+                                ultimaHuellaSincronizada = huellaRemota;
+                                return;
+                            }
                             if (huellaRemota !== ultimaHuellaSincronizada) {
                                 ultimaHuellaSincronizada = huellaRemota;
                                 aplicarEstadoRemoto(estadoRemoto);
@@ -260,6 +267,12 @@ const firebaseConfig = {
                 const estadoRemoto = snapshot.val();
                 if (estadoRemoto) {
                     const huellaRemota = calcularHuellaEstado(estadoRemoto);
+                    const huellaLocal = calcularHuellaEstado();
+                    if (sincronizacionLocalEnCurso && huellaRemota === huellaLocal) {
+                        sincronizacionLocalEnCurso = false;
+                        ultimaHuellaSincronizada = huellaRemota;
+                        return;
+                    }
                     if (huellaRemota !== ultimaHuellaSincronizada) {
                         ultimaHuellaSincronizada = huellaRemota;
                         aplicarEstadoRemoto(estadoRemoto);
@@ -849,6 +862,7 @@ const firebaseConfig = {
         function renderizarPantallaSonados() {
             estadoVistaSonados = { modo: 'lista', idPais: null };
             normalizarDestinosSonados();
+            estadoVistaSonados = { modo: 'lista', idPais: null };
             const contenedor = document.getElementById('vista-por-vivir');
             const idsPaises = Object.keys(destinosSonados);
 
@@ -1749,6 +1763,7 @@ const firebaseConfig = {
                 renderizarPantallaSonados();
                 return;
             }
+            estadoVistaSonados = { modo: 'detalle', idPais };
 
             const nombrePrincipal = obtenerNombreCabeceraDestino(pais);
             const escalasResumen = obtenerResumenEscalas(pais);
@@ -2007,6 +2022,8 @@ const firebaseConfig = {
             destinosSonados[idPais].itinerario.push(nuevoItem);
             document.getElementById('contenedor-formularios').innerHTML = '';
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
+            estadoVistaSonados = { modo: 'detalle', idPais };
+            sincronizacionLocalEnCurso = true;
             dibujarItinerario(idPais);
         };
 
