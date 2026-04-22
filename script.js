@@ -1107,7 +1107,7 @@ const firebaseConfig = {
                 listaHTML.className = 'lista-paises';
                 idsPaises.forEach(id => {
                     const pais = destinosSonados[id];
-                    const numItems = Array.isArray(pais.itinerario) ? pais.itinerario.length : 0;
+                    const totalEscalas = contarEscalasDestino(pais);
                     const nombrePrincipal = obtenerNombreCabeceraDestino(pais);
                     const escalasResumen = obtenerResumenEscalas(pais);
                     const portadaLista = pais.portadaUrl || 'https://via.placeholder.com/240x150?text=Sin+Portada';
@@ -1118,11 +1118,11 @@ const firebaseConfig = {
                                 <div>
                                     <h3 class="destino-principal dorado">${nombrePrincipal}</h3>
                                     ${escalasResumen ? `<div class="destino-escalas">(${escalasResumen})</div>` : ''}
-                                    <span class="zonas-badge">${numItems} pasos</span>
+                                    <span class="zonas-badge">${totalEscalas} escalas</span>
                                 </div>
                             </div>
                             <div class="acciones-itinerario-card">
-                                <img class="miniatura-portada-lista" src="${portadaLista}" alt="Portada de ${nombrePrincipal}">
+                                <img class="miniatura-portada-lista" src="${portadaLista}" alt="Portada de ${nombrePrincipal}" onclick="abrirModalUrlsAventuras('${id}')" role="button" tabindex="0" onkeydown="manejarTeclaMiniatura(event, '${id}')">
                                 <button class="btn-accion-pais secundario" onclick="abrirPlanificador('${id}')">Ver Itinerario <i data-lucide="calendar"></i></button>
                             </div>
                         </div>`;
@@ -1131,6 +1131,73 @@ const firebaseConfig = {
             }
             lucide.createIcons();
         }
+
+        function contarEscalasDestino(destino) {
+            if (!destino || typeof destino !== 'object') return 0;
+            const escalasCiudades = Array.isArray(destino.escalasCiudades) ? destino.escalasCiudades.filter(Boolean) : [];
+            const escalasPaises = Array.isArray(destino.escalas) ? destino.escalas.filter(Boolean) : [];
+            if (escalasCiudades.length) return escalasCiudades.length;
+            if (escalasPaises.length) return escalasPaises.length;
+            return 0;
+        }
+
+        window.manejarTeclaMiniatura = function(event, idPais) {
+            if (!event) return;
+            if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                abrirModalUrlsAventuras(idPais);
+            }
+        };
+
+        window.abrirModalUrlsAventuras = function(idPais) {
+            const destino = destinosSonados[idPais];
+            if (!destino) return;
+
+            cerrarModalUrlsAventuras();
+
+            const urlsAventuras = (Array.isArray(destino.itinerario) ? destino.itinerario : [])
+                .filter(item => item?.tipo === 'aventura' && typeof item?.miniatura === 'string' && item.miniatura.trim())
+                .map(item => ({
+                    nombre: item.lugar || 'Aventura',
+                    url: item.miniatura.trim()
+                }));
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-url-aventuras';
+            modal.id = 'modal-url-aventuras';
+            modal.onclick = (e) => {
+                if (e.target === modal) cerrarModalUrlsAventuras();
+            };
+
+            const tituloDestino = obtenerNombreCabeceraDestino(destino);
+            const contenidoLista = urlsAventuras.length
+                ? `<ul class="modal-url-aventuras-lista">
+                    ${urlsAventuras.map((item, index) => `
+                        <li class="modal-url-aventuras-item">
+                            <strong>${index + 1}. ${item.nombre}</strong><br>
+                            <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a>
+                        </li>
+                    `).join('')}
+                  </ul>`
+                : `<p style="margin:0; color:#607D8B; font-weight:700;">No hay URLs cargadas para aventuras en este itinerario todavía.</p>`;
+
+            modal.innerHTML = `
+                <div class="modal-url-aventuras-contenido" role="dialog" aria-modal="true" aria-label="URLs de aventuras">
+                    <div class="modal-url-aventuras-header">
+                        <h3 style="margin:0; color:#D81B60;">URLs de aventuras · ${tituloDestino}</h3>
+                        <button class="btn-cerrar-menu" onclick="cerrarModalUrlsAventuras()" aria-label="Cerrar listado de URLs">×</button>
+                    </div>
+                    ${contenidoLista}
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+        };
+
+        window.cerrarModalUrlsAventuras = function() {
+            const modal = document.getElementById('modal-url-aventuras');
+            if (modal) modal.remove();
+        };
 
         window.renderizarPantallaRecuerdos = function() {
             estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null, submodo: 'ver', seccionNuevo: 'drive' };

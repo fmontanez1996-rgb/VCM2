@@ -183,16 +183,31 @@
 
         .lista-paises { display: flex; flex-direction: column; gap: 20px; }
         .tarjeta-pais { 
-            background: #FFFFFF; border: 3px solid #B3E5FC; border-radius: 25px; padding: 20px; 
+            background: linear-gradient(145deg, #fffef8 0%, #fff7e6 42%, #fff4fb 100%);
+            border: 3px solid #B3E5FC; border-radius: 25px; padding: 20px; 
             display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 8px 15px rgba(0, 188, 212, 0.08); transition: all 0.3s ease;
+            box-shadow: 0 8px 15px rgba(0, 188, 212, 0.08), inset 0 0 22px rgba(255, 236, 179, 0.28);
+            transition: all 0.3s ease;
         }
-        .tarjeta-pais:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 188, 212, 0.2); border-color: var(--secondary); }
+        .tarjeta-pais:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 188, 212, 0.2), 0 0 18px rgba(255, 202, 40, 0.28); border-color: var(--secondary); }
         .info-pais { display: flex; align-items: center; gap: 15px; }
         .icono-bandera { width: 50px; height: 50px; background: #E1F5FE; color: var(--secondary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; }
         .nombre-pais-lista { font-size: 1.4rem; font-weight: 800; color: #455A64; margin: 0; }
         .destino-principal { margin: 0; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; }
-        .destino-principal.dorado { color: #FFB300; font-size: 1.65rem; text-shadow: 1px 1px 0 #FFE082; }
+        .destino-principal.dorado {
+            color: #FFB300;
+            font-size: 1.72rem;
+            font-weight: 900;
+            letter-spacing: 0.8px;
+            text-shadow:
+                0 1px 0 #fff9c4,
+                0 2px 0 #ffe082,
+                0 3px 0 #ffca28,
+                0 4px 6px rgba(255, 152, 0, 0.42),
+                0 0 18px rgba(255, 215, 64, 0.32);
+            -webkit-text-stroke: 0.5px rgba(255, 143, 0, 0.35);
+            filter: saturate(1.1);
+        }
         .destino-principal.rosa { color: #FF4081; font-size: 1.85rem; text-shadow: 1px 1px 0 #F8BBD0; }
         .destino-escalas { margin-top: 4px; font-size: 0.95rem; color: #90A4AE; font-weight: 600; }
         .zonas-badge { background: #FCE4EC; color: #D81B60; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-top: 5px; display: inline-block; }
@@ -202,8 +217,36 @@
             font-family: 'Quicksand', sans-serif; font-size: 1.1rem; font-weight: 800; cursor: pointer; 
             transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px var(--btn-glow);
         }
-        .btn-accion-pais.secundario { background: #FFB300; box-shadow: 0 5px 15px rgba(255, 179, 0, 0.4); }
-        .btn-accion-pais:hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-accion-pais.secundario {
+            background: linear-gradient(160deg, #fff4b8 0%, #ffd95c 22%, #ffbe0b 50%, #e08f00 100%);
+            color: #6b3c00;
+            border: 1px solid rgba(255, 244, 179, 0.9);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.95),
+                inset 0 -5px 10px rgba(176, 98, 0, 0.28),
+                0 7px 0 #b87400,
+                0 10px 22px rgba(255, 179, 0, 0.5);
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+            transform: translateY(0);
+        }
+        .btn-accion-pais.secundario:hover {
+            transform: translateY(-1px) scale(1.03);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.95),
+                inset 0 -5px 10px rgba(176, 98, 0, 0.28),
+                0 8px 0 #b87400,
+                0 14px 24px rgba(255, 179, 0, 0.55),
+                0 0 16px rgba(255, 215, 64, 0.48);
+        }
+        .btn-accion-pais.secundario:active {
+            transform: translateY(3px) scale(0.99);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.9),
+                inset 0 -3px 8px rgba(176, 98, 0, 0.25),
+                0 4px 0 #b87400,
+                0 7px 14px rgba(255, 179, 0, 0.35);
+        }
+        .btn-accion-pais:not(.secundario):hover { transform: scale(1.05); filter: brightness(1.1); }
         .acciones-itinerario-card { display: flex; align-items: center; gap: 12px; }
         .miniatura-portada-lista {
             width: 92px;
@@ -214,6 +257,72 @@
             background: #FFFDE7;
             box-shadow: 0 4px 10px rgba(255, 179, 0, 0.22);
             flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.35s ease, box-shadow 0.35s ease, filter 0.35s ease;
+            position: relative;
+        }
+        .miniatura-portada-lista:hover,
+        .miniatura-portada-lista:focus-visible {
+            transform: scale(1.08);
+            filter: saturate(1.12) brightness(1.08);
+            box-shadow:
+                0 0 0 2px rgba(255, 244, 179, 0.9),
+                0 0 16px rgba(255, 202, 40, 0.75),
+                0 0 30px rgba(255, 239, 186, 0.65),
+                0 10px 22px rgba(255, 179, 0, 0.3);
+            animation: miniaturaSuenoNube 1.9s ease-in-out infinite alternate;
+        }
+        @keyframes miniaturaSuenoNube {
+            from { filter: drop-shadow(0 0 8px rgba(255, 215, 120, 0.6)); }
+            to { filter: drop-shadow(0 0 14px rgba(255, 236, 179, 0.9)); }
+        }
+
+        .modal-url-aventuras {
+            position: fixed;
+            inset: 0;
+            background: rgba(16, 27, 43, 0.58);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+            padding: 16px;
+        }
+        .modal-url-aventuras-contenido {
+            width: min(680px, 100%);
+            max-height: min(82vh, 860px);
+            overflow: auto;
+            background: linear-gradient(155deg, #fffdf6 0%, #fff8f3 100%);
+            border-radius: 20px;
+            border: 2px solid #ffd54f;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(255, 179, 0, 0.35);
+        }
+        .modal-url-aventuras-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .modal-url-aventuras-lista {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-url-aventuras-item {
+            background: #ffffff;
+            border: 1px solid #ffe082;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-weight: 700;
+        }
+        .modal-url-aventuras-item a {
+            color: #bf6d00;
+            word-break: break-all;
         }
 
         .mensaje-vacio { text-align: center; padding: 50px 20px; color: #90A4AE; display: flex; flex-direction: column; align-items: center; gap: 20px; }
