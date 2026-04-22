@@ -1234,9 +1234,9 @@ const firebaseConfig = {
 
             contenedor.innerHTML = `
                 <div class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
-                    <h2><i data-lucide="camera"></i> Galería de Recuerdos</h2>
+                    <h2 class="titulo-galeria-recuerdos"><i data-lucide="camera"></i> Galería de Recuerdos</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);">
+                        <button id="btn-nuevo-recuerdo" class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="border: none; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                             <i data-lucide="plus-circle"></i> NUEVO RECUERDO
                         </button>
                     </div>
@@ -1258,7 +1258,7 @@ const firebaseConfig = {
 
                 <div style="display: flex; gap: 10px;">
                     <button onclick="confirmarNuevoRecuerdo()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #4CAF50; color: white; font-weight: bold; cursor: pointer;">Guardar Recuerdo</button>
-                    <button onclick="document.getElementById('selector-nuevo-recuerdo').style.display='none'" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
+                    <button onclick="ocultarSelectorNuevoRecuerdo()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
                 </div>
             </div>
 
@@ -1302,7 +1302,7 @@ const firebaseConfig = {
                                 <div class="icono-bandera"><i data-lucide="map-pin"></i></div>
                                 <div><h3 class="nombre-pais-lista">${pais.nombre}</h3><span class="zonas-badge">${numMemorias} memorias</span></div>
                             </div>
-                            <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Álbumes <i data-lucide="chevron-right"></i></button>
+                            <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Galería <i data-lucide="chevron-right"></i></button>
                         </div>`;
                 });
                 scrollArea.appendChild(listaHTML);
@@ -1311,7 +1311,17 @@ const firebaseConfig = {
         }
 
         window.mostrarSelectorNuevoRecuerdo = function() {
-            document.getElementById('selector-nuevo-recuerdo').style.display = 'block';
+            const selector = document.getElementById('selector-nuevo-recuerdo');
+            const boton = document.getElementById('btn-nuevo-recuerdo');
+            if (selector) selector.style.display = 'block';
+            if (boton) boton.classList.add('activo-form');
+        };
+
+        window.ocultarSelectorNuevoRecuerdo = function() {
+            const selector = document.getElementById('selector-nuevo-recuerdo');
+            const boton = document.getElementById('btn-nuevo-recuerdo');
+            if (selector) selector.style.display = 'none';
+            if (boton) boton.classList.remove('activo-form');
         };
 
         window.cargarCiudadesAventura = function() {
@@ -1408,7 +1418,7 @@ const firebaseConfig = {
                 } catch(e) {}
 
                 renderizarPantallaRecuerdos();
-                document.getElementById('selector-nuevo-recuerdo').style.display = 'none';
+                window.ocultarSelectorNuevoRecuerdo();
                 alert("Ubicación marcada como visitada.");
             } else {
                 alert("Por favor, selecciona país y ciudad.");
@@ -2051,7 +2061,7 @@ const firebaseConfig = {
                 </div>
             </div>
             <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">
-                Ver Álbumes <i data-lucide="chevron-right"></i>
+                Ver Galería <i data-lucide="chevron-right"></i>
             </button>
         </div>`;
 });
