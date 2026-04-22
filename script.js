@@ -198,50 +198,53 @@ const firebaseConfig = {
             return diasNormalizados;
         }
 
-        function obtenerDiaPorTexto(destino, textoDia = '') {
-            const texto = String(textoDia || '').trim();
-            if (!texto) return null;
-            const textoMin = texto.toLowerCase();
-            const numeroDesdeTexto = (texto.match(/\d+/) || [])[0];
-
-            const exacto = destino.dias.find(d => d.nombre.toLowerCase() === textoMin);
-            if (exacto) return exacto;
-
-            if (numeroDesdeTexto) {
-                const numero = Number(numeroDesdeTexto);
-                const porNumero = destino.dias.find(d => d.numero === numero);
-                if (porNumero) return porNumero;
-
-                const nuevoDia = crearDia(numero, texto);
-                destino.dias.push(nuevoDia);
-                destino.dias.sort((a, b) => a.numero - b.numero);
-                return nuevoDia;
-            }
-
-            const nuevoNumero = destino.dias.length + 1;
-            const nuevoDia = crearDia(nuevoNumero, texto);
-            destino.dias.push(nuevoDia);
-            destino.dias.sort((a, b) => a.numero - b.numero);
-            return nuevoDia;
+        function esFechaActividadValida(fecha = '') {
+            return /^\d{4}-\d{2}-\d{2}$/.test(String(fecha || '').trim());
         }
 
-        function asegurarDiaIdEnItem(destino, item) {
-            if (!item || typeof item !== 'object') return;
-
-            if (item.diaId) {
-                const existe = destino.dias.some(d => d.id === item.diaId);
-                if (existe) return;
+        function derivarDiasDesdeFechasItinerario(destino) {
+            if (!destino || typeof destino !== 'object') {
+                return {
+                    dias: [crearDia(1, 'Día 1')],
+                    diaPorFecha: new Map(),
+                    fechaPorDiaId: new Map()
+                };
             }
 
-            const diaDesdeTexto = obtenerDiaPorTexto(destino, item.dia);
-            if (diaDesdeTexto) {
-                item.diaId = diaDesdeTexto.id;
-                return;
-            }
+            const itinerario = Array.isArray(destino.itinerario) ? destino.itinerario : [];
+            const fechasUnicas = Array.from(new Set(
+                itinerario
+                    .map(item => String(item?.fechaActividad || '').trim())
+                    .filter(esFechaActividadValida)
+            )).sort((a, b) => a.localeCompare(b));
 
-            const primerDia = destino.dias[0] || crearDia(1, 'Llegada');
-            if (!destino.dias.length) destino.dias.push(primerDia);
-            item.diaId = primerDia.id;
+            const dias = fechasUnicas.length
+                ? fechasUnicas.map((_, index) => crearDia(index + 1, `Día ${index + 1}`))
+                : [crearDia(1, 'Día 1')];
+
+            const diaPorFecha = new Map();
+            const fechaPorDiaId = new Map();
+
+            fechasUnicas.forEach((fecha, index) => {
+                const dia = dias[index];
+                diaPorFecha.set(fecha, dia);
+                fechaPorDiaId.set(dia.id, fecha);
+            });
+
+            const diaFallback = dias[0];
+            itinerario.forEach(item => {
+                if (!item || typeof item !== 'object') return;
+                const fecha = String(item.fechaActividad || '').trim();
+                if (esFechaActividadValida(fecha) && diaPorFecha.has(fecha)) {
+                    item.diaId = diaPorFecha.get(fecha).id;
+                } else {
+                    item.fechaActividad = '';
+                    item.diaId = diaFallback.id;
+                }
+            });
+
+            destino.dias = dias;
+            return { dias, diaPorFecha, fechaPorDiaId };
         }
 
         function normalizarDestinosSonados() {
@@ -260,8 +263,7 @@ const firebaseConfig = {
                 destino.ciudadDestinoFinal = destino.ciudadDestinoFinal || "";
                 destino.portadaUrl = destino.portadaUrl || "";
                 destino.dias = normalizarDiasDestino(destino);
-
-                destino.itinerario.forEach(item => asegurarDiaIdEnItem(destino, item));
+                derivarDiasDesdeFechasItinerario(destino);
             });
         }
 
@@ -276,14 +278,10 @@ const firebaseConfig = {
             return `DÍA ${dia.numero}: ${dia.nombre}`;
         }
 
-        function renderSelectDias(destino, diaIdActual = '') {
-            const opciones = (destino?.dias || []).map(dia => (
-                `<option value="${dia.id}" ${dia.id === diaIdActual ? 'selected' : ''}>DÍA ${dia.numero}: ${dia.nombre}</option>`
-            )).join('');
-
+        function renderCampoFechaItinerario(fechaActual = '') {
             return `
-                <div class="campo-form"><label>Día</label>
-                    <select id="input-item-dia">${opciones}</select>
+                <div class="campo-form"><label>Fecha de actividad</label>
+                    <input type="date" id="input-item-fecha" value="${fechaActual}">
                 </div>
             `;
         }
@@ -1971,20 +1969,6 @@ const firebaseConfig = {
             }
         };
 
-        function normalizarDiaItinerario(dia) {
-            const texto = (dia || '').toString().trim();
-            if (!texto) {
-                return { etiqueta: 'Sin día', orden: Number.MAX_SAFE_INTEGER };
-            }
-            const sinAcentos = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-            const matchDia = sinAcentos.match(/dia\s*(\d+)/i);
-            if (matchDia) {
-                const nroDia = Number(matchDia[1]);
-                return { etiqueta: `Día ${nroDia}`, orden: nroDia };
-            }
-            return { etiqueta: texto, orden: Number.MAX_SAFE_INTEGER - 1 };
-        }
-
         function obtenerMinutosHorario(item) {
             const candidatos = [item?.llegada, item?.partida];
             for (const horario of candidatos) {
@@ -2041,6 +2025,7 @@ const firebaseConfig = {
             if (!calendario || !destino) return;
 
             const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
+            const { fechaPorDiaId } = derivarDiasDesdeFechasItinerario(destino);
             calendario.innerHTML = '';
 
             if (items.length === 0) {
@@ -2051,12 +2036,17 @@ const firebaseConfig = {
 
             const grupos = new Map();
             items.forEach((item, indiceCreacion) => {
-                const diaNormalizado = normalizarDiaItinerario(item?.dia);
-                const clave = `${diaNormalizado.orden}-${diaNormalizado.etiqueta}`;
+                const dia = obtenerDiaDeItem(destino, item) || crearDia(1, 'Día 1');
+                const etiqueta = `DÍA ${dia.numero}: ${dia.nombre}`;
+                const fecha = fechaPorDiaId.get(dia.id) || '';
+                const ordenFecha = fecha || '9999-12-31';
+                const clave = `${ordenFecha}-${dia.numero}`;
                 if (!grupos.has(clave)) {
                     grupos.set(clave, {
-                        etiqueta: diaNormalizado.etiqueta,
-                        orden: diaNormalizado.orden,
+                        etiqueta,
+                        fecha,
+                        ordenFecha,
+                        ordenDia: dia.numero,
                         items: []
                     });
                 }
@@ -2064,7 +2054,7 @@ const firebaseConfig = {
             });
 
             const columnas = Array.from(grupos.values())
-                .sort((a, b) => a.orden - b.orden || a.etiqueta.localeCompare(b.etiqueta))
+                .sort((a, b) => a.ordenFecha.localeCompare(b.ordenFecha) || a.ordenDia - b.ordenDia)
                 .map(grupo => {
                     grupo.items.sort((a, b) => {
                         const minutosA = obtenerMinutosHorario(a);
@@ -2089,7 +2079,7 @@ const firebaseConfig = {
 
                     return `
                         <section class="columna-dia-itinerario">
-                            <header>${grupo.etiqueta}</header>
+                            <header>${grupo.etiqueta}${grupo.fecha ? ` · ${grupo.fecha}` : ''}</header>
                             <div class="columna-dia-lista">${tarjetas}</div>
                         </section>
                     `;
@@ -2204,7 +2194,7 @@ const firebaseConfig = {
             const esEdicion = Boolean(itemExistente);
             const idPais = document.querySelector('.linea-tiempo').id.replace('linea-tiempo-', '');
             const destino = destinosSonados[idPais];
-            const diaActual = itemExistente?.diaId || destino?.dias?.[0]?.id || '';
+            const fechaActual = itemExistente?.fechaActividad || '';
             let formHTML = `<div class="formulario-itinerario activo" id="form-${tipo}">`;
 
             if (tipo === 'viaje') {
@@ -2261,7 +2251,7 @@ const firebaseConfig = {
                 `;
             }
 
-            formHTML += renderSelectDias(destino, diaActual);
+            formHTML += renderCampoFechaItinerario(fechaActual);
             if (esEdicion) {
                 formHTML += `<button class="btn-guardar-item" onclick="actualizarItemItinerario('${idPais}', ${itemExistente.id}, '${tipo}')">Guardar cambios ✨</button></div>`;
             } else {
@@ -2286,7 +2276,7 @@ const firebaseConfig = {
             if (!dataPais.destinoFinal) dataPais.destinoFinal = dataPais.nombre;
             if (!dataPais.escalas) dataPais.escalas = [];
             if (!dataPais.escalasCiudades) dataPais.escalasCiudades = [];
-            nuevoItem.diaId = document.getElementById('input-item-dia')?.value || dataPais.dias?.[0]?.id;
+            nuevoItem.fechaActividad = document.getElementById('input-item-fecha')?.value || '';
 
             if (tipo === 'viaje') {
                 nuevoItem.medio = document.getElementById('input-viaje-medio').value;
@@ -2325,6 +2315,7 @@ const firebaseConfig = {
             }
 
             destinosSonados[idPais].itinerario.push(nuevoItem);
+            derivarDiasDesdeFechasItinerario(destinosSonados[idPais]);
             document.getElementById('contenedor-formularios').innerHTML = '';
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
             estadoVistaSonados = { modo: 'detalle', idPais };
@@ -2334,6 +2325,7 @@ const firebaseConfig = {
 
         window.eliminarItemItinerario = function(idPais, idItem) {
             destinosSonados[idPais].itinerario = destinosSonados[idPais].itinerario.filter(i => i.id !== idItem);
+            derivarDiasDesdeFechasItinerario(destinosSonados[idPais]);
             dibujarItinerario(idPais);
         }
 
@@ -2352,7 +2344,7 @@ const firebaseConfig = {
             if (idx === -1) return;
 
             const itemActualizado = { ...destino.itinerario[idx], tipo };
-            itemActualizado.diaId = document.getElementById('input-item-dia')?.value || destino.dias?.[0]?.id;
+            itemActualizado.fechaActividad = document.getElementById('input-item-fecha')?.value || '';
 
             if (tipo === 'viaje') {
                 const selectPaisEscala = document.getElementById('input-viaje-destino');
@@ -2383,6 +2375,7 @@ const firebaseConfig = {
             }
 
             destino.itinerario[idx] = itemActualizado;
+            derivarDiasDesdeFechasItinerario(destino);
             document.getElementById('contenedor-formularios').innerHTML = '';
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
             dibujarItinerario(idPais);
@@ -2413,6 +2406,7 @@ const firebaseConfig = {
             const calendario = document.getElementById(`placeholder-calendario-${idPais}`);
             if (!timeline || !calendario || !destinosSonados[idPais]) return;
             const items = destinosSonados[idPais].itinerario;
+            derivarDiasDesdeFechasItinerario(destinosSonados[idPais]);
             timeline.innerHTML = '';
             calendario.innerHTML = '';
             if (items.length === 0) {
@@ -2451,7 +2445,7 @@ const firebaseConfig = {
             });
 
             const agrupadosPorDia = items.reduce((acumulado, item, index) => {
-                const claveDia = (item.dia || 'Sin día').trim() || 'Sin día';
+                const claveDia = obtenerEtiquetaDia(destinosSonados[idPais], item);
                 if (!acumulado[claveDia]) acumulado[claveDia] = [];
                 acumulado[claveDia].push({ item, index });
                 return acumulado;
