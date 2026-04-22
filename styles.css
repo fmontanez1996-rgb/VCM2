@@ -152,44 +152,6 @@
             border-radius: 25px; padding: 18px; box-shadow: 0 15px 35px rgba(255, 64, 129, 0.2); 
             z-index: 1000; min-width: 220px;
         }
-        #cartel-interes {
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            z-index: 1600;
-            width: min(320px, calc(100% - 32px));
-            background: rgba(255, 255, 255, 0.97);
-            border: 3px solid #80DEEA;
-            border-radius: 18px;
-            box-shadow: 0 12px 24px rgba(0, 188, 212, 0.22);
-            padding: 14px 16px 12px;
-        }
-        .cartel-interes-oculto { display: none; }
-        .cartel-interes-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-        .cartel-interes-titulo { margin: 0; color: #00796B; font-size: 1rem; font-weight: 900; }
-        .cartel-interes-subtitulo { margin: 0; color: #006064; font-size: 0.9rem; font-weight: 700; }
-        .cartel-interes-lista {
-            margin: 8px 0 0;
-            padding-left: 20px;
-            color: #455A64;
-            font-size: 0.95rem;
-            font-weight: 700;
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        #cerrar-cartel-interes {
-            border: none;
-            background: #E0F7FA;
-            color: #00838F;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        #cerrar-cartel-interes:hover { background: #00BCD4; color: white; }
         .menu-oculto { display: none; }
         .menu-visible { display: block; animation: scaleIn 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); }
         @keyframes scaleIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
