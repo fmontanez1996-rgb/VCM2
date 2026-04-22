@@ -15,10 +15,11 @@ const firebaseConfig = {
         let provinciasVisitadas = {}; 
         let destinosSonados = {}; 
         let estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null };
-        let estadoVistaItinerario = { modo: 'lista', idPais: null };
+        let estadoVistaSonados = { modo: 'lista', idPais: null };
         let firebaseDb = null;
         let estadoInicialSincronizado = false;
         let ultimaHuellaSincronizada = "";
+        let sincronizacionLocalEnCurso = false;
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
 
@@ -140,7 +141,11 @@ const firebaseConfig = {
             }
 
             if (vistaSonadosActiva) {
-                renderizarPantallaSonados();
+                if (estadoVistaSonados.modo === 'detalle' && estadoVistaSonados.idPais && destinosSonados[estadoVistaSonados.idPais]) {
+                    abrirPlanificador(estadoVistaSonados.idPais);
+                } else {
+                    renderizarPantallaSonados();
+                }
             }
         }
 
@@ -206,6 +211,12 @@ const firebaseConfig = {
                         const estadoRemoto = snapshot.val();
                         if (estadoRemoto) {
                             const huellaRemota = calcularHuellaEstado(estadoRemoto);
+                            const huellaLocal = calcularHuellaEstado();
+                            if (sincronizacionLocalEnCurso && huellaRemota === huellaLocal) {
+                                sincronizacionLocalEnCurso = false;
+                                ultimaHuellaSincronizada = huellaRemota;
+                                return;
+                            }
                             if (huellaRemota !== ultimaHuellaSincronizada) {
                                 ultimaHuellaSincronizada = huellaRemota;
                                 aplicarEstadoRemoto(estadoRemoto);
@@ -256,6 +267,12 @@ const firebaseConfig = {
                 const estadoRemoto = snapshot.val();
                 if (estadoRemoto) {
                     const huellaRemota = calcularHuellaEstado(estadoRemoto);
+                    const huellaLocal = calcularHuellaEstado();
+                    if (sincronizacionLocalEnCurso && huellaRemota === huellaLocal) {
+                        sincronizacionLocalEnCurso = false;
+                        ultimaHuellaSincronizada = huellaRemota;
+                        return;
+                    }
                     if (huellaRemota !== ultimaHuellaSincronizada) {
                         ultimaHuellaSincronizada = huellaRemota;
                         aplicarEstadoRemoto(estadoRemoto);
@@ -843,7 +860,9 @@ const firebaseConfig = {
         }
 
         function renderizarPantallaSonados() {
+            estadoVistaSonados = { modo: 'lista', idPais: null };
             normalizarDestinosSonados();
+            estadoVistaSonados = { modo: 'lista', idPais: null };
             const contenedor = document.getElementById('vista-por-vivir');
             const idsPaises = Object.keys(destinosSonados);
 
@@ -1736,6 +1755,7 @@ const firebaseConfig = {
         };
 
         window.abrirPlanificador = function(idPais) {
+            estadoVistaSonados = { modo: 'detalle', idPais };
             normalizarDestinosSonados();
             const pais = destinosSonados[idPais];
             const scrollArea = document.getElementById('scroll-sonados');
@@ -1743,6 +1763,7 @@ const firebaseConfig = {
                 renderizarPantallaSonados();
                 return;
             }
+            estadoVistaSonados = { modo: 'detalle', idPais };
 
             const nombrePrincipal = obtenerNombreCabeceraDestino(pais);
             const escalasResumen = obtenerResumenEscalas(pais);
@@ -1921,11 +1942,13 @@ const firebaseConfig = {
             }
         };
 
-        window.mostrarFormularioItinerario = function(tipo, btn) {
+        window.mostrarFormularioItinerario = function(tipo, btn, config = {}) {
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
-            btn.classList.add('seleccionado');
+            if (btn) btn.classList.add('seleccionado');
 
             const contenedor = document.getElementById('contenedor-formularios');
+            const itemExistente = config.item || null;
+            const esEdicion = Boolean(itemExistente);
             let formHTML = `<div class="formulario-itinerario activo" id="form-${tipo}">`;
 
             if (tipo === 'viaje') {
@@ -1933,56 +1956,72 @@ const firebaseConfig = {
                 const paisesSelect = paisesMapa
                     .map(d => ({ id: d.id, nombre: d.properties.name }))
                     .sort((a, b) => a.nombre.localeCompare(b.nombre))
-                    .map(p => `<option value="${p.id}">${p.nombre}</option>` )
+                    .map(p => `<option value="${p.id}" ${itemExistente?.destinoId === p.id ? 'selected' : ''}>${p.nombre}</option>` )
                     .join('');
+                const horas = itemExistente?.horas || '';
+                const minutos = itemExistente?.minutos || '';
+                const costo = itemExistente?.costo || '';
 
                 formHTML += `
                     <div class="campo-form"><label>Medio de transporte</label>
-                        <select id="input-viaje-medio"><option value="Micro">🚌 Micro / Autobús</option><option value="Auto">🚗 Auto / Alquiler</option><option value="Avión">✈️ Avión</option><option value="Tren">🚂 Tren</option></select>
+                        <select id="input-viaje-medio"><option value="Micro" ${itemExistente?.medio === 'Micro' ? 'selected' : ''}>🚌 Micro / Autobús</option><option value="Auto" ${itemExistente?.medio === 'Auto' ? 'selected' : ''}>🚗 Auto / Alquiler</option><option value="Avión" ${itemExistente?.medio === 'Avión' ? 'selected' : ''}>✈️ Avión</option><option value="Tren" ${itemExistente?.medio === 'Tren' ? 'selected' : ''}>🚂 Tren</option></select>
                     </div>
                     <div class="campo-form"><label>País de Escala</label>
-                        <select id="input-viaje-destino" onchange="cargarCiudadesEscalaViaje()"><option value="" disabled selected>Selecciona un país...</option>${paisesSelect}</select>
+                        <select id="input-viaje-destino" onchange="cargarCiudadesEscalaViaje()"><option value="" disabled ${!itemExistente?.destinoId ? 'selected' : ''}>Selecciona un país...</option>${paisesSelect}</select>
                     </div>
                     <div class="campo-form" id="campo-viaje-ciudad" style="display:none;"><label>Ciudad de Escala</label>
                         <select id="input-viaje-ciudad"><option value="" disabled selected>Selecciona una ciudad...</option></select>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Horas</label><input type="number" id="input-viaje-horas" placeholder="0"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Minutos</label><input type="number" id="input-viaje-minutos" placeholder="0"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Horas</label><input type="number" id="input-viaje-horas" placeholder="0" value="${horas}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Minutos</label><input type="number" id="input-viaje-minutos" placeholder="0" value="${minutos}"></div>
                     </div>
-                    <div class="campo-form"><label>Costo Pasaje ($)</label><input type="number" id="input-viaje-costo" placeholder="Ej. 150000"></div>
+                    <div class="campo-form"><label>Costo Pasaje ($)</label><input type="number" id="input-viaje-costo" placeholder="Ej. 150000" value="${costo}"></div>
                 `;
             } else if (tipo === 'hospedaje') {
                 formHTML += `
-                    <div class="campo-form"><label>Nombre del Hotel</label><input type="text" id="input-hospedaje-nombre" placeholder="Ej. Hotel Copacabana"></div>
+                    <div class="campo-form"><label>Nombre del Hotel</label><input type="text" id="input-hospedaje-nombre" placeholder="Ej. Hotel Copacabana" value="${itemExistente?.hotel || ''}"></div>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Noches</label><input type="number" id="input-hospedaje-noches" placeholder="Ej. 5"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Precio Total ($)</label><input type="number" id="input-hospedaje-costo" placeholder="Ej. 80000"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Noches</label><input type="number" id="input-hospedaje-noches" placeholder="Ej. 5" value="${itemExistente?.noches || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Precio Total ($)</label><input type="number" id="input-hospedaje-costo" placeholder="Ej. 80000" value="${itemExistente?.costo || ''}"></div>
                     </div>
                 `;
             } else if (tipo === 'aventura') {
                 formHTML += `
-                    <div class="campo-form"><label>Lugar a visitar</label><input type="text" id="input-aventura-lugar" placeholder="Ej. Cristo Redentor"></div>
-                    <div class="campo-form"><label>Miniatura (URL)</label><input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg"></div>
+                    <div class="campo-form"><label>Lugar a visitar</label><input type="text" id="input-aventura-lugar" placeholder="Ej. Cristo Redentor" value="${itemExistente?.lugar || ''}"></div>
+                    <div class="campo-form"><label>Miniatura (URL)</label><input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${itemExistente?.miniatura || ''}"></div>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Día</label><input type="text" id="input-aventura-dia" placeholder="Ej. Día 2"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Precio ($)</label><input type="number" id="input-aventura-costo" placeholder="0"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Día</label><input type="text" id="input-aventura-dia" placeholder="Ej. Día 2" value="${itemExistente?.dia || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Precio ($)</label><input type="number" id="input-aventura-costo" placeholder="0" value="${itemExistente?.costo || ''}"></div>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-aventura-llegada"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-aventura-partida"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-aventura-llegada" value="${itemExistente?.llegada || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-aventura-partida" value="${itemExistente?.partida || ''}"></div>
                     </div>
                 `;
             } else if (tipo === 'restaurante') {
                 formHTML += `
-                    <div class="campo-form"><label>Plato o Lugar</label><input type="text" id="input-rest-plato" placeholder="Ej. Feijoada"></div>
-                    <div class="campo-form"><label>Precio estimado ($)</label><input type="number" id="input-rest-precio" placeholder="Ej. 25000"></div>
+                    <div class="campo-form"><label>Plato o Lugar</label><input type="text" id="input-rest-plato" placeholder="Ej. Feijoada" value="${itemExistente?.plato || ''}"></div>
+                    <div class="campo-form"><label>Precio estimado ($)</label><input type="number" id="input-rest-precio" placeholder="Ej. 25000" value="${itemExistente?.precio || ''}"></div>
                 `;
             }
 
             const idPais = document.querySelector('.linea-tiempo').id.replace('linea-tiempo-', '');
-            formHTML += `<button class="btn-guardar-item" onclick="guardarItemItinerario('${idPais}', '${tipo}')">Añadir al Itinerario ✨</button></div>`;
+            if (esEdicion) {
+                formHTML += `<button class="btn-guardar-item" onclick="actualizarItemItinerario('${idPais}', ${itemExistente.id}, '${tipo}')">Guardar cambios ✨</button></div>`;
+            } else {
+                formHTML += `<button class="btn-guardar-item" onclick="guardarItemItinerario('${idPais}', '${tipo}')">Añadir al Itinerario ✨</button></div>`;
+            }
             contenedor.innerHTML = formHTML;
+
+            if (tipo === 'viaje' && itemExistente?.destinoId) {
+                cargarCiudadesEscalaViaje().then(() => {
+                    const selectCiudad = document.getElementById('input-viaje-ciudad');
+                    if (selectCiudad && itemExistente.ciudad) {
+                        selectCiudad.value = itemExistente.ciudad;
+                    }
+                });
+            }
         };
 
         window.guardarItemItinerario = function(idPais, tipo) {
@@ -2032,6 +2071,8 @@ const firebaseConfig = {
             destinosSonados[idPais].itinerario.push(nuevoItem);
             document.getElementById('contenedor-formularios').innerHTML = '';
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
+            estadoVistaSonados = { modo: 'detalle', idPais };
+            sincronizacionLocalEnCurso = true;
             dibujarItinerario(idPais);
         };
 
@@ -2039,6 +2080,57 @@ const firebaseConfig = {
             destinosSonados[idPais].itinerario = destinosSonados[idPais].itinerario.filter(i => i.id !== idItem);
             dibujarItinerario(idPais);
         }
+
+        window.editarItemItinerario = function(idPais, idItem) {
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.itinerario)) return;
+            const item = destino.itinerario.find(i => i.id === idItem);
+            if (!item) return;
+            mostrarFormularioItinerario(item.tipo, null, { item });
+        };
+
+        window.actualizarItemItinerario = function(idPais, idItem, tipo) {
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.itinerario)) return;
+            const idx = destino.itinerario.findIndex(i => i.id === idItem);
+            if (idx === -1) return;
+
+            const itemActualizado = { ...destino.itinerario[idx], tipo };
+
+            if (tipo === 'viaje') {
+                const selectPaisEscala = document.getElementById('input-viaje-destino');
+                const escalaId = selectPaisEscala.value;
+                const escalaNombre = selectPaisEscala.options[selectPaisEscala.selectedIndex]?.text || '';
+                const selectCiudadEscala = document.getElementById('input-viaje-ciudad');
+                const ciudadEscala = selectCiudadEscala ? (selectCiudadEscala.value || '') : '';
+                itemActualizado.medio = document.getElementById('input-viaje-medio').value;
+                itemActualizado.destino = escalaNombre;
+                itemActualizado.destinoId = escalaId;
+                itemActualizado.ciudad = ciudadEscala;
+                itemActualizado.horas = document.getElementById('input-viaje-horas').value || '0';
+                itemActualizado.minutos = document.getElementById('input-viaje-minutos').value || '0';
+                itemActualizado.costo = document.getElementById('input-viaje-costo').value || '0';
+            } else if (tipo === 'hospedaje') {
+                itemActualizado.hotel = document.getElementById('input-hospedaje-nombre').value || 'Alojamiento';
+                itemActualizado.noches = document.getElementById('input-hospedaje-noches').value || '1';
+                itemActualizado.costo = document.getElementById('input-hospedaje-costo').value || '0';
+            } else if (tipo === 'aventura') {
+                itemActualizado.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
+                itemActualizado.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
+                itemActualizado.dia = document.getElementById('input-aventura-dia').value || 'Día 1';
+                itemActualizado.costo = document.getElementById('input-aventura-costo').value || '0';
+                itemActualizado.llegada = document.getElementById('input-aventura-llegada').value;
+                itemActualizado.partida = document.getElementById('input-aventura-partida').value;
+            } else if (tipo === 'restaurante') {
+                itemActualizado.plato = document.getElementById('input-rest-plato').value || 'Restaurante';
+                itemActualizado.precio = document.getElementById('input-rest-precio').value || '0';
+            }
+
+            destino.itinerario[idx] = itemActualizado;
+            document.getElementById('contenedor-formularios').innerHTML = '';
+            document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
+            dibujarItinerario(idPais);
+        };
 
         window.dibujarItinerario = function(idPais) {
             const timeline = document.getElementById(`linea-tiempo-${idPais}`);
@@ -2048,7 +2140,7 @@ const firebaseConfig = {
                 timeline.innerHTML = `<p style="color:#90A4AE; padding-left: 20px;">Itinerario vacío.</p>`;
                 return;
             }
-            items.forEach(item => {
+            items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = ''; let detalles = '';
                 if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
                 else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${item.noches} noches - Total: $${item.costo}`; }
@@ -2057,10 +2149,12 @@ const firebaseConfig = {
                 const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
                     ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
                     : '';
+                const deshabilitarSubir = index === 0;
+                const deshabilitarBajar = index === (items.length - 1);
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}<button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">${miniaturaAventura}<button class="btn-editar-item" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
