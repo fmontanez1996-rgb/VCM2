@@ -39,24 +39,32 @@ const firebaseConfig = {
             };
         }
 
+        function contarMemoriasDestino(destino) {
+            if (!destino || typeof destino !== "object") return 0;
+
+            const totalAlbumes = Array.isArray(destino?.albumes) ? destino.albumes.length : 0;
+            const totalHistorias = Array.isArray(destino?.historias) ? destino.historias.length : 0;
+
+            // Compatibilidad con datos guardados con nombres anteriores
+            const totalDrives = Array.isArray(destino?.drives) ? destino.drives.length : 0;
+            const totalNotas = Array.isArray(destino?.notas) ? destino.notas.length : 0;
+
+            return totalAlbumes + totalHistorias + totalDrives + totalNotas;
+        }
+
         function contarMemoriasPais(idPais) {
             const provinciasDelPais = provinciasVisitadas?.[idPais];
             let totalMemorias = 0;
 
             if (provinciasDelPais && typeof provinciasDelPais === "object") {
                 Object.values(provinciasDelPais).forEach((provincia) => {
-                    const totalAlbumes = Array.isArray(provincia?.albumes) ? provincia.albumes.length : 0;
-                    const totalHistorias = Array.isArray(provincia?.historias) ? provincia.historias.length : 0;
-                    totalMemorias += totalAlbumes + totalHistorias;
+                    totalMemorias += contarMemoriasDestino(provincia);
                 });
             }
 
             // Mantener compatibilidad con recuerdos guardados a nivel país
             const pais = paisesVisitados?.[idPais];
-            const totalAlbumesPais = Array.isArray(pais?.albumes) ? pais.albumes.length : 0;
-            const totalHistoriasPais = Array.isArray(pais?.historias) ? pais.historias.length : 0;
-
-            return totalMemorias + totalAlbumesPais + totalHistoriasPais;
+            return totalMemorias + contarMemoriasDestino(pais);
         }
 
         function serializarEstable(valor) {
