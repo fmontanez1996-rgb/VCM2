@@ -642,6 +642,140 @@
                 0 4px 6px rgba(70, 0, 9, 0.55),
                 0 0 16px rgba(255, 50, 80, 0.45);
         }
+        .titulo-memorias-ciudad {
+            margin: 0;
+            font-family: 'Luckiest Guy', cursive;
+            font-size: clamp(2rem, 3.2vw, 2.85rem);
+            letter-spacing: 0.045em;
+            line-height: 1.05;
+            background:
+                linear-gradient(170deg, #ffe4e6 0%, #ff7f8f 18%, #ff364e 38%, #b1081f 62%, #ff334f 81%, #ffd2da 100%),
+                repeating-linear-gradient(140deg, rgba(255, 255, 255, 0.28) 0 4px, rgba(124, 0, 20, 0.26) 4px 8px);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-stroke: 1.8px #6f0013;
+            text-shadow:
+                0 1px 0 #ffd5dc,
+                0 2px 0 #ff8b9a,
+                0 4px 0 #bf0d27,
+                0 8px 12px rgba(58, 0, 8, 0.65),
+                0 0 14px rgba(255, 58, 90, 0.86),
+                0 0 30px rgba(255, 43, 80, 0.6);
+        }
+        .titulo-memorias-ciudad .pais-parentesis {
+            font-family: 'Baloo 2', sans-serif;
+            font-size: 0.62em;
+            letter-spacing: 0.04em;
+            margin-left: 8px;
+            background:
+                linear-gradient(165deg, #ffe4f3 0%, #ffd0eb 28%, #ffc6e8 55%, #ec9fd0 78%, #ffe4f3 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            -webkit-text-stroke: 0.7px #d97bb2;
+            text-shadow:
+                0 1px 0 rgba(255, 239, 248, 0.95),
+                0 2px 6px rgba(255, 168, 220, 0.58);
+        }
+        .seccion-musica-metal {
+            margin-bottom: 20px;
+            padding: 14px;
+            border-radius: 14px;
+            border: 1px solid #98a4b3;
+            background:
+                linear-gradient(145deg, #f7f8fb 0%, #dde1e7 28%, #c2c8d1 51%, #e7ebf1 72%, #b5bdc9 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.32) 0 7px, rgba(96, 108, 127, 0.18) 7px 13px);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.82),
+                inset 0 -5px 12px rgba(106, 115, 132, 0.42),
+                0 5px 12px rgba(18, 30, 46, 0.24);
+        }
+        .input-musica-metal {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .campo-musica-metal {
+            flex: 1;
+            max-width: 560px;
+            position: relative;
+        }
+        .icono-musica-metal {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 15px;
+            color: #939ca9;
+            filter:
+                drop-shadow(0 1px 0 rgba(255, 255, 255, 0.95))
+                drop-shadow(0 2px 1px rgba(70, 78, 90, 0.52));
+        }
+        .texto-musica-metal {
+            width: 100%;
+            padding: 10px 10px 10px 36px;
+            border-radius: 9px;
+            border: 1px solid #a5adba;
+            font-size: 0.88rem;
+            outline: none;
+            background: rgba(247, 249, 252, 0.95);
+        }
+        .btn-guardar-musica-metal {
+            min-width: 118px;
+            background: linear-gradient(165deg, #d9ecff 0%, #4ca6ff 30%, #0a5ad4 62%, #8ec4ff 100%);
+            color: #fff;
+            border: 1px solid #8fc3ff;
+            padding: 10px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 900;
+            text-shadow: 0 1px 0 rgba(0, 19, 52, 0.55);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.88),
+                inset 0 -5px 10px rgba(0, 47, 116, 0.45),
+                0 6px 0 #0846a1,
+                0 10px 18px rgba(2, 63, 161, 0.5),
+                0 0 18px rgba(92, 176, 255, 0.62);
+        }
+        .tabs-memoria-metal {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn-tab-memoria {
+            border: none;
+            border-radius: 14px;
+            padding: 10px 15px;
+            font-weight: 900;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #fff;
+            opacity: 0.45;
+            transition: all 0.22s ease;
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+        }
+        .btn-tab-memoria.tab-nuevo {
+            background: linear-gradient(165deg, #ffd6d6 0%, #ff6363 33%, #b81818 67%, #ff9c9c 100%);
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.8), inset 0 -6px 10px rgba(121, 15, 15, 0.5), 0 7px 0 #8a1414;
+        }
+        .btn-tab-memoria.tab-ver {
+            background: linear-gradient(165deg, #e5ffd8 0%, #68d35f 33%, #218a2b 67%, #aff3a7 100%);
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.8), inset 0 -6px 10px rgba(12, 88, 23, 0.5), 0 7px 0 #186a22;
+        }
+        .btn-tab-memoria.activo {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+        .btn-tab-memoria.tab-nuevo.activo {
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.9), inset 0 -6px 10px rgba(121, 15, 15, 0.5), 0 8px 0 #8a1414, 0 0 16px rgba(255, 123, 123, 0.92);
+        }
+        .btn-tab-memoria.tab-ver.activo {
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.9), inset 0 -6px 10px rgba(12, 88, 23, 0.5), 0 8px 0 #186a22, 0 0 16px rgba(143, 255, 152, 0.92);
+        }
         .icono-mapa-destino {
             color: #ffeaa0;
             fill: rgba(255, 242, 176, 0.55);
