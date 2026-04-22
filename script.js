@@ -180,6 +180,20 @@ const firebaseConfig = {
             return /^\d{4}-\d{2}-\d{2}$/.test(String(fecha || '').trim());
         }
 
+        function generarRangoFechasISO(fechaInicio = '', fechaFin = '') {
+            if (!esFechaActividadValida(fechaInicio) || !esFechaActividadValida(fechaFin)) return [];
+            if (fechaInicio > fechaFin) return [];
+
+            const fechas = [];
+            let cursor = fechaInicio;
+            while (cursor <= fechaFin) {
+                fechas.push(cursor);
+                cursor = sumarDiasAFechaISO(cursor, 1);
+                if (!cursor) break;
+            }
+            return fechas;
+        }
+
         function derivarDiasDesdeFechasItinerario(destino) {
             if (!destino || typeof destino !== 'object') {
                 return {
@@ -205,11 +219,11 @@ const firebaseConfig = {
                 }
             });
 
-            const fechasUnicas = Array.from(new Set(
+            const fechasConActividad = Array.from(new Set(
                 fechasItinerario.filter(esFechaActividadValida)
             )).sort((a, b) => a.localeCompare(b));
 
-            if (!fechasUnicas.length) {
+            if (!fechasConActividad.length) {
                 const diasSinFechas = normalizarDiasDestino(destino);
                 const diaPorFechaVacio = new Map();
                 const fechaPorDiaIdVacio = new Map();
@@ -220,6 +234,10 @@ const firebaseConfig = {
                     fechaPorDiaId: fechaPorDiaIdVacio
                 };
             }
+
+            const fechaInicio = fechasConActividad[0];
+            const fechaFin = fechasConActividad[fechasConActividad.length - 1];
+            const fechasUnicas = generarRangoFechasISO(fechaInicio, fechaFin);
 
             const diasPrevios = Array.isArray(destino.dias) ? normalizarDiasDestino(destino) : [];
             const diaPrevioPorFecha = new Map();
@@ -2219,11 +2237,12 @@ const firebaseConfig = {
 
         function obtenerMetaItinerario(item = {}, destino = null) {
             if (item._esCheckoutVirtual) {
+                const horaCheckout = normalizarHoraItinerario(item.partida) || 'Sin horario';
                 return {
                     icono: 'hotel',
-                    titulo: `Check-out hotel${item.hotel ? ` · ${item.hotel}` : ''}`,
-                    detalle: item.hotel ? `Salida de ${item.hotel}` : 'Salida de hospedaje',
-                    horario: normalizarHoraItinerario(item.partida) || 'Sin horario'
+                    titulo: 'Hotel',
+                    detalle: item.hotel || 'Sin nombre de hotel',
+                    horario: `Check-out: ${horaCheckout}`
                 };
             }
 
@@ -2237,11 +2256,12 @@ const firebaseConfig = {
                 };
             }
             if (item.tipo === 'hospedaje') {
+                const horaCheckin = normalizarHoraItinerario(item.llegada) || 'Sin horario';
                 return {
                     icono: 'hotel',
-                    titulo: item.hotel || 'Hospedaje',
-                    detalle: `${item.noches || '1'} noches · Total: $${item.costo || '0'}`,
-                    horario
+                    titulo: 'Hotel',
+                    detalle: item.hotel || 'Sin nombre de hotel',
+                    horario: `Check-in: ${horaCheckin}`
                 };
             }
             if (item.tipo === 'aventura') {
