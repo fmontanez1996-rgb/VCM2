@@ -1230,55 +1230,62 @@
             border-bottom: 2px solid rgba(255,255,255,0.45);
         }
         .cabecera-columna-dia-itinerario {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 8px;
+            display: block;
         }
         .cabecera-dia-contenido {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
-            line-height: 1.1;
+            gap: 4px;
+            line-height: 1.08;
         }
-        .cabecera-dia-numero {
-            font-size: 1.12rem;
+        .cabecera-dia-principal {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .cabecera-dia-titulo-editable {
+            font-size: 1.45rem;
             font-weight: 900;
             letter-spacing: 0.01em;
+            color: #06306e;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.55);
         }
-        .cabecera-dia-fecha {
-            font-size: 0.58rem;
-            font-weight: 600;
-            color: rgba(13, 71, 161, 0.45);
-            margin-left: 4px;
-            vertical-align: middle;
-        }
-        .cabecera-dia-nombre {
-            margin-top: 3px;
+        .cabecera-dia-subtitulo {
             font-size: 0.78rem;
-            font-weight: 700;
+            font-weight: 800;
             color: #0B5394;
-            text-transform: none;
-            opacity: 0.95;
+            opacity: 0.9;
+            letter-spacing: 0.01em;
         }
         .btn-editar-dia-calendario {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
-            border: 1px solid rgba(13, 71, 161, 0.25);
-            background: rgba(255, 255, 255, 0.85);
-            color: #0D47A1;
+            width: 30px;
+            height: 30px;
+            border-radius: 9px;
+            border: 1px solid rgba(146, 95, 0, 0.45);
+            background:
+                linear-gradient(145deg, #fffad1 0%, #ffd54f 35%, #ffb300 68%, #fff1b8 100%);
+            color: #5e3a00;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease;
             flex-shrink: 0;
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.8),
+                inset 0 -3px 6px rgba(128, 82, 0, 0.28),
+                0 2px 5px rgba(0, 0, 0, 0.24);
         }
         .btn-editar-dia-calendario:hover {
-            background: #FFFFFF;
+            filter: brightness(1.04);
             transform: translateY(-1px);
-            box-shadow: 0 3px 8px rgba(13, 71, 161, 0.2);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.88),
+                inset 0 -3px 6px rgba(128, 82, 0, 0.28),
+                0 4px 10px rgba(0, 0, 0, 0.26);
         }
         .btn-editar-dia-calendario i { width: 14px; height: 14px; }
         .columna-dia-lista { padding: 10px; display: flex; flex-direction: column; gap: 10px; }
@@ -1312,16 +1319,20 @@
         .tarjeta-calendario-header h4 {
             margin: 0;
             font-size: 0.98rem;
-            color: #37474F;
+            color: #101010;
             display: inline-flex;
             gap: 6px;
             align-items: center;
         }
         .tarjeta-calendario-itinerario p {
             margin: 0;
-            color: #546E7A;
+            color: #111111;
             font-size: 0.9rem;
             font-weight: 600;
+        }
+        .tarjeta-calendario-itinerario .badge-horario {
+            color: #111111;
+            font-weight: 800;
         }
         .tarjeta-calendario-itinerario.viaje {
             border-left: 5px solid #FFB300;
@@ -1662,10 +1673,22 @@
         .btn-modal-metal.cancelar { background: linear-gradient(145deg, #ffffff, #dfe4ea, #f8fbff); }
         .btn-modal-metal.eliminar { background: linear-gradient(145deg, #ffcdd2, #ef5350, #c62828); }
 
-        .tarjeta-calendario-itinerario.viaje { border-left: 5px solid #FFB300; background: #FFF7E0; }
-        .tarjeta-calendario-itinerario.hospedaje { border-left: 5px solid #9C27B0; background: #F4E8FF; }
-        .tarjeta-calendario-itinerario.aventura { border-left: 5px solid #4CAF50; background: #E8F8EC; }
-        .tarjeta-calendario-itinerario.restaurante { border-left: 5px solid #FF5252; background: #FFECEC; }
+        .tarjeta-calendario-itinerario.viaje {
+            border-left: 5px solid #FFB300;
+            background: linear-gradient(155deg, #fffce6 0%, #ffe08d 36%, #f2be45 64%, #fff6d1 100%);
+        }
+        .tarjeta-calendario-itinerario.hospedaje {
+            border-left: 5px solid #9C27B0;
+            background: linear-gradient(155deg, #fcf0ff 0%, #e6baff 36%, #ba74df 66%, #f7e6ff 100%);
+        }
+        .tarjeta-calendario-itinerario.aventura {
+            border-left: 5px solid #4CAF50;
+            background: linear-gradient(155deg, #f2fff0 0%, #b6f0b0 36%, #66b96a 66%, #e8ffe4 100%);
+        }
+        .tarjeta-calendario-itinerario.restaurante {
+            border-left: 5px solid #FF5252;
+            background: linear-gradient(155deg, #fff1f1 0%, #ffc0c0 36%, #ff7a7a 66%, #ffe8e8 100%);
+        }
         @media (max-width: 900px) {
             .calendario-itinerario { grid-auto-columns: clamp(250px, calc((100vw - 90px) / 2), 360px); }
             .columna-dia-itinerario { min-height: 140px; }
