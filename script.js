@@ -2936,7 +2936,7 @@ const firebaseConfig = {
                 .map(dia => {
                     const itemsDia = Array.isArray(dia.items) ? dia.items : [];
                     const nombreDia = (dia.nombre || `Día ${dia.numero || 1}`).trim();
-                    const fechaDia = formatearFechaCortaItinerario(dia.fecha);
+                    const fechaDia = formatearFechaCortaItinerario(dia.fecha) || '__/__/____';
                     itemsDia.sort((a, b) => {
                         const minutosA = obtenerMinutosHorario(a);
                         const minutosB = obtenerMinutosHorario(b);
@@ -2964,12 +2964,14 @@ const firebaseConfig = {
                         <section class="columna-dia-itinerario">
                             <header class="cabecera-columna-dia-itinerario">
                                 <div class="cabecera-dia-contenido">
-                                    <span class="cabecera-dia-numero">Día ${dia.numero || 1}${fechaDia ? ` <span class="cabecera-dia-fecha">(${fechaDia})</span>` : ''}</span>
-                                    <span class="cabecera-dia-nombre">${nombreDia}</span>
+                                    <div class="cabecera-dia-principal">
+                                        <span class="cabecera-dia-titulo-editable">${nombreDia}</span>
+                                        <button class="btn-editar-dia-calendario" onclick="editarNombreDia('${idPais}', '${dia.id}')" title="Editar nombre del día">
+                                            <i data-lucide="pencil"></i>
+                                        </button>
+                                    </div>
+                                    <span class="cabecera-dia-subtitulo">Día ${dia.numero || 1} ${fechaDia}</span>
                                 </div>
-                                <button class="btn-editar-dia-calendario" onclick="editarNombreDia('${idPais}', '${dia.id}')" title="Editar nombre del día">
-                                    <i data-lucide="pencil"></i>
-                                </button>
                             </header>
                             <div class="columna-dia-lista">${tarjetas || '<div class="estado-dia-vacio">Sin actividades para este día.</div>'}</div>
                         </section>
