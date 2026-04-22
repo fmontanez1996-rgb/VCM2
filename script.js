@@ -2046,15 +2046,20 @@ const firebaseConfig = {
             if (!calendario || !destino) return;
 
             const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
+            const dias = Array.isArray(destino.dias) ? destino.dias : [];
             calendario.innerHTML = '';
 
-            if (items.length === 0) {
+            if (items.length === 0 && dias.length === 0) {
                 calendario.innerHTML = `<div class="calendario-vacio">No hay actividades para mostrar.</div>`;
                 lucide.createIcons();
                 return;
             }
 
             const grupos = new Map();
+            dias.forEach(dia => {
+                grupos.set(dia.id, { ...dia, items: [] });
+            });
+
             items.forEach((item, indiceCreacion) => {
                 const dia = obtenerDiaDeItem(destino, item);
                 const diaNormalizado = normalizarDiaItinerario(dia ? `Día ${dia.numero}` : '');
@@ -2068,20 +2073,22 @@ const firebaseConfig = {
                         items: []
                     });
                 }
-                grupos.get(clave).items.push({ ...item, _ordenCreacion: indiceCreacion });
+                grupos.get(claveDia).items.push({ ...item, _ordenCreacion: indiceCreacion });
             });
 
             const columnas = Array.from(grupos.values())
-                .sort((a, b) => a.orden - b.orden || a.etiqueta.localeCompare(b.etiqueta))
-                .map(grupo => {
-                    grupo.items.sort((a, b) => {
+                .sort((a, b) => (a.numero || 0) - (b.numero || 0))
+                .map(dia => {
+                    const itemsDia = Array.isArray(dia.items) ? dia.items : [];
+                    const nombreDia = (dia.nombre || `Día ${dia.numero || 1}`).trim();
+                    itemsDia.sort((a, b) => {
                         const minutosA = obtenerMinutosHorario(a);
                         const minutosB = obtenerMinutosHorario(b);
                         if (minutosA !== minutosB) return minutosA - minutosB;
                         return a._ordenCreacion - b._ordenCreacion;
                     });
 
-                    const tarjetas = grupo.items.map(item => {
+                    const tarjetas = itemsDia.map(item => {
                         const meta = obtenerMetaItinerario(item);
                         const horario = [item.llegada, item.partida].filter(Boolean).join(' - ') || 'Sin horario';
                         return `
@@ -2097,14 +2104,39 @@ const firebaseConfig = {
 
                     return `
                         <section class="columna-dia-itinerario">
-                            <header>${grupo.etiqueta}</header>
-                            <div class="columna-dia-lista">${tarjetas}</div>
+                            <header class="cabecera-columna-dia-itinerario">
+                                <div class="cabecera-dia-contenido">
+                                    <span class="cabecera-dia-numero">Día ${dia.numero || 1}</span>
+                                    <span class="cabecera-dia-nombre">${nombreDia}</span>
+                                </div>
+                                <button class="btn-editar-dia-calendario" onclick="editarNombreDia('${idPais}', '${dia.id}')" title="Editar nombre del día">
+                                    <i data-lucide="pencil"></i>
+                                </button>
+                            </header>
+                            <div class="columna-dia-lista">${tarjetas || '<div class="estado-dia-vacio">Sin actividades para este día.</div>'}</div>
                         </section>
                     `;
                 }).join('');
 
             calendario.innerHTML = columnas;
             lucide.createIcons();
+        };
+
+        window.editarNombreDia = function(idPais, diaId) {
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.dias)) return;
+
+            const dia = destino.dias.find(d => d.id === diaId);
+            if (!dia) return;
+
+            const nombreActual = (dia.nombre || '').trim() || `Día ${dia.numero || 1}`;
+            const nuevoNombre = window.prompt(`Nombre para Día ${dia.numero}:`, nombreActual);
+            if (nuevoNombre === null) return;
+
+            const nombreLimpio = nuevoNombre.trim();
+            dia.nombre = nombreLimpio || `Día ${dia.numero || 1}`;
+            sincronizacionLocalEnCurso = true;
+            dibujarItinerario(idPais);
         };
 
         window.manual_Hospedaje = (btn) => mostrarFormularioItinerario('hospedaje', btn);
