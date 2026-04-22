@@ -465,12 +465,16 @@ const firebaseConfig = {
             const dia = obtenerDiaDeItem(destino, item);
             const numeroDia = dia?.numero || 1;
             const diaLinea = obtenerLineaDiaItem(destino, item);
-            const fechaInicio = formatearFechaCortaItinerario(obtenerFechaBaseItem(destino, item));
+            const fechaInicioISO = obtenerFechaBaseItem(destino, item);
+            const fechaInicio = formatearFechaCortaItinerario(fechaInicioISO);
             const { fechaFin, horaFin } = obtenerRangoTemporalItem(destino, item);
             const fechaFinTexto = formatearFechaCortaItinerario(fechaFin);
             const horaSalida = normalizarHoraItinerario(item.llegada) || 'Sin horario';
             const horaLlegada = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
             const costoBase = formatearMonedaItinerario(item.costo ?? item.precio ?? 0);
+            const numeroDiaFechaFin = (Array.isArray(destino?.dias) && esFechaActividadValida(fechaFin))
+                ? (destino.dias.find((diaActual) => diaActual?.fecha === fechaFin)?.numero || numeroDia)
+                : numeroDia;
 
             if (item._esSalidaViajeVirtual) {
                 return [
@@ -514,7 +518,7 @@ const firebaseConfig = {
                     `Origen: ${origen}`,
                     `Destino: ${destinoViaje}`,
                     `Salida: ${fechaInicio || 'Sin fecha'}, ${horaSalida} (día ${numeroDia})`,
-                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada} (día ${numeroDia})`,
+                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada} (día ${numeroDiaFechaFin})`,
                     `Costo por persona ${costoBase}`
                 ];
             }
@@ -530,14 +534,11 @@ const firebaseConfig = {
             if (item.tipo === 'hospedaje') {
                 const noches = Number(item.noches) || 1;
                 const precioPorNoche = formatearMonedaItinerario(noches > 0 ? Number(item.costo || 0) / noches : item.costo || 0);
-                const diaSalida = (esFechaActividadValida(fechaInicio) && esFechaActividadValida(fechaFin))
-                    ? (Math.max(numeroDia, numeroDia + Math.max(0, Math.round((new Date(`${fechaFin}T00:00:00Z`) - new Date(`${fechaInicio}T00:00:00Z`)) / 86400000))))
-                    : numeroDia;
                 return [
                     `Cantidad de Noches: ${noches}`,
                     `Fecha de Llegada: ${fechaInicio || 'Sin fecha'} (día ${numeroDia})`,
                     `Check in: ${horaSalida}`,
-                    `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${diaSalida})`,
+                    `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${numeroDiaFechaFin})`,
                     `Check out: ${horaLlegada}`,
                     `Precio por noche ${precioPorNoche}`,
                     `Precio total ${costoBase}`
