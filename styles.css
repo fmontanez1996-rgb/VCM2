@@ -735,16 +735,16 @@
             font-weight: 900;
             letter-spacing: 0.04em;
             background:
-                linear-gradient(180deg, #ffd7df 0%, #ff909f 22%, #ff475d 48%, #bc001e 70%, #ff3f58 100%),
-                repeating-linear-gradient(145deg, rgba(255, 255, 255, 0.35) 0 5px, rgba(130, 0, 23, 0.28) 5px 10px);
+                linear-gradient(180deg, #ffd6dc 0%, #ff667a 20%, #f0132f 42%, #a00013 66%, #5b0009 100%),
+                repeating-linear-gradient(145deg, rgba(255, 255, 255, 0.28) 0 5px, rgba(115, 0, 13, 0.35) 5px 10px);
             -webkit-background-clip: text;
             background-clip: text;
-            -webkit-text-stroke: 1.4px #7a0014;
+            -webkit-text-stroke: 1.6px #510009;
             text-shadow:
-                0 1px 0 #ffd0da,
-                0 2px 0 #ff7c90,
-                0 4px 6px rgba(70, 0, 9, 0.55),
-                0 0 16px rgba(255, 50, 80, 0.45);
+                0 1px 0 #ffd0d8,
+                0 2px 0 #ff4f65,
+                0 4px 8px rgba(73, 0, 8, 0.7),
+                0 0 18px rgba(255, 20, 50, 0.62);
         }
         .titulo-memorias-ciudad {
             margin: 0;
@@ -961,15 +961,15 @@
         .tarjeta-agregar.tarjeta-ciudad {
             height: auto;
             padding: 20px;
-            border: 3px solid #7dcff2;
+            border: 3px solid #d7dde3;
             background:
-                linear-gradient(160deg, #f2fbff 0%, #c8eaff 24%, #9fd9f8 48%, #77b9df 72%, #e3f5ff 100%),
-                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0 6px, rgba(75, 123, 155, 0.2) 6px 12px);
+                linear-gradient(160deg, #ffffff 0%, #f9fbfd 26%, #e7edf3 50%, #fefefe 76%, #dce4ea 100%),
+                repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.55) 0 6px, rgba(151, 165, 178, 0.18) 6px 12px);
             color: #020406;
             box-shadow:
-                inset 0 1px 0 rgba(255, 255, 255, 0.86),
-                inset 0 -8px 14px rgba(56, 97, 126, 0.35),
-                0 10px 20px rgba(53, 103, 135, 0.3);
+                inset 0 2px 0 rgba(255, 255, 255, 0.92),
+                inset 0 -8px 14px rgba(121, 133, 145, 0.28),
+                0 10px 22px rgba(120, 133, 147, 0.36);
         }
         .tarjeta-agregar.tarjeta-ciudad i,
         .tarjeta-agregar.tarjeta-ciudad .emoji-ciudad {
@@ -985,16 +985,12 @@
             margin-top: 10px;
             text-align: center;
             font-weight: 900;
-            font-size: 1.28rem;
-            color: transparent;
+            font-size: clamp(1.55rem, 2.2vw, 1.95rem);
+            color: #0055a4;
             letter-spacing: 0.03em;
             font-family: 'Luckiest Guy', cursive;
-            background:
-                linear-gradient(170deg, #f2f2f2 0%, #8f98a1 18%, #f8f8f8 33%, #5c6369 54%, #171a1f 72%, #5a6168 87%, #eceff3 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-stroke: 1px #050505;
-            text-shadow: 0 2px 0 rgba(255,255,255,0.22), 0 4px 8px rgba(0, 0, 0, 0.5);
+            -webkit-text-stroke: 1px #003a70;
+            text-shadow: 0 1px 0 rgba(238,245,255,0.85), 0 4px 10px rgba(0, 56, 109, 0.45);
         }
         .tarjeta-agregar.tarjeta-ciudad:hover {
             transform: scale(1.03) translateY(-4px);
@@ -1003,13 +999,9 @@
                 0 0 18px rgba(182, 229, 255, 0.75);
         }
         .tarjeta-agregar.tarjeta-ciudad:hover .nombre-ciudad-tarjeta {
-            background:
-                linear-gradient(155deg, #ffffff 0%, #adb5bf 32%, #f7f9fb 45%, #4d555d 64%, #0f1216 86%, #edf0f4 100%);
-            color: transparent;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-stroke: 0.9px #07090b;
-            text-shadow: 0 0 10px rgba(208, 220, 230, 0.6);
+            color: #0067c8;
+            -webkit-text-stroke: 1px #004887;
+            text-shadow: 0 0 12px rgba(114, 181, 255, 0.7);
         }
         @keyframes pulsoMetal {
             0%, 100% { transform: translateY(0); }
