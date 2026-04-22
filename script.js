@@ -1083,10 +1083,10 @@ const firebaseConfig = {
                     <h2><i data-lucide="camera"></i> Galería de Recuerdos</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <button onclick="document.getElementById('selector-nuevo-recuerdo').style.display='none'" style="background: #ECEFF1; color: #546E7A; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="eye"></i> Ver recuerdos
+                            <i data-lucide="eye"></i> Ver recuerdo
                         </button>
                         <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);">
-                            <i data-lucide="plus-circle"></i> Nuevo Recuerdo
+                            <i data-lucide="plus-circle"></i> + Nuevo Recuerdo
                         </button>
                     </div>
                 </div>
@@ -1430,7 +1430,9 @@ const firebaseConfig = {
 
             const idProvinciaNormalizado = idProvincia || null;
             const estabaEnMismoDestino = estadoVistaRecuerdos.idPais === idPais && estadoVistaRecuerdos.idProvincia === idProvinciaNormalizado;
-            const submodoActual = (submodo || (estabaEnMismoDestino ? estadoVistaRecuerdos.submodo : 'ver')) === 'nuevo' ? 'nuevo' : 'ver';
+            // Al entrar a una ciudad mostramos primero la vista de recuerdos guardados.
+            // Solo abrimos "nuevo" cuando se pide explícitamente desde el botón.
+            const submodoActual = (submodo === 'nuevo') ? 'nuevo' : 'ver';
             const seccionNuevo = estabaEnMismoDestino ? (estadoVistaRecuerdos.seccionNuevo || 'drive') : 'drive';
             estadoVistaRecuerdos = { modo: 'detalle', idPais, idProvincia: idProvinciaNormalizado, submodo: submodoActual, seccionNuevo: seccionNuevo };
             let objDestino = pais;
@@ -1526,10 +1528,10 @@ const firebaseConfig = {
                 </div>
                 <div style="display:flex; gap:10px; margin-bottom:20px;">
                     <button onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonVerEstilo}">
-                        <i data-lucide="eye" style="width:16px;"></i> Ver recuerdos
+                        <i data-lucide="eye" style="width:16px;"></i> Ver recuerdo
                     </button>
                     <button onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonNuevoEstilo}">
-                        <i data-lucide="plus-circle" style="width:16px;"></i> Nuevo recuerdo
+                        <i data-lucide="plus-circle" style="width:16px;"></i> + Nuevo recuerdo
                     </button>
                 </div>
 
