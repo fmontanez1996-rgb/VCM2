@@ -1611,6 +1611,9 @@ const firebaseConfig = {
             const botonNuevoEstilo = submodoActual === 'nuevo'
                 ? 'background: var(--secondary); color: white; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);'
                 : 'background: #E0F7FA; color: #00838F;';
+            const botonVerEstilo = submodoActual === 'ver'
+                ? 'background: #26a69a; color: white; box-shadow: 0 4px 10px rgba(38, 166, 154, 0.3);'
+                : 'background: #E0F2F1; color: #00695C;';
             const bloqueNuevo = submodoActual === 'nuevo' ? `
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px;">
                     <button id="tab-drive" onclick="cambiarSeccionRecuerdos('drive', '${idPais}', ${paramProv})" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background: var(--secondary); color:white;">
@@ -1674,9 +1677,12 @@ const firebaseConfig = {
                         <button onclick="guardarMusica('${idPais}', ${paramProv})" style="background: #3b82f6; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Guardar</button>
                     </div>
                 </div>
-                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap: wrap;">
                     <button onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonNuevoEstilo}">
                         <i data-lucide="plus-circle" style="width:16px;"></i> AGREGAR MEMORIAS
+                    </button>
+                    <button onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonVerEstilo}">
+                        <i data-lucide="images" style="width:16px;"></i> VER RECUERDOS
                     </button>
                 </div>
 
