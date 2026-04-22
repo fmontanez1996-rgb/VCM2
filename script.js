@@ -2066,6 +2066,101 @@ const firebaseConfig = {
             };
         }
 
+        let limpiarMenuContextualItinerario = null;
+
+        function cerrarMenuContextualItinerario() {
+            const menu = document.getElementById('menu-contextual');
+            if (!menu) return;
+
+            menu.classList.remove('menu-visible', 'menu-itinerario');
+            menu.classList.add('menu-oculto');
+            menu.innerHTML = '';
+
+            if (typeof limpiarMenuContextualItinerario === 'function') {
+                limpiarMenuContextualItinerario();
+                limpiarMenuContextualItinerario = null;
+            }
+        }
+
+        function abrirMenuContextualItinerario(event, idPais, idItem) {
+            event.preventDefault();
+            event.stopPropagation();
+
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.itinerario)) return;
+            const item = destino.itinerario.find(i => Number(i.id) === Number(idItem));
+            if (!item) return;
+
+            const menu = document.getElementById('menu-contextual');
+            if (!menu) return;
+
+            const tituloItem = item.lugar || item.hotel || item.plato || `Viaje en ${item.medio || 'transporte'}`;
+            cerrarMenuContextualItinerario();
+
+            menu.classList.add('menu-itinerario');
+            menu.innerHTML = `
+                <div class="menu-header">
+                    <h3 class="menu-titulo">${tituloItem}</h3>
+                    <button id="cerrar-menu-itinerario" class="btn-cerrar-menu" type="button">&times;</button>
+                </div>
+                <ul class="opciones-menu">
+                    <li id="opc-itinerario-editar"><i data-lucide="pencil"></i> Editar</li>
+                    <li id="opc-itinerario-eliminar" class="opcion-peligro"><i data-lucide="trash-2"></i> Eliminar</li>
+                </ul>
+            `;
+            lucide.createIcons();
+
+            menu.classList.remove('menu-oculto');
+            menu.classList.add('menu-visible');
+
+            const margen = 12;
+            const ancho = menu.offsetWidth || 250;
+            const alto = menu.offsetHeight || 180;
+            const maxX = window.scrollX + window.innerWidth - ancho - margen;
+            const maxY = window.scrollY + window.innerHeight - alto - margen;
+            const posX = Math.max(window.scrollX + margen, Math.min(event.pageX, maxX));
+            const posY = Math.max(window.scrollY + margen, Math.min(event.pageY, maxY));
+
+            menu.style.left = `${posX}px`;
+            menu.style.top = `${posY}px`;
+
+            document.getElementById('opc-itinerario-editar')?.addEventListener('click', () => {
+                cerrarMenuContextualItinerario();
+                editarItemItinerario(idPais, idItem);
+            });
+            document.getElementById('opc-itinerario-eliminar')?.addEventListener('click', () => {
+                const confirmar = window.confirm('¿Seguro que quieres eliminar este ítem del itinerario?');
+                if (!confirmar) return;
+                cerrarMenuContextualItinerario();
+                eliminarItemItinerario(idPais, idItem);
+            });
+            document.getElementById('cerrar-menu-itinerario')?.addEventListener('click', cerrarMenuContextualItinerario);
+
+            const manejarClickFuera = (ev) => {
+                if (!menu.contains(ev.target)) cerrarMenuContextualItinerario();
+            };
+            const manejarEscape = (ev) => {
+                if (ev.key === 'Escape') cerrarMenuContextualItinerario();
+            };
+
+            document.addEventListener('mousedown', manejarClickFuera);
+            document.addEventListener('keydown', manejarEscape);
+            limpiarMenuContextualItinerario = () => {
+                document.removeEventListener('mousedown', manejarClickFuera);
+                document.removeEventListener('keydown', manejarEscape);
+            };
+        }
+
+        function vincularMenuContextualItinerario(idPais, contenedor) {
+            if (!contenedor) return;
+            const elementos = contenedor.querySelectorAll('[data-itinerario-item-id]');
+            elementos.forEach((elemento) => {
+                elemento.addEventListener('contextmenu', (event) => {
+                    abrirMenuContextualItinerario(event, idPais, elemento.dataset.itinerarioItemId);
+                });
+            });
+        }
+
         window.renderizarCalendarioItinerario = function(idPais) {
             const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
             const destino = destinosSonados[idPais];
@@ -2117,7 +2212,7 @@ const firebaseConfig = {
                     const tarjetas = itemsDia.map(item => {
                         const meta = obtenerMetaItinerario(item);
                         return `
-                            <article class="tarjeta-calendario-itinerario ${item.tipo || ''}">
+                            <article class="tarjeta-calendario-itinerario ${item.tipo || ''}" data-itinerario-item-id="${item.id}">
                                 <div class="tarjeta-calendario-header">
                                     <h4><i data-lucide="${meta.icono}"></i> ${meta.titulo}</h4>
                                     <span class="badge-horario"><i data-lucide="clock-3"></i> ${meta.horario}</span>
@@ -2145,6 +2240,7 @@ const firebaseConfig = {
 
             calendario.innerHTML = columnas;
             lucide.createIcons();
+            vincularMenuContextualItinerario(idPais, calendario);
         };
 
         window.editarNombreDia = function(idPais, diaId) {
@@ -2542,7 +2638,7 @@ const firebaseConfig = {
                 const deshabilitarSubir = index === 0;
                 const deshabilitarBajar = index === (items.length - 1);
                 timeline.innerHTML += `
-                    <div class="item-timeline ${item.tipo}"><div class="punto-timeline"></div>
+                    <div class="item-timeline ${item.tipo}" data-itinerario-item-id="${item.id}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
                         <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
@@ -2573,7 +2669,7 @@ const firebaseConfig = {
                         const deshabilitarSubir = index === 0;
                         const deshabilitarBajar = index === (items.length - 1);
                         return `
-                            <div class="item-timeline ${item.tipo}" style="margin:8px 0;">
+                            <div class="item-timeline ${item.tipo}" style="margin:8px 0;" data-itinerario-item-id="${item.id}">
                                 <div class="item-header">
                                     <h4 class="item-titulo"><i data-lucide="${item.tipo === 'viaje' ? 'bus' : item.tipo === 'hospedaje' ? 'hotel' : item.tipo === 'aventura' ? 'mountain' : 'utensils'}"></i> ${item.lugar || item.hotel || item.plato || `Viaje en ${item.medio}`}</h4>
                                     <div class="item-header-actions">
@@ -2586,6 +2682,8 @@ const firebaseConfig = {
                 </div>
             `).join('');
             lucide.createIcons();
+            vincularMenuContextualItinerario(idPais, timeline);
+            vincularMenuContextualItinerario(idPais, calendario);
             if (estadoVistaItinerario?.modo === 'calendario') {
                 renderizarCalendarioItinerario(idPais);
             }

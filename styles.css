@@ -202,6 +202,13 @@
         .opciones-menu { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
         .opciones-menu li { padding: 10px 15px; border-radius: 20px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: all 0.2s; font-size: 1rem; font-weight: 700; color: #546E7A; background: #F5F5F5; }
         .opciones-menu li:hover { background: #E1F5FE; color: var(--secondary); transform: translateX(5px); box-shadow: 0 4px 10px rgba(0, 188, 212, 0.2); }
+        #menu-contextual.menu-itinerario { border-color: #90CAF9; box-shadow: 0 15px 35px rgba(25, 118, 210, 0.25); }
+        #menu-contextual.menu-itinerario .menu-header { border-bottom-color: #BBDEFB; }
+        #menu-contextual.menu-itinerario .menu-titulo { color: #1565C0; font-size: 1.05rem; max-width: 190px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #menu-contextual.menu-itinerario .opciones-menu li { background: #E3F2FD; color: #0D47A1; }
+        #menu-contextual.menu-itinerario .opciones-menu li:hover { background: #BBDEFB; color: #0B3C91; transform: translateX(3px); }
+        #menu-contextual.menu-itinerario .opciones-menu .opcion-peligro { background: #FFEBEE; color: #C62828; }
+        #menu-contextual.menu-itinerario .opciones-menu .opcion-peligro:hover { background: #FFCDD2; color: #B71C1C; }
 
         .spin { animation: spin 2s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -404,6 +411,7 @@
             border: 2px solid #E1F5FE;
             border-radius: 12px;
             padding: 10px;
+            cursor: context-menu;
         }
         .tarjeta-calendario-header {
             display: flex;
@@ -441,7 +449,7 @@
             font-size: 0.9rem;
         }
 
-        .item-timeline { position: relative; margin-bottom: 25px; background: #FFFFFF; border: 2px solid #E1F5FE; border-radius: 20px; padding: 15px 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; }
+        .item-timeline { position: relative; margin-bottom: 25px; background: #FFFFFF; border: 2px solid #E1F5FE; border-radius: 20px; padding: 15px 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; cursor: context-menu; }
         .item-timeline:hover { border-color: #B3E5FC; transform: translateX(5px); }
 
         .punto-timeline { 
