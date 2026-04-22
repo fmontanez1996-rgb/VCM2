@@ -54,17 +54,6 @@ const firebaseConfig = {
         }
 
 
-        // Sube tu archivo SVG en: assets/avatar-viajera.svg
-        const MENU_AVATAR_SRC = "assets/avatar-viajera.svg";
-
-        function obtenerAvatarMenuHtml() {
-            return `
-                <div class="avatar-dialogo" aria-hidden="true">
-                    <img src="${MENU_AVATAR_SRC}" alt="" class="avatar-dialogo-img" loading="lazy" decoding="async" data-avatar-indice="0" onerror="manejarErrorAvatarMenu(this)">
-                </div>
-            `;
-        }
-
         function posicionarMenuContextual(menu, x, y, contenedorMapa) {
             const menuWidth = menu.node().offsetWidth;
             const menuHeight = menu.node().offsetHeight;
@@ -724,7 +713,6 @@ const firebaseConfig = {
                                 ${idPais && idPais !== "-99" ? `<li id="opc-planear"><i data-lucide="map"></i> Planear Aventura</li>` : ''}
                                 ${idPais && idPais !== "-99" ? `<li id="opc-explorar"><i data-lucide="search"></i> Explorar Zonas</li>` : ''}
                             </ul>
-                            ${obtenerAvatarMenuHtml()}
                         `);
 
                         lucide.createIcons();
@@ -998,7 +986,6 @@ const firebaseConfig = {
                                     Planear aventura
                                 </li>
                             </ul>
-                            ${obtenerAvatarMenuHtml()}
                         `);
 
                         lucide.createIcons();

@@ -172,28 +172,6 @@
         #menu-contextual.menu-itinerario .opciones-menu li:hover { background: #BBDEFB; color: #0B3C91; transform: translateX(3px); }
         #menu-contextual.menu-itinerario .opciones-menu .opcion-peligro { background: #FFEBEE; color: #C62828; }
         #menu-contextual.menu-itinerario .opciones-menu .opcion-peligro:hover { background: #FFCDD2; color: #B71C1C; }
-        .avatar-dialogo {
-            position: absolute;
-            right: -70px;
-            bottom: -46px;
-            width: 92px;
-            height: 92px;
-            border-radius: 50%;
-            background: radial-gradient(circle at 35% 35%, #FFE5F2 0%, #FFC1DF 65%, #FF9CCC 100%);
-            border: 4px solid #FFFFFF;
-            box-shadow: 0 10px 18px rgba(255, 64, 129, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            pointer-events: none;
-        }
-        .avatar-dialogo-img {
-            width: 84px;
-            height: 84px;
-            object-fit: contain;
-            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.2));
-        }
-
         .spin { animation: spin 2s linear infinite; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
