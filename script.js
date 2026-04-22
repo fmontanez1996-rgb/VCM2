@@ -1795,7 +1795,7 @@ const firebaseConfig = {
 
                 ${bloqueNuevo}
 
-                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;">
+                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
                 </div>
             `;
 
@@ -1937,23 +1937,10 @@ const firebaseConfig = {
                 : `leerHistoria('${idPais}', ${paramProv}, ${index})`;
 
             return `
-                <article class="tarjeta-memoria-cuadrada" onclick="${abrir}">
+                <article class="tarjeta-memoria-cuadrada" onclick="${abrir}" oncontextmenu="abrirMenuMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
                     <div class="imagen-memoria" style="background-image: url('${imagen}');"></div>
                     <footer class="pie-memoria">
                         <h3 class="titulo-memoria ${claseTitulo}" title="${titulo}">${titulo}</h3>
-                        <div class="menu-memoria" id="menu-memoria-${tipo}-${index}">
-                            <button class="btn-menu-memoria" onclick="alternarMenuMemoria(event, 'menu-memoria-${tipo}-${index}')">
-                                <i data-lucide="ellipsis"></i>
-                            </button>
-                            <div class="panel-opciones-memoria">
-                                <button class="opcion-memoria editar" onclick="editarMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
-                                    <i data-lucide="pencil"></i> Editar
-                                </button>
-                                <button class="opcion-memoria eliminar" onclick="eliminarMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
-                                    <i data-lucide="trash-2"></i> Eliminar
-                                </button>
-                            </div>
-                        </div>
                     </footer>
                 </article>`;
         }
@@ -2021,17 +2008,41 @@ const firebaseConfig = {
             window.open(urlDrive, '_blank', 'noopener,noreferrer');
         };
 
-        window.alternarMenuMemoria = function(event, menuId) {
+        function cerrarMenuMemoria() {
+            document.getElementById('menu-contextual-memoria')?.remove();
+        }
+
+        window.abrirMenuMemoria = function(event, idPais, idProvincia = null, index, tipo) {
+            event.preventDefault();
             event.stopPropagation();
-            document.querySelectorAll('.menu-memoria.abierto').forEach((menu) => {
-                if (menu.id !== menuId) menu.classList.remove('abierto');
-            });
-            const menu = document.getElementById(menuId);
-            if (menu) menu.classList.toggle('abierto');
+            cerrarMenuMemoria();
+
+            const menu = document.createElement('div');
+            menu.id = 'menu-contextual-memoria';
+            menu.className = 'menu-contextual-memoria';
+            menu.innerHTML = `
+                <button class="opcion-memoria editar" type="button" onclick="editarMemoria(event, '${idPais}', ${idProvincia ? `'${idProvincia}'` : 'null'}, ${index}, '${tipo}')">
+                    <i data-lucide="pencil"></i> Editar
+                </button>
+                <button class="opcion-memoria eliminar" type="button" onclick="eliminarMemoria(event, '${idPais}', ${idProvincia ? `'${idProvincia}'` : 'null'}, ${index}, '${tipo}')">
+                    <i data-lucide="trash-2"></i> Eliminar
+                </button>
+            `;
+            document.body.appendChild(menu);
+            lucide.createIcons();
+
+            const margen = 10;
+            const ancho = menu.offsetWidth || 175;
+            const alto = menu.offsetHeight || 110;
+            const maxX = window.innerWidth - ancho - margen;
+            const maxY = window.innerHeight - alto - margen;
+            menu.style.left = `${Math.max(margen, Math.min(event.clientX, maxX))}px`;
+            menu.style.top = `${Math.max(margen, Math.min(event.clientY, maxY))}px`;
         };
 
         window.editarMemoria = function(event, idPais, idProvincia = null, index, tipo) {
             event.stopPropagation();
+            cerrarMenuMemoria();
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
 
             if (tipo === 'drive') {
@@ -2077,6 +2088,8 @@ const firebaseConfig = {
                 tipo = arguments[4];
             }
 
+            cerrarMenuMemoria();
+
             if (confirm("¿Seguro que quieres borrar esto?")) {
                 let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
                 if (tipo === 'drive') {
@@ -2095,9 +2108,12 @@ const firebaseConfig = {
         };
 
         document.addEventListener('click', (event) => {
-            if (!event.target.closest('.menu-memoria')) {
-                document.querySelectorAll('.menu-memoria.abierto').forEach((menu) => menu.classList.remove('abierto'));
-            }
+            const menu = document.getElementById('menu-contextual-memoria');
+            if (menu && !menu.contains(event.target)) cerrarMenuMemoria();
+        });
+        document.addEventListener('contextmenu', (event) => {
+            const menu = document.getElementById('menu-contextual-memoria');
+            if (menu && !event.target.closest('.tarjeta-memoria-cuadrada')) cerrarMenuMemoria();
         });
 
         window.agregarCarpetaDrive = async function(idPais, idProvincia = null) {

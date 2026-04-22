@@ -848,25 +848,29 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background: #0c1118;
-            border: 3px solid #b3c0cf;
-            aspect-ratio: 1 / 1;
+            background:
+                linear-gradient(180deg, rgba(20, 56, 93, 0.75) 0%, rgba(8, 24, 43, 0.96) 100%);
+            border: 3px solid #5ca8da;
+            min-height: 380px;
             box-shadow:
                 inset 0 1px 0 rgba(255,255,255,0.75),
                 inset 0 -3px 8px rgba(65, 79, 95, 0.5),
+                0 0 0 2px rgba(77, 177, 255, 0.28),
+                0 0 20px rgba(60, 160, 240, 0.28),
                 0 8px 16px rgba(0,0,0,0.38);
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
         .tarjeta-memoria-cuadrada:hover {
-            border-color: #7fd5ff;
-            transform: translateY(-4px);
+            border-color: #8adfff;
+            transform: translateY(-7px) scale(1.015);
             box-shadow:
                 inset 0 1px 0 rgba(255,255,255,0.8),
                 inset 0 -4px 10px rgba(35, 52, 71, 0.55),
-                0 0 0 2px rgba(99, 203, 255, 0.42),
-                0 0 20px rgba(69, 177, 255, 0.65),
-                0 12px 20px rgba(0,0,0,0.45);
+                0 0 0 3px rgba(133, 220, 255, 0.65),
+                0 0 25px rgba(80, 192, 255, 0.9),
+                0 0 50px rgba(66, 154, 255, 0.8),
+                0 16px 28px rgba(0,0,0,0.5);
         }
         .imagen-memoria {
             flex: 1;
@@ -874,15 +878,16 @@
             background-size: cover;
             background-repeat: no-repeat;
             min-height: 0;
+            min-height: 300px;
         }
         .pie-memoria {
-            min-height: 62px;
+            min-height: 78px;
             background: linear-gradient(180deg, rgba(7, 16, 28, 0.95), rgba(14, 27, 43, 0.98));
             border-top: 1px solid rgba(188, 215, 242, 0.25);
-            padding: 10px 12px;
+            padding: 12px 16px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             gap: 8px;
         }
         .titulo-memoria {
@@ -890,10 +895,11 @@
             font-family: 'Baloo 2', sans-serif;
             font-weight: 900;
             letter-spacing: 0.02em;
-            font-size: 1.04rem;
+            font-size: 1.32rem;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            width: 100%;
         }
         .titulo-memoria.drive {
             color: #58b7ff;
@@ -903,43 +909,22 @@
             color: #62d770;
             text-shadow: 0 1px 0 #eaffec, 0 0 12px rgba(98, 215, 112, 0.4);
         }
-        .menu-memoria {
-            position: relative;
-            z-index: 2;
-        }
-        .btn-menu-memoria {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            border: 1px solid #6f7f90;
-            background: linear-gradient(180deg, #1e2f42, #152434);
-            color: #d7e7f8;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .panel-opciones-memoria {
-            position: absolute;
-            right: 0;
-            top: calc(100% + 6px);
+        .menu-contextual-memoria {
+            position: fixed;
+            z-index: 4000;
             background: #ffffff;
-            border-radius: 10px;
-            border: 1px solid #d9e0e7;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.28);
-            display: none;
-            flex-direction: column;
-            min-width: 125px;
+            border: 2px solid #b8d7ee;
+            border-radius: 14px;
+            box-shadow: 0 14px 30px rgba(6, 32, 58, 0.34);
+            min-width: 170px;
             overflow: hidden;
-        }
-        .menu-memoria.abierto .panel-opciones-memoria {
-            display: flex;
         }
         .opcion-memoria {
             border: none;
             background: #fff;
             text-align: left;
-            padding: 9px 10px;
+            width: 100%;
+            padding: 11px 12px;
             font-weight: 700;
             font-family: inherit;
             cursor: pointer;
