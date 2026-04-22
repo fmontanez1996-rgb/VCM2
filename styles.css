@@ -7,12 +7,14 @@
             --text-main: #455A64; 
             --btn-glow: rgba(255, 64, 129, 0.6); 
             --btn-glow-sec: rgba(0, 188, 212, 0.6); 
+            --titulo-relleno: #fff8d9;
+            --titulo-borde: #ff3d95;
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Quicksand', sans-serif;
+            font-family: 'Fredoka', sans-serif;
             background-color: var(--bg-main);
             color: var(--text-main);
             display: flex;
@@ -36,7 +38,17 @@
         }
 
         .logo-titulo { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--primary); margin-bottom: 30px; }
-        .logo-titulo h1 { font-size: 1.6rem; margin: 0; font-weight: 900; text-align: center; }
+        .logo-titulo h1 {
+            font-size: 1.7rem;
+            margin: 0;
+            font-weight: 800;
+            text-align: center;
+            font-family: 'Baloo 2', cursive;
+            color: var(--titulo-relleno);
+            -webkit-text-stroke: 2px var(--titulo-borde);
+            text-shadow: 3px 3px 0 rgba(255, 105, 180, 0.28);
+            letter-spacing: 0.03em;
+        }
         .icono-magia { color: #FFCA28; fill: #FFE082; }
 
         .menu-lateral { display: flex; flex-direction: column; gap: 18px; }
@@ -46,7 +58,7 @@
             padding: 14px 20px; border-radius: 50px; cursor: pointer; text-align: left;
             display: flex; align-items: center; gap: 12px; 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            font-family: 'Quicksand', sans-serif; font-size: 1.05rem; font-weight: 700;
+            font-family: 'Baloo 2', sans-serif; font-size: 1.05rem; font-weight: 700;
         }
 
         .btn-menu:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 20px var(--btn-glow); border-color: var(--primary); }
@@ -93,10 +105,13 @@
             filter: drop-shadow(0 2px 2px rgba(0, 121, 107, 0.2));
         }
         .pais:hover {
-            fill: #9be7ff;
+            fill: #8ee9ff;
             cursor: pointer;
             transform: translateY(-1px);
-            filter: drop-shadow(0 5px 7px rgba(0, 188, 212, 0.3));
+            filter:
+                drop-shadow(0 0 12px rgba(168, 242, 255, 0.95))
+                drop-shadow(0 0 24px rgba(206, 249, 255, 0.86))
+                drop-shadow(0 7px 10px rgba(0, 188, 212, 0.48));
         }
         .pais.visitado { fill: #ff6b9d !important; }
         .pais.sonado { fill: #ffd166; stroke: #ffffff; stroke-width: 2px; }
@@ -177,22 +192,67 @@
 
         /* === SECCIÓN DE RECUERDOS Y SOÑADOS === */
         .encabezado-seccion { padding: 20px 30px; border-bottom: 4px dashed #E1F5FE; background: #FFFFFF; z-index: 5; }
-        h2 { color: var(--primary); font-size: 2rem; font-weight: 900; margin: 0; text-shadow: 2px 2px 0px #F8BBD0; display: flex; align-items: center; gap: 15px;}
+        h2 {
+            color: #ffe57f;
+            font-size: 2rem;
+            font-weight: 800;
+            margin: 0;
+            font-family: 'Baloo 2', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            -webkit-text-stroke: 2px #ff4f9a;
+            text-shadow: 3px 3px 0 rgba(255, 64, 129, 0.22);
+        }
+        .titulo-galeria-recuerdos {
+            font-family: 'Luckiest Guy', cursive;
+            letter-spacing: 0.03em;
+            color: #9ef3ff;
+            -webkit-text-stroke: 2px #00a7cc;
+            text-shadow: 4px 4px 0 rgba(0, 122, 204, 0.3);
+        }
 
         .contenedor-scroll { flex-grow: 1; overflow-y: auto; padding: 30px; background: #FAFAFA; }
 
-        .lista-paises { display: flex; flex-direction: column; gap: 20px; }
-        .tarjeta-pais { 
-            background: linear-gradient(145deg, #fffef8 0%, #fff7e6 42%, #fff4fb 100%);
-            border: 3px solid #B3E5FC; border-radius: 25px; padding: 20px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 8px 15px rgba(0, 188, 212, 0.08), inset 0 0 22px rgba(255, 236, 179, 0.28);
-            transition: all 0.3s ease;
+        .lista-paises {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(215px, 1fr));
+            gap: 20px;
         }
-        .tarjeta-pais:hover { transform: translateY(-5px); box-shadow: 0 12px 25px rgba(0, 188, 212, 0.2), 0 0 18px rgba(255, 202, 40, 0.28); border-color: var(--secondary); }
-        .info-pais { display: flex; align-items: center; gap: 15px; }
+        .tarjeta-pais { 
+            background: linear-gradient(145deg, #f9feff 0%, #edfaff 48%, #f7f5ff 100%);
+            border: 3px solid #7adfff;
+            border-radius: 24px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 205px;
+            aspect-ratio: 1 / 1;
+            text-align: center;
+            box-shadow: 0 10px 18px rgba(0, 188, 212, 0.13), inset 0 0 24px rgba(150, 236, 255, 0.33);
+            transition: all 0.32s ease;
+        }
+        .tarjeta-pais:hover {
+            transform: translateY(-8px);
+            box-shadow:
+                0 14px 28px rgba(0, 188, 212, 0.22),
+                0 0 24px rgba(138, 239, 255, 0.7),
+                0 0 38px rgba(219, 248, 255, 0.75);
+            border-color: #3bd5ff;
+        }
+        .info-pais { display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .icono-bandera { width: 50px; height: 50px; background: #E1F5FE; color: var(--secondary); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.5rem; }
-        .nombre-pais-lista { font-size: 1.4rem; font-weight: 800; color: #455A64; margin: 0; }
+        .nombre-pais-lista {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #d7f9ff;
+            margin: 0;
+            font-family: 'Baloo 2', sans-serif;
+            -webkit-text-stroke: 1.6px #048bb2;
+            text-shadow: 2px 2px 0 rgba(1, 132, 168, 0.23);
+        }
         .destino-principal { margin: 0; font-weight: 900; letter-spacing: 0.3px; text-transform: uppercase; }
         .destino-principal.dorado {
             color: #FFB300;
@@ -212,10 +272,27 @@
         .destino-escalas { margin-top: 4px; font-size: 0.95rem; color: #90A4AE; font-weight: 600; }
         .zonas-badge { background: #FCE4EC; color: #D81B60; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; margin-top: 5px; display: inline-block; }
 
-        .btn-accion-pais { 
-            background: var(--primary); color: white; border: none; padding: 12px 25px; border-radius: 50px; 
-            font-family: 'Quicksand', sans-serif; font-size: 1.1rem; font-weight: 800; cursor: pointer; 
-            transition: all 0.2s; display: flex; align-items: center; gap: 10px; box-shadow: 0 5px 15px var(--btn-glow);
+        .btn-accion-pais {
+            background: linear-gradient(160deg, #9cff8b 0%, #3fbf58 30%, #20913c 55%, #58e977 100%);
+            color: #ffffff;
+            border: 1px solid rgba(204, 255, 214, 0.95);
+            padding: 12px 22px;
+            border-radius: 18px;
+            font-family: 'Baloo 2', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.24s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.88),
+                inset 0 -8px 12px rgba(14, 86, 32, 0.35),
+                0 7px 0 #1c7e35,
+                0 14px 24px rgba(31, 153, 63, 0.45);
+            text-shadow: 0 1px 0 rgba(0, 0, 0, 0.24);
         }
         .btn-accion-pais.secundario {
             background: linear-gradient(160deg, #fff4b8 0%, #ffd95c 22%, #ffbe0b 50%, #e08f00 100%);
@@ -246,7 +323,54 @@
                 0 4px 0 #b87400,
                 0 7px 14px rgba(255, 179, 0, 0.35);
         }
-        .btn-accion-pais:not(.secundario):hover { transform: scale(1.05); filter: brightness(1.1); }
+        .btn-accion-pais:not(.secundario):hover {
+            transform: translateY(-2px) scale(1.04);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.95),
+                inset 0 -8px 12px rgba(14, 86, 32, 0.35),
+                0 9px 0 #1c7e35,
+                0 16px 28px rgba(31, 153, 63, 0.55),
+                0 0 26px rgba(140, 255, 176, 0.9);
+            filter: saturate(1.08);
+        }
+        .btn-accion-pais:not(.secundario):active {
+            transform: translateY(3px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.85),
+                inset 0 -5px 10px rgba(14, 86, 32, 0.3),
+                0 4px 0 #1c7e35,
+                0 8px 14px rgba(31, 153, 63, 0.4);
+        }
+        .btn-nueva-aventura {
+            border: 1px solid rgba(191, 232, 255, 0.95);
+            border-radius: 18px;
+            background: linear-gradient(150deg, #b0ccff 0%, #3d8bff 32%, #0f5bd7 62%, #89e6ff 100%);
+            color: #ffffff;
+            font-family: 'Baloo 2', sans-serif;
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.88),
+                inset 0 -7px 12px rgba(3, 45, 133, 0.45),
+                0 7px 0 #0a45b4,
+                0 12px 24px rgba(15, 91, 215, 0.45);
+            transition: all 0.25s ease;
+        }
+        .btn-nueva-aventura:hover {
+            transform: translateY(-2px);
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.92),
+                inset 0 -7px 12px rgba(3, 45, 133, 0.45),
+                0 9px 0 #0a45b4,
+                0 16px 26px rgba(15, 91, 215, 0.5);
+        }
+        .btn-nueva-aventura.activo-form {
+            box-shadow:
+                inset 0 2px 0 rgba(255, 255, 255, 0.95),
+                inset 0 -8px 14px rgba(0, 112, 126, 0.55),
+                0 9px 0 #058b9b,
+                0 0 22px rgba(0, 255, 251, 0.95),
+                0 0 45px rgba(87, 255, 243, 0.92);
+            filter: saturate(1.2) brightness(1.08);
+        }
         .acciones-itinerario-card { display: flex; align-items: center; gap: 12px; }
         .miniatura-portada-lista {
             width: 92px;
