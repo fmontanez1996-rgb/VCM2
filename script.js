@@ -261,7 +261,12 @@ const firebaseConfig = {
                 destino.portadaUrl = destino.portadaUrl || "";
                 destino.dias = normalizarDiasDestino(destino);
 
-                destino.itinerario.forEach(item => asegurarDiaIdEnItem(destino, item));
+                destino.itinerario.forEach(item => {
+                    asegurarDiaIdEnItem(destino, item);
+                    if (item && item.diaId && Object.prototype.hasOwnProperty.call(item, 'dia')) {
+                        delete item.dia;
+                    }
+                });
             });
         }
 
@@ -1974,7 +1979,7 @@ const firebaseConfig = {
         function normalizarDiaItinerario(dia) {
             const texto = (dia || '').toString().trim();
             if (!texto) {
-                return { etiqueta: 'Sin día', orden: Number.MAX_SAFE_INTEGER };
+                return { etiqueta: 'Día 1', orden: 1 };
             }
             const sinAcentos = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
             const matchDia = sinAcentos.match(/dia\s*(\d+)/i);
@@ -2051,12 +2056,15 @@ const firebaseConfig = {
 
             const grupos = new Map();
             items.forEach((item, indiceCreacion) => {
-                const diaNormalizado = normalizarDiaItinerario(item?.dia);
-                const clave = `${diaNormalizado.orden}-${diaNormalizado.etiqueta}`;
+                const dia = obtenerDiaDeItem(destino, item);
+                const diaNormalizado = normalizarDiaItinerario(dia ? `Día ${dia.numero}` : '');
+                const etiqueta = dia ? `DÍA ${dia.numero}: ${dia.nombre}` : diaNormalizado.etiqueta;
+                const clave = dia?.id || `sin-dia-${diaNormalizado.orden}`;
+
                 if (!grupos.has(clave)) {
                     grupos.set(clave, {
-                        etiqueta: diaNormalizado.etiqueta,
-                        orden: diaNormalizado.orden,
+                        etiqueta,
+                        orden: dia?.numero || diaNormalizado.orden,
                         items: []
                     });
                 }
@@ -2286,7 +2294,12 @@ const firebaseConfig = {
             if (!dataPais.destinoFinal) dataPais.destinoFinal = dataPais.nombre;
             if (!dataPais.escalas) dataPais.escalas = [];
             if (!dataPais.escalasCiudades) dataPais.escalasCiudades = [];
-            nuevoItem.diaId = document.getElementById('input-item-dia')?.value || dataPais.dias?.[0]?.id;
+                        const diaSeleccionado = document.getElementById('input-item-dia')?.value;
+            nuevoItem.diaId = diaSeleccionado || dataPais.dias?.[0]?.id || crearDia(1, 'Llegada').id;
+            if (!dataPais.dias?.length) {
+                dataPais.dias = [crearDia(1, 'Llegada')];
+                nuevoItem.diaId = dataPais.dias[0].id;
+            }
 
             if (tipo === 'viaje') {
                 nuevoItem.medio = document.getElementById('input-viaje-medio').value;
@@ -2412,7 +2425,8 @@ const firebaseConfig = {
             const timeline = document.getElementById(`linea-tiempo-${idPais}`);
             const calendario = document.getElementById(`placeholder-calendario-${idPais}`);
             if (!timeline || !calendario || !destinosSonados[idPais]) return;
-            const items = destinosSonados[idPais].itinerario;
+            const destino = destinosSonados[idPais];
+            const items = destino.itinerario;
             timeline.innerHTML = '';
             calendario.innerHTML = '';
             if (items.length === 0) {
@@ -2451,15 +2465,25 @@ const firebaseConfig = {
             });
 
             const agrupadosPorDia = items.reduce((acumulado, item, index) => {
-                const claveDia = (item.dia || 'Sin día').trim() || 'Sin día';
-                if (!acumulado[claveDia]) acumulado[claveDia] = [];
-                acumulado[claveDia].push({ item, index });
+                const dia = obtenerDiaDeItem(destino, item);
+                const claveDia = dia?.id || 'sin-dia';
+                if (!acumulado[claveDia]) {
+                    const diaNormalizado = normalizarDiaItinerario(dia ? `Día ${dia.numero}` : '');
+                    acumulado[claveDia] = {
+                        etiqueta: dia ? `DÍA ${dia.numero}: ${dia.nombre}` : diaNormalizado.etiqueta,
+                        orden: dia?.numero || diaNormalizado.orden,
+                        lista: []
+                    };
+                }
+                acumulado[claveDia].lista.push({ item, index });
                 return acumulado;
             }, {});
 
-            calendario.innerHTML = Object.entries(agrupadosPorDia).map(([dia, lista]) => `
+            calendario.innerHTML = Object.values(agrupadosPorDia)
+                .sort((a, b) => a.orden - b.orden || a.etiqueta.localeCompare(b.etiqueta))
+                .map(({ etiqueta, lista }) => `
                 <div class="cal-dia">
-                    <h4 style="margin:0 0 8px; color:#D81B60;">${dia}</h4>
+                    <h4 style="margin:0 0 8px; color:#D81B60;">${etiqueta}</h4>
                     ${lista.map(({ item, index }) => {
                         const deshabilitarSubir = index === 0;
                         const deshabilitarBajar = index === (items.length - 1);
