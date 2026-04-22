@@ -2953,7 +2953,6 @@ const firebaseConfig = {
                             <article class="tarjeta-calendario-itinerario ${item.tipo || ''}" data-itinerario-item-id="${item.id}">
                                 <div class="tarjeta-calendario-header">
                                     <h4><i data-lucide="${meta.icono}"></i> ${meta.titulo}</h4>
-                                    <span class="badge-horario"><i data-lucide="clock-3"></i> ${meta.horario}</span>
                                 </div>
                                 <div class="item-detalles">${resumen}</div>
                             </article>
