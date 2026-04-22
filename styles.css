@@ -174,7 +174,7 @@
         #menu-contextual.menu-itinerario .opciones-menu .opcion-peligro:hover { background: #FFCDD2; color: #B71C1C; }
         .avatar-dialogo {
             position: absolute;
-            left: -70px;
+            right: -70px;
             bottom: -46px;
             width: 92px;
             height: 92px;
