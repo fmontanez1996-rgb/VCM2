@@ -14,7 +14,7 @@ const firebaseConfig = {
         let paisesVisitados = {};
         let provinciasVisitadas = {}; 
         let destinosSonados = {}; 
-        let estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null };
+        let estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null, submodo: 'ver', seccionNuevo: 'drive' };
         let estadoVistaSonados = { modo: 'lista', idPais: null };
         let estadoVistaItinerario = { modo: 'lista', idPais: null };
         let firebaseDb = null;
@@ -96,7 +96,7 @@ const firebaseConfig = {
                 if (estadoVistaRecuerdos.modo === 'detalle' && estadoVistaRecuerdos.idPais && paisesVisitados[estadoVistaRecuerdos.idPais]) {
                     const provinciaExiste = estadoVistaRecuerdos.idProvincia && provinciasVisitadas[estadoVistaRecuerdos.idPais]?.[estadoVistaRecuerdos.idProvincia];
                     if (estadoVistaRecuerdos.idProvincia && provinciaExiste) {
-                        abrirAlbumDetalle(estadoVistaRecuerdos.idPais, estadoVistaRecuerdos.idProvincia);
+                        abrirAlbumDetalle(estadoVistaRecuerdos.idPais, estadoVistaRecuerdos.idProvincia, estadoVistaRecuerdos.submodo || 'ver');
                     } else {
                         abrirAlbum(estadoVistaRecuerdos.idPais);
                     }
@@ -1061,16 +1061,21 @@ const firebaseConfig = {
         }
 
         window.renderizarPantallaRecuerdos = function() {
-            estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null };
+            estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null, submodo: 'ver', seccionNuevo: 'drive' };
             const contenedor = document.getElementById('vista-vividas');
             const idsPaises = Object.keys(paisesVisitados);
 
             contenedor.innerHTML = `
-                <div class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <h2><i data-lucide="camera"></i> Galería de Recuerdos</h2>
-                    <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);">
-                        <i data-lucide="plus-circle"></i> Nuevo Recuerdo
-                    </button>
+                    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <button onclick="document.getElementById('selector-nuevo-recuerdo').style.display='none'" style="background: #ECEFF1; color: #546E7A; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="eye"></i> Ver recuerdos
+                        </button>
+                        <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);">
+                            <i data-lucide="plus-circle"></i> Nuevo Recuerdo
+                        </button>
+                    </div>
                 </div>
                 
                 <div id="selector-nuevo-recuerdo" style="display:none; background: #FDF2F5; margin: 15px; padding: 20px; border-radius: 15px; border: 2px dashed var(--primary); animation: fadeIn 0.3s ease;">
@@ -1256,7 +1261,7 @@ const firebaseConfig = {
 
             // Si NO hay provincia seleccionada, siempre mostramos el menú de provincias (eliminamos el acceso general)
             if (!idProvincia) {
-                estadoVistaRecuerdos = { modo: 'provincias', idPais, idProvincia: null };
+                estadoVistaRecuerdos = { modo: 'provincias', idPais, idProvincia: null, submodo: 'ver', seccionNuevo: 'drive' };
                 const provs = provinciasVisitadas[idPais] || {};
                 const idsProvincias = Object.keys(provs);
 
@@ -1403,14 +1408,18 @@ const firebaseConfig = {
             };
         };
 
-        window.abrirAlbumDetalle = function(idPais, idProvincia) {
+        window.abrirAlbumDetalle = function(idPais, idProvincia, submodo = null) {
             const pais = paisesVisitados[idPais];
             if (!pais) {
                 renderizarPantallaRecuerdos();
                 return;
             }
 
-            estadoVistaRecuerdos = { modo: 'detalle', idPais, idProvincia: idProvincia || null };
+            const idProvinciaNormalizado = idProvincia || null;
+            const estabaEnMismoDestino = estadoVistaRecuerdos.idPais === idPais && estadoVistaRecuerdos.idProvincia === idProvinciaNormalizado;
+            const submodoActual = (submodo || (estabaEnMismoDestino ? estadoVistaRecuerdos.submodo : 'ver')) === 'nuevo' ? 'nuevo' : 'ver';
+            const seccionNuevo = estabaEnMismoDestino ? (estadoVistaRecuerdos.seccionNuevo || 'drive') : 'drive';
+            estadoVistaRecuerdos = { modo: 'detalle', idPais, idProvincia: idProvinciaNormalizado, submodo: submodoActual, seccionNuevo: seccionNuevo };
             let objDestino = pais;
             let nombreTitulo = pais.nombre;
 
@@ -1433,32 +1442,13 @@ const firebaseConfig = {
             // Lógica de navegación: si estamos dentro de una ciudad, "Volver" nos lleva a la lista de ciudades.
             const btnVolverAccion = idProvincia ? `abrirAlbum('${idPais}')` : `renderizarPantallaRecuerdos()`;
             const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
-
-            scrollArea.innerHTML = `
-                <div class="cabecera-detalle" style="justify-content: flex-start; gap: 15px; margin-bottom: 5px;">
-                    <button class="btn-volver" onclick="${btnVolverAccion}" title="Volver"><i data-lucide="arrow-left"></i></button>
-                    <h2 style="margin:0;">Memorias de ${nombreTitulo}</h2>
-                </div>
-
-                <div id="seccion-musica" style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #3b82f6;">
-                    <div id="vista-musica-guardada" style="display: ${tieneMusica ? 'flex' : 'none'}; align-items: center; justify-content: space-between; gap: 10px;">
-                        <a href="${objDestino.musica}" target="_blank" style="flex: 1; background: #3b82f6; color: white; text-decoration: none; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i data-lucide="play-circle"></i> MÚSICA PARA LA MEMORIA
-                        </a>
-                        <button onclick="cambiarMusica('${idPais}', ${paramProv})" title="Cambiar enlace" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #64748b; padding: 12px; border-radius: 10px; cursor: pointer;">
-                            <i data-lucide="refresh-cw" style="width:18px;"></i>
-                        </button>
-                    </div>
-                    
-                    <div id="input-musica" style="display: ${tieneMusica ? 'none' : 'flex'}; gap: 10px; align-items: center;">
-                        <div style="flex:1; position:relative;">
-                            <i data-lucide="music" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; color:#94a3b8;"></i>
-                            <input type="text" id="url-musica" placeholder="Pega el link de la canción..." style="width:100%; padding:10px 10px 10px 35px; border-radius:8px; border:1px solid #cbd5e1; font-size: 0.85rem; outline: none;">
-                        </div>
-                        <button onclick="guardarMusica('${idPais}', ${paramProv})" style="background: #3b82f6; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Guardar</button>
-                    </div>
-                </div>
-
+            const botonVerEstilo = submodoActual === 'ver'
+                ? 'background: #4f46e5; color: white; box-shadow: 0 4px 10px rgba(79,70,229,0.25);'
+                : 'background: #EEF2FF; color: #4f46e5;';
+            const botonNuevoEstilo = submodoActual === 'nuevo'
+                ? 'background: var(--secondary); color: white; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);'
+                : 'background: #E0F7FA; color: #00838F;';
+            const bloqueNuevo = submodoActual === 'nuevo' ? `
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px;">
                     <button id="tab-drive" onclick="cambiarSeccionRecuerdos('drive', '${idPais}', ${paramProv})" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background: var(--secondary); color:white;">
                         <i data-lucide="folder" style="width:16px; vertical-align:middle;"></i> Drive
@@ -1495,13 +1485,59 @@ const firebaseConfig = {
                         <button onclick="agregarHistoria('${idPais}', ${paramProv})" style="background: var(--primary); color:white; border:none; padding:12px 20px; border-radius:10px; cursor:pointer; font-weight:bold; align-self: flex-end;">Guardar Historia</button>
                     </div>
                 </div>
+            ` : '';
+
+            scrollArea.innerHTML = `
+                <div class="cabecera-detalle" style="justify-content: flex-start; gap: 15px; margin-bottom: 5px;">
+                    <button class="btn-volver" onclick="${btnVolverAccion}" title="Volver"><i data-lucide="arrow-left"></i></button>
+                    <h2 style="margin:0;">Memorias de ${nombreTitulo}</h2>
+                </div>
+
+                <div id="seccion-musica" style="margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #3b82f6;">
+                    <div id="vista-musica-guardada" style="display: ${tieneMusica ? 'flex' : 'none'}; align-items: center; justify-content: space-between; gap: 10px;">
+                        <a href="${objDestino.musica}" target="_blank" style="flex: 1; background: #3b82f6; color: white; text-decoration: none; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <i data-lucide="play-circle"></i> MÚSICA PARA LA MEMORIA
+                        </a>
+                        <button onclick="cambiarMusica('${idPais}', ${paramProv})" title="Cambiar enlace" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #64748b; padding: 12px; border-radius: 10px; cursor: pointer;">
+                            <i data-lucide="refresh-cw" style="width:18px;"></i>
+                        </button>
+                    </div>
+                    
+                    <div id="input-musica" style="display: ${tieneMusica ? 'none' : 'flex'}; gap: 10px; align-items: center;">
+                        <div style="flex:1; position:relative;">
+                            <i data-lucide="music" style="position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; color:#94a3b8;"></i>
+                            <input type="text" id="url-musica" placeholder="Pega el link de la canción..." style="width:100%; padding:10px 10px 10px 35px; border-radius:8px; border:1px solid #cbd5e1; font-size: 0.85rem; outline: none;">
+                        </div>
+                        <button onclick="guardarMusica('${idPais}', ${paramProv})" style="background: #3b82f6; color:white; border:none; padding:10px 15px; border-radius:8px; cursor:pointer; font-weight:bold;">Guardar</button>
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <button onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonVerEstilo}">
+                        <i data-lucide="eye" style="width:16px;"></i> Ver recuerdos
+                    </button>
+                    <button onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})" style="border:none; border-radius:12px; padding:10px 14px; font-weight:bold; cursor:pointer; display:flex; align-items:center; gap:8px; ${botonNuevoEstilo}">
+                        <i data-lucide="plus-circle" style="width:16px;"></i> Nuevo recuerdo
+                    </button>
+                </div>
+
+                ${bloqueNuevo}
 
                 <div id="lista-memorias-guardadas" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
                 </div>
             `;
 
-            actualizarVistaAlbumes(idPais, idProvincia);
+            if (submodoActual === 'nuevo') {
+                cambiarSeccionRecuerdos(seccionNuevo, idPais, idProvincia);
+            } else {
+                actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
+            }
             lucide.createIcons();
+        };
+
+        window.cambiarSubmodoRecuerdos = function(submodo, idPais, idProvincia = null) {
+            const destino = submodo === 'nuevo' ? 'nuevo' : 'ver';
+            estadoVistaRecuerdos.submodo = destino;
+            window.abrirAlbumDetalle(idPais, idProvincia, destino);
         };
 
         window.extraerIDYoutube = function(url) {
@@ -1528,10 +1564,12 @@ const firebaseConfig = {
         };
 
         window.cambiarSeccionRecuerdos = function(tipo, idPais, idProvincia = null) {
+            if (estadoVistaRecuerdos.submodo !== 'nuevo') return;
             const btnDrive = document.getElementById('tab-drive');
             const btnHistorias = document.getElementById('tab-historias');
             const formDrive = document.getElementById('form-drive');
             const formHistorias = document.getElementById('form-historias');
+            estadoVistaRecuerdos.seccionNuevo = tipo === 'historias' ? 'historias' : 'drive';
 
             if (tipo === 'drive') {
                 btnDrive.style.background = 'var(--secondary)'; btnDrive.style.color = 'white';
@@ -1543,6 +1581,52 @@ const firebaseConfig = {
                 formDrive.style.display = 'none'; formHistorias.style.display = 'block';
             }
             actualizarVistaAlbumes(idPais, idProvincia, tipo);
+        };
+
+        window.actualizarVistaRecuerdosSoloLectura = function(idPais, idProvincia = null) {
+            const contenedor = document.getElementById('lista-memorias-guardadas');
+            if (!contenedor) return;
+            let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
+            const albumes = objDestino.albumes || [];
+            const historias = objDestino.historias || [];
+            const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
+
+            let html = '';
+            if (albumes.length === 0 && historias.length === 0) {
+                html = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i data-lucide="camera-off" style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;"></i><p>Aún no hay recuerdos guardados para este destino.</p></div>';
+            } else {
+                albumes.forEach((album, index) => {
+                    html += `
+                        <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary);">
+                            <div style="height:120px; background: #eee url('${album.portada || 'https://via.placeholder.com/300x150?text=Sin+Portada'}') center/cover no-repeat;"></div>
+                            <div style="padding: 15px;">
+                                <div style="display:flex; justify-content: space-between;">
+                                    <h3 style="margin:0; font-size: 1rem;">${album.nombre}</h3>
+                                    <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'drive')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
+                                </div>
+                                <a href="${album.url}" target="_blank" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
+                            </div>
+                        </div>`;
+                });
+
+                historias.forEach((h, index) => {
+                    html += `
+                        <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display:flex; flex-direction:column;">
+                            <div style="height:120px; background: #eee url('${h.img || 'https://via.placeholder.com/300x150?text=Sin+Imagen'}') center/cover no-repeat;"></div>
+                            <div style="padding: 15px;">
+                                <div style="display:flex; justify-content: space-between; align-items:center;">
+                                    <h3 style="margin:0; font-size: 1rem; color: var(--primary);">${h.titulo}</h3>
+                                    <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'historia')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
+                                </div>
+                                <p style="font-size: 0.85rem; color: #546E7A; margin-top:10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${h.texto}</p>
+                                <button onclick="leerHistoria('${idPais}', ${paramProv}, ${index})" style="width:100%; margin-top:10px; padding:8px; border-radius:8px; border:1px solid var(--primary); color:var(--primary); background:transparent; font-weight:bold; cursor:pointer;">Leer Completa</button>
+                            </div>
+                        </div>`;
+                });
+            }
+
+            contenedor.innerHTML = html;
+            lucide.createIcons();
         };
 
         window.actualizarVistaAlbumes = function(idPais, idProvincia = null, vista = 'drive') {
@@ -1652,10 +1736,15 @@ const firebaseConfig = {
                 let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
                 if (tipo === 'drive') {
                     objDestino.albumes.splice(index, 1);
-                    actualizarVistaAlbumes(idPais, idProvincia, 'drive');
                 } else {
                     objDestino.historias.splice(index, 1);
-                    actualizarVistaAlbumes(idPais, idProvincia, 'historias');
+                }
+
+                if (estadoVistaRecuerdos.submodo === 'nuevo') {
+                    const vistaActiva = estadoVistaRecuerdos.seccionNuevo || 'drive';
+                    actualizarVistaAlbumes(idPais, idProvincia, vistaActiva);
+                } else {
+                    actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
                 }
             }
         };
