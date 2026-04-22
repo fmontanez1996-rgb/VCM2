@@ -378,7 +378,7 @@
             background: #F0FBFF;
             color: #607D8B;
             font-weight: 700;
-            text-align: center;
+            font-size: 0.9rem;
         }
 
         .item-timeline { position: relative; margin-bottom: 25px; background: #FFFFFF; border: 2px solid #E1F5FE; border-radius: 20px; padding: 15px 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; }
