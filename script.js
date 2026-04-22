@@ -54,6 +54,7 @@ const firebaseConfig = {
         }
 
 
+        // Sube tu archivo SVG en: assets/avatar-viajera.svg
         const MENU_AVATAR_SRC = "assets/avatar-viajera.svg";
 
         function obtenerAvatarMenuHtml() {
