@@ -16,6 +16,7 @@ const firebaseConfig = {
         let destinosSonados = {}; 
         let estadoVistaRecuerdos = { modo: 'lista', idPais: null, idProvincia: null };
         let estadoVistaSonados = { modo: 'lista', idPais: null };
+        let estadoVistaItinerario = { modo: 'lista', idPais: null };
         let firebaseDb = null;
         let estadoInicialSincronizado = false;
         let ultimaHuellaSincronizada = "";
@@ -149,6 +150,100 @@ const firebaseConfig = {
             }
         }
 
+        function slugDia(nombre = "") {
+            return String(nombre || "")
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[̀-ͯ]/g, '')
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '') || 'dia';
+        }
+
+        function crearDia(numero = 1, nombre = '') {
+            const numeroSeguro = Math.max(1, Number(numero) || 1);
+            const nombreSeguro = (nombre || `Día ${numeroSeguro}`).trim() || `Día ${numeroSeguro}`;
+            return {
+                id: `dia-${numeroSeguro}-${slugDia(nombreSeguro)}`,
+                numero: numeroSeguro,
+                nombre: nombreSeguro
+            };
+        }
+
+        function normalizarDiasDestino(destino) {
+            const diasOriginales = Array.isArray(destino.dias) ? destino.dias : [];
+            const diasNormalizados = [];
+            const idsUsados = new Set();
+
+            diasOriginales.forEach((dia, index) => {
+                const numero = Math.max(1, Number(dia?.numero) || (index + 1));
+                const nombre = (dia?.nombre || `Día ${numero}`).trim() || `Día ${numero}`;
+                let id = typeof dia?.id === 'string' ? dia.id.trim() : '';
+                if (!id) id = `dia-${numero}-${slugDia(nombre)}`;
+                while (idsUsados.has(id)) id = `${id}-${index + 1}`;
+                idsUsados.add(id);
+                diasNormalizados.push({ id, numero, nombre });
+            });
+
+            if (!diasNormalizados.length) {
+                const base = crearDia(1, 'Llegada');
+                diasNormalizados.push(base);
+            }
+
+            diasNormalizados.sort((a, b) => a.numero - b.numero || a.nombre.localeCompare(b.nombre));
+            diasNormalizados.forEach((dia, index) => {
+                dia.numero = index + 1;
+                if (!dia.nombre) dia.nombre = `Día ${dia.numero}`;
+            });
+
+            return diasNormalizados;
+        }
+
+        function obtenerDiaPorTexto(destino, textoDia = '') {
+            const texto = String(textoDia || '').trim();
+            if (!texto) return null;
+            const textoMin = texto.toLowerCase();
+            const numeroDesdeTexto = (texto.match(/\d+/) || [])[0];
+
+            const exacto = destino.dias.find(d => d.nombre.toLowerCase() === textoMin);
+            if (exacto) return exacto;
+
+            if (numeroDesdeTexto) {
+                const numero = Number(numeroDesdeTexto);
+                const porNumero = destino.dias.find(d => d.numero === numero);
+                if (porNumero) return porNumero;
+
+                const nuevoDia = crearDia(numero, texto);
+                destino.dias.push(nuevoDia);
+                destino.dias.sort((a, b) => a.numero - b.numero);
+                return nuevoDia;
+            }
+
+            const nuevoNumero = destino.dias.length + 1;
+            const nuevoDia = crearDia(nuevoNumero, texto);
+            destino.dias.push(nuevoDia);
+            destino.dias.sort((a, b) => a.numero - b.numero);
+            return nuevoDia;
+        }
+
+        function asegurarDiaIdEnItem(destino, item) {
+            if (!item || typeof item !== 'object') return;
+
+            if (item.diaId) {
+                const existe = destino.dias.some(d => d.id === item.diaId);
+                if (existe) return;
+            }
+
+            const diaDesdeTexto = obtenerDiaPorTexto(destino, item.dia);
+            if (diaDesdeTexto) {
+                item.diaId = diaDesdeTexto.id;
+                return;
+            }
+
+            const primerDia = destino.dias[0] || crearDia(1, 'Llegada');
+            if (!destino.dias.length) destino.dias.push(primerDia);
+            item.diaId = primerDia.id;
+        }
+
         function normalizarDestinosSonados() {
             Object.keys(destinosSonados || {}).forEach((idPais) => {
                 const destino = destinosSonados[idPais];
@@ -164,7 +259,33 @@ const firebaseConfig = {
                 destino.itinerario = Array.isArray(destino.itinerario) ? destino.itinerario : [];
                 destino.ciudadDestinoFinal = destino.ciudadDestinoFinal || "";
                 destino.portadaUrl = destino.portadaUrl || "";
+                destino.dias = normalizarDiasDestino(destino);
+
+                destino.itinerario.forEach(item => asegurarDiaIdEnItem(destino, item));
             });
+        }
+
+        function obtenerDiaDeItem(destino, item) {
+            if (!destino || !item) return null;
+            return destino.dias.find(d => d.id === item.diaId) || destino.dias[0] || null;
+        }
+
+        function obtenerEtiquetaDia(destino, item) {
+            const dia = obtenerDiaDeItem(destino, item);
+            if (!dia) return 'Día 1';
+            return `DÍA ${dia.numero}: ${dia.nombre}`;
+        }
+
+        function renderSelectDias(destino, diaIdActual = '') {
+            const opciones = (destino?.dias || []).map(dia => (
+                `<option value="${dia.id}" ${dia.id === diaIdActual ? 'selected' : ''}>DÍA ${dia.numero}: ${dia.nombre}</option>`
+            )).join('');
+
+            return `
+                <div class="campo-form"><label>Día</label>
+                    <select id="input-item-dia">${opciones}</select>
+                </div>
+            `;
         }
 
         function guardarEstadoEnFirebase(forzar = false) {
@@ -523,7 +644,7 @@ const firebaseConfig = {
                             // Planear aventura se queda fijo
                             d3.select("#opc-planear").on("click", function() {
                                 if (!esSonado) {
-                                    destinosSonados[idPais] = { nombre: nombrePais, destinoFinal: nombrePais, escalas: [], escalasCiudades: [], itinerario: [] };
+                                    destinosSonados[idPais] = { nombre: nombrePais, destinoFinal: nombrePais, escalas: [], escalasCiudades: [], itinerario: [], dias: [crearDia(1, 'Llegada')] };
                                     elementoPais.classed("sonado", true);
                                 }
                                 menu.classed("menu-visible", false).classed("menu-oculto", true);
@@ -829,7 +950,7 @@ const firebaseConfig = {
                         });
 
                         d3.select("#opc-prov-planear").on("click", function() {
-                            if (!destinosSonados[idPais]) destinosSonados[idPais] = { nombre: nombrePais, destinoFinal: nombrePais, escalas: [], escalasCiudades: [], itinerario: [] };
+                            if (!destinosSonados[idPais]) destinosSonados[idPais] = { nombre: nombrePais, destinoFinal: nombrePais, escalas: [], escalasCiudades: [], itinerario: [], dias: [crearDia(1, 'Llegada')] };
                             menu.classed("menu-visible", false).classed("menu-oculto", true);
                             irAPantalla('vista-por-vivir');
                             setTimeout(() => abrirPlanificador(idPais), 50);
@@ -1739,7 +1860,8 @@ const firebaseConfig = {
                     ciudadDestinoFinal: ciudadSeleccionada ? ciudadSeleccionada.toUpperCase() : '',
                     escalas: [],
                     escalasCiudades: ciudadSeleccionada ? [ciudadSeleccionada.toUpperCase()] : [],
-                    itinerario: []
+                    itinerario: [],
+                    dias: [crearDia(1, 'Llegada')]
                 };
 
                 // Pintar el mapa
@@ -1815,9 +1937,7 @@ const firebaseConfig = {
                 </div>
 
                 <div class="linea-tiempo" id="linea-tiempo-${idPais}"></div>
-                <div class="placeholder-calendario-itinerario" id="placeholder-calendario-${idPais}" style="display:none;">
-                    Próximamente
-                </div>
+                <div class="calendario-itinerario" id="calendario-itinerario-${idPais}" style="display:none;"></div>
             `;
 
             lucide.createIcons();
@@ -1835,15 +1955,16 @@ const firebaseConfig = {
             const btnLista = document.getElementById(`btn-modo-lista-${idPais}`);
             const btnCalendario = document.getElementById(`btn-modo-calendario-${idPais}`);
             const lineaTiempo = document.getElementById(`linea-tiempo-${idPais}`);
-            const placeholderCalendario = document.getElementById(`placeholder-calendario-${idPais}`);
+            const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
 
-            if (!btnLista || !btnCalendario || !lineaTiempo || !placeholderCalendario) return;
+            if (!btnLista || !btnCalendario || !lineaTiempo || !calendario) return;
 
             const esLista = modoNormalizado === 'lista';
             btnLista.classList.toggle('activo', esLista);
             btnCalendario.classList.toggle('activo', !esLista);
             lineaTiempo.style.display = esLista ? 'block' : 'none';
-            placeholderCalendario.style.display = esLista ? 'none' : 'block';
+            calendario.style.display = esLista ? 'none' : 'grid';
+            if (!esLista) dibujarCalendarioItinerario(idPais);
         };
 
         window.manual_Hospedaje = (btn) => mostrarFormularioItinerario('hospedaje', btn);
@@ -1949,6 +2070,9 @@ const firebaseConfig = {
             const contenedor = document.getElementById('contenedor-formularios');
             const itemExistente = config.item || null;
             const esEdicion = Boolean(itemExistente);
+            const idPais = document.querySelector('.linea-tiempo').id.replace('linea-tiempo-', '');
+            const destino = destinosSonados[idPais];
+            const diaActual = itemExistente?.diaId || destino?.dias?.[0]?.id || '';
             let formHTML = `<div class="formulario-itinerario activo" id="form-${tipo}">`;
 
             if (tipo === 'viaje') {
@@ -1991,7 +2115,6 @@ const firebaseConfig = {
                     <div class="campo-form"><label>Lugar a visitar</label><input type="text" id="input-aventura-lugar" placeholder="Ej. Cristo Redentor" value="${itemExistente?.lugar || ''}"></div>
                     <div class="campo-form"><label>Miniatura (URL)</label><input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${itemExistente?.miniatura || ''}"></div>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Día</label><input type="text" id="input-aventura-dia" placeholder="Ej. Día 2" value="${itemExistente?.dia || ''}"></div>
                         <div class="campo-form" style="flex: 1;"><label>Precio ($)</label><input type="number" id="input-aventura-costo" placeholder="0" value="${itemExistente?.costo || ''}"></div>
                     </div>
                     <div style="display: flex; gap: 10px;">
@@ -2006,7 +2129,7 @@ const firebaseConfig = {
                 `;
             }
 
-            const idPais = document.querySelector('.linea-tiempo').id.replace('linea-tiempo-', '');
+            formHTML += renderSelectDias(destino, diaActual);
             if (esEdicion) {
                 formHTML += `<button class="btn-guardar-item" onclick="actualizarItemItinerario('${idPais}', ${itemExistente.id}, '${tipo}')">Guardar cambios ✨</button></div>`;
             } else {
@@ -2027,9 +2150,11 @@ const firebaseConfig = {
         window.guardarItemItinerario = function(idPais, tipo) {
             let nuevoItem = { tipo: tipo, id: Date.now() };
             const dataPais = destinosSonados[idPais];
+            normalizarDestinosSonados();
             if (!dataPais.destinoFinal) dataPais.destinoFinal = dataPais.nombre;
             if (!dataPais.escalas) dataPais.escalas = [];
             if (!dataPais.escalasCiudades) dataPais.escalasCiudades = [];
+            nuevoItem.diaId = document.getElementById('input-item-dia')?.value || dataPais.dias?.[0]?.id;
 
             if (tipo === 'viaje') {
                 nuevoItem.medio = document.getElementById('input-viaje-medio').value;
@@ -2059,7 +2184,6 @@ const firebaseConfig = {
             } else if (tipo === 'aventura') {
                 nuevoItem.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 nuevoItem.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
-                nuevoItem.dia = document.getElementById('input-aventura-dia').value || 'Día 1';
                 nuevoItem.costo = document.getElementById('input-aventura-costo').value || '0';
                 nuevoItem.llegada = document.getElementById('input-aventura-llegada').value;
                 nuevoItem.partida = document.getElementById('input-aventura-partida').value;
@@ -2096,6 +2220,7 @@ const firebaseConfig = {
             if (idx === -1) return;
 
             const itemActualizado = { ...destino.itinerario[idx], tipo };
+            itemActualizado.diaId = document.getElementById('input-item-dia')?.value || destino.dias?.[0]?.id;
 
             if (tipo === 'viaje') {
                 const selectPaisEscala = document.getElementById('input-viaje-destino');
@@ -2117,7 +2242,6 @@ const firebaseConfig = {
             } else if (tipo === 'aventura') {
                 itemActualizado.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 itemActualizado.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
-                itemActualizado.dia = document.getElementById('input-aventura-dia').value || 'Día 1';
                 itemActualizado.costo = document.getElementById('input-aventura-costo').value || '0';
                 itemActualizado.llegada = document.getElementById('input-aventura-llegada').value;
                 itemActualizado.partida = document.getElementById('input-aventura-partida').value;
@@ -2134,18 +2258,23 @@ const firebaseConfig = {
 
         window.dibujarItinerario = function(idPais) {
             const timeline = document.getElementById(`linea-tiempo-${idPais}`);
-            const items = destinosSonados[idPais].itinerario;
+            const destino = destinosSonados[idPais];
+            if (!timeline || !destino) return;
+            normalizarDestinosSonados();
+            const items = destino.itinerario;
             timeline.innerHTML = '';
             if (items.length === 0) {
                 timeline.innerHTML = `<p style="color:#90A4AE; padding-left: 20px;">Itinerario vacío.</p>`;
+                if (document.getElementById(`calendario-itinerario-${idPais}`)) dibujarCalendarioItinerario(idPais);
                 return;
             }
             items.forEach((item, index) => {
                 let icono = 'circle'; let titulo = ''; let detalles = '';
-                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
-                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${item.noches} noches - Total: $${item.costo}`; }
-                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; detalles = `Día: ${item.dia} ($${item.costo})<br>${item.llegada || ''} - ${item.partida || ''}`; }
-                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; detalles = `Gasto: $${item.precio}`; }
+                const etiquetaDia = obtenerEtiquetaDia(destino, item);
+                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `${etiquetaDia}<br>Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Costo: $${item.costo}`; }
+                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${etiquetaDia}<br>${item.noches} noches - Total: $${item.costo}`; }
+                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; detalles = `${etiquetaDia} ($${item.costo})<br>${item.llegada || ''} - ${item.partida || ''}`; }
+                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; detalles = `${etiquetaDia}<br>Gasto: $${item.precio}`; }
                 const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
                     ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
                     : '';
@@ -2159,6 +2288,75 @@ const firebaseConfig = {
                     </div>`;
             });
             lucide.createIcons();
+            if (document.getElementById(`calendario-itinerario-${idPais}`)) dibujarCalendarioItinerario(idPais);
+        };
+
+        window.dibujarCalendarioItinerario = function(idPais) {
+            const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
+            const destino = destinosSonados[idPais];
+            if (!calendario || !destino) return;
+            normalizarDestinosSonados();
+
+            const dias = destino.dias || [];
+            if (!dias.length) {
+                calendario.innerHTML = `<p class="texto-calendario-vacio">Agrega días para usar el modo calendario.</p>`;
+                return;
+            }
+
+            const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
+            const columnas = dias.map((dia) => {
+                const itemsDia = items.filter(item => item.diaId === dia.id);
+                const cards = itemsDia.map(item => {
+                    const titulo = item.tipo === 'viaje' ? `Viaje en ${item.medio}` :
+                        item.tipo === 'hospedaje' ? (item.hotel || 'Hospedaje') :
+                        item.tipo === 'aventura' ? (item.lugar || 'Aventura') : (item.plato || 'Restaurante');
+                    return `<div class="item-dia-card ${item.tipo}"><span class="item-dia-tipo">${item.tipo}</span><strong>${titulo}</strong></div>`;
+                }).join('');
+
+                return `
+                    <div class="columna-dia">
+                        <div class="encabezado-dia">
+                            <span class="encabezado-dia-titulo">DÍA ${dia.numero}: <span id="nombre-dia-${idPais}-${dia.id}" ondblclick="iniciarEdicionNombreDia('${idPais}', '${dia.id}')">${dia.nombre}</span></span>
+                            <button class="btn-editar-dia" onclick="iniciarEdicionNombreDia('${idPais}', '${dia.id}')" title="Editar nombre del día">
+                                <i data-lucide="pencil"></i>
+                            </button>
+                        </div>
+                        <div class="columna-dia-items">${cards || '<p class="texto-calendario-vacio">Sin actividades</p>'}</div>
+                    </div>
+                `;
+            }).join('');
+
+            calendario.innerHTML = columnas;
+            lucide.createIcons();
+        };
+
+        window.iniciarEdicionNombreDia = function(idPais, diaId) {
+            const destino = destinosSonados[idPais];
+            if (!destino) return;
+            const dia = destino.dias.find(d => d.id === diaId);
+            if (!dia) return;
+            const nodoNombre = document.getElementById(`nombre-dia-${idPais}-${dia.id}`);
+            if (!nodoNombre) return;
+
+            nodoNombre.innerHTML = `<input class="input-editar-dia" id="input-editar-dia-${idPais}-${dia.id}" value="${dia.nombre}" onkeydown="if(event.key==='Enter'){guardarNombreDia('${idPais}','${dia.id}')}">`;
+            const input = document.getElementById(`input-editar-dia-${idPais}-${dia.id}`);
+            if (input) {
+                input.focus();
+                input.select();
+                input.addEventListener('blur', () => guardarNombreDia(idPais, dia.id), { once: true });
+            }
+        };
+
+        window.guardarNombreDia = function(idPais, diaId) {
+            const destino = destinosSonados[idPais];
+            if (!destino) return;
+            const dia = destino.dias.find(d => d.id === diaId);
+            const input = document.getElementById(`input-editar-dia-${idPais}-${diaId}`);
+            if (!dia || !input) return;
+            dia.nombre = input.value.trim() || `Día ${dia.numero}`;
+            sincronizacionLocalEnCurso = true;
+            dibujarItinerario(idPais);
+            if (estadoVistaItinerario.modo === 'calendario') dibujarCalendarioItinerario(idPais);
         };
 
         window.guardarPortadaItinerario = function(idPais) {
