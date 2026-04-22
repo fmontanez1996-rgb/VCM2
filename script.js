@@ -1791,7 +1791,7 @@ const firebaseConfig = {
 
                 ${bloqueNuevo}
 
-                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">
+                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;">
                 </div>
             `;
 
@@ -1858,40 +1858,25 @@ const firebaseConfig = {
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             const albumes = objDestino.albumes || [];
             const historias = objDestino.historias || [];
-            const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
 
             let html = '';
             if (albumes.length === 0 && historias.length === 0) {
                 html = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i data-lucide="camera-off" style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;"></i><p>Aún no hay recuerdos guardados para este destino.</p></div>';
             } else {
                 albumes.forEach((album, index) => {
-                    const urlDrive = resolverUrlDriveAlbum(album);
-                    html += `
-                        <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary);">
-                            <div style="height:120px; background: #eee url('${album.portada || 'https://via.placeholder.com/300x150?text=Sin+Portada'}') center/cover no-repeat;"></div>
-                            <div style="padding: 15px;">
-                                <div style="display:flex; justify-content: space-between;">
-                                    <h3 style="margin:0; font-size: 1rem;">${album.nombre}</h3>
-                                    <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'drive')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
-                                </div>
-                                <a href="${urlDrive || '#'}" target="_blank" rel="noopener noreferrer" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
-                            </div>
-                        </div>`;
+                    html += construirTarjetaMemoria('drive', album, {
+                        idPais,
+                        idProvincia,
+                        index
+                    });
                 });
 
                 historias.forEach((h, index) => {
-                    html += `
-                        <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display:flex; flex-direction:column;">
-                            <div style="height:120px; background: #eee url('${h.img || 'https://via.placeholder.com/300x150?text=Sin+Imagen'}') center/cover no-repeat;"></div>
-                            <div style="padding: 15px;">
-                                <div style="display:flex; justify-content: space-between; align-items:center;">
-                                    <h3 style="margin:0; font-size: 1rem; color: var(--primary);">${h.titulo}</h3>
-                                    <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'historia')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
-                                </div>
-                                <p style="font-size: 0.85rem; color: #546E7A; margin-top:10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${h.texto}</p>
-                                <button onclick="leerHistoria('${idPais}', ${paramProv}, ${index})" style="width:100%; margin-top:10px; padding:8px; border-radius:8px; border:1px solid var(--primary); color:var(--primary); background:transparent; font-weight:bold; cursor:pointer;">Leer Completa</button>
-                            </div>
-                        </div>`;
+                    html += construirTarjetaMemoria('historia', h, {
+                        idPais,
+                        idProvincia,
+                        index
+                    });
                 });
             }
 
@@ -1904,26 +1889,17 @@ const firebaseConfig = {
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             contenedor.innerHTML = '';
 
-            const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
-
             if (vista === 'drive') {
                 const albumes = objDestino.albumes || [];
                 if (albumes.length === 0) {
                     contenedor.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i data-lucide="folder-x" style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;"></i><p>No hay carpetas compartidas aún.</p></div>';
                 } else {
                     albumes.forEach((album, index) => {
-                        const urlDrive = resolverUrlDriveAlbum(album);
-                        contenedor.innerHTML += `
-                            <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); border-top: 5px solid var(--secondary);">
-                                <div style="height:120px; background: #eee url('${album.portada || 'https://via.placeholder.com/300x150?text=Sin+Portada'}') center/cover no-repeat;"></div>
-                                <div style="padding: 15px;">
-                                    <div style="display:flex; justify-content: space-between;">
-                                        <h3 style="margin:0; font-size: 1rem;">${album.nombre}</h3>
-                                        <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'drive')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
-                                    </div>
-                                    <a href="${urlDrive || '#'}" target="_blank" rel="noopener noreferrer" style="display:block; margin-top:15px; text-align:center; background:#DB4437; color:white; padding:10px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:0.8rem;">ABRIR DRIVE</a>
-                                </div>
-                            </div>`;
+                        contenedor.innerHTML += construirTarjetaMemoria('drive', album, {
+                            idPais,
+                            idProvincia,
+                            index
+                        });
                     });
                 }
             } else {
@@ -1932,23 +1908,51 @@ const firebaseConfig = {
                     contenedor.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:40px; color:#94a3b8;"><i data-lucide="scroll" style="width:40px; height:40px; margin-bottom:10px; opacity:0.5;"></i><p>Aún no has escrito historias.</p></div>';
                 } else {
                     historias.forEach((h, index) => {
-                        contenedor.innerHTML += `
-                            <div style="background: white; border-radius: 15px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08); display:flex; flex-direction:column;">
-                                <div style="height:120px; background: #eee url('${h.img || 'https://via.placeholder.com/300x150?text=Sin+Imagen'}') center/cover no-repeat;"></div>
-                                <div style="padding: 15px;">
-                                    <div style="display:flex; justify-content: space-between; align-items:center;">
-                                        <h3 style="margin:0; font-size: 1rem; color: var(--primary);">${h.titulo}</h3>
-                                        <button onclick="eliminarMemoria('${idPais}', ${paramProv}, ${index}, 'historia')" style="background:none; border:none; color: #EF5350; cursor:pointer;"><i data-lucide="trash-2" style="width:16px;"></i></button>
-                                    </div>
-                                    <p style="font-size: 0.85rem; color: #546E7A; margin-top:10px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">${h.texto}</p>
-                                    <button onclick="leerHistoria('${idPais}', ${paramProv}, ${index})" style="width:100%; margin-top:10px; padding:8px; border-radius:8px; border:1px solid var(--primary); color:var(--primary); background:transparent; font-weight:bold; cursor:pointer;">Leer Completa</button>
-                                </div>
-                            </div>`;
+                        contenedor.innerHTML += construirTarjetaMemoria('historia', h, {
+                            idPais,
+                            idProvincia,
+                            index
+                        });
                     });
                 }
             }
             lucide.createIcons();
         };
+
+        function construirTarjetaMemoria(tipo, item, contexto) {
+            const { idPais, idProvincia, index } = contexto;
+            const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
+            const placeholder = tipo === 'drive'
+                ? 'https://via.placeholder.com/500?text=Sin+Portada'
+                : 'https://via.placeholder.com/500?text=Sin+Imagen';
+            const imagen = tipo === 'drive' ? (item.portada || placeholder) : (item.img || placeholder);
+            const titulo = tipo === 'drive' ? (item.nombre || 'Sin nombre') : (item.titulo || 'Sin título');
+            const claseTitulo = tipo === 'drive' ? 'drive' : 'historia';
+            const abrir = tipo === 'drive'
+                ? `abrirMemoriaDrive('${idPais}', ${paramProv}, ${index})`
+                : `leerHistoria('${idPais}', ${paramProv}, ${index})`;
+
+            return `
+                <article class="tarjeta-memoria-cuadrada" onclick="${abrir}">
+                    <div class="imagen-memoria" style="background-image: url('${imagen}');"></div>
+                    <footer class="pie-memoria">
+                        <h3 class="titulo-memoria ${claseTitulo}" title="${titulo}">${titulo}</h3>
+                        <div class="menu-memoria" id="menu-memoria-${tipo}-${index}">
+                            <button class="btn-menu-memoria" onclick="alternarMenuMemoria(event, 'menu-memoria-${tipo}-${index}')">
+                                <i data-lucide="ellipsis"></i>
+                            </button>
+                            <div class="panel-opciones-memoria">
+                                <button class="opcion-memoria editar" onclick="editarMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
+                                    <i data-lucide="pencil"></i> Editar
+                                </button>
+                                <button class="opcion-memoria eliminar" onclick="eliminarMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
+                                    <i data-lucide="trash-2"></i> Eliminar
+                                </button>
+                            </div>
+                        </div>
+                    </footer>
+                </article>`;
+        }
 
         window.obtenerImagenPortada = function(idInputUrl, idInputArchivo) {
             const url = document.getElementById(idInputUrl)?.value?.trim() || '';
@@ -2002,7 +2006,73 @@ const firebaseConfig = {
             document.body.appendChild(modal);
         };
 
-        window.eliminarMemoria = function(idPais, idProvincia = null, index, tipo) {
+        window.abrirMemoriaDrive = function(idPais, idProvincia = null, index) {
+            const destino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
+            const album = destino?.albumes?.[index];
+            const urlDrive = resolverUrlDriveAlbum(album);
+            if (!urlDrive) {
+                alert("No se encontró un enlace válido para esta memoria.");
+                return;
+            }
+            window.open(urlDrive, '_blank', 'noopener,noreferrer');
+        };
+
+        window.alternarMenuMemoria = function(event, menuId) {
+            event.stopPropagation();
+            document.querySelectorAll('.menu-memoria.abierto').forEach((menu) => {
+                if (menu.id !== menuId) menu.classList.remove('abierto');
+            });
+            const menu = document.getElementById(menuId);
+            if (menu) menu.classList.toggle('abierto');
+        };
+
+        window.editarMemoria = function(event, idPais, idProvincia = null, index, tipo) {
+            event.stopPropagation();
+            let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
+
+            if (tipo === 'drive') {
+                const album = objDestino.albumes[index];
+                if (!album) return;
+                const nuevoNombre = prompt('Editar nombre de la memoria:', album.nombre || '');
+                if (nuevoNombre === null) return;
+                const nuevoEnlace = prompt('Editar enlace de Drive:', resolverUrlDriveAlbum(album));
+                if (nuevoEnlace === null) return;
+                if (!nuevoEnlace.includes('drive.google.com')) { alert("Link no válido."); return; }
+
+                album.nombre = nuevoNombre.trim() || album.nombre || 'Sin nombre';
+                album.url = nuevoEnlace.trim();
+                album.driveUrl = nuevoEnlace.trim();
+            } else {
+                const historia = objDestino.historias[index];
+                if (!historia) return;
+                const nuevoTitulo = prompt('Editar título de la historia:', historia.titulo || '');
+                if (nuevoTitulo === null) return;
+                historia.titulo = nuevoTitulo.trim() || historia.titulo || 'Sin título';
+            }
+
+            if (estadoVistaRecuerdos.submodo === 'nuevo') {
+                actualizarVistaAlbumes(idPais, idProvincia, estadoVistaRecuerdos.seccionNuevo || 'drive');
+            } else {
+                actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
+            }
+        };
+
+        window.eliminarMemoria = function(eventOrIdPais, idPaisOrProvincia = null, maybeIndex, maybeTipo) {
+            let event = null;
+            let idPais = eventOrIdPais;
+            let idProvincia = idPaisOrProvincia;
+            let index = maybeIndex;
+            let tipo = maybeTipo;
+
+            if (typeof eventOrIdPais === 'object' && eventOrIdPais?.stopPropagation) {
+                event = eventOrIdPais;
+                event.stopPropagation();
+                idPais = idPaisOrProvincia;
+                idProvincia = maybeIndex;
+                index = arguments[3];
+                tipo = arguments[4];
+            }
+
             if (confirm("¿Seguro que quieres borrar esto?")) {
                 let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
                 if (tipo === 'drive') {
@@ -2019,6 +2089,12 @@ const firebaseConfig = {
                 }
             }
         };
+
+        document.addEventListener('click', (event) => {
+            if (!event.target.closest('.menu-memoria')) {
+                document.querySelectorAll('.menu-memoria.abierto').forEach((menu) => menu.classList.remove('abierto'));
+            }
+        });
 
         window.agregarCarpetaDrive = async function(idPais, idProvincia = null) {
             const nombre = document.getElementById('nombre-carpeta-drive').value.trim();
