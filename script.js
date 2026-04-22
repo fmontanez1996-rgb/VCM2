@@ -1468,16 +1468,19 @@ const firebaseConfig = {
                 estadoVistaRecuerdos = { modo: 'provincias', idPais, idProvincia: null, submodo: 'ver', seccionNuevo: 'drive' };
                 const provs = provinciasVisitadas[idPais] || {};
                 const idsProvincias = Object.keys(provs);
+                const emojiBanderaPais = obtenerEmojiBanderaPorPais(idPais);
+                const iconoCiudadHTML = emojiBanderaPais
+                    ? `<span class="emoji-ciudad" role="img" aria-label="Bandera de ${pais.nombre}">${emojiBanderaPais}</span>`
+                    : `<i data-lucide="map-pin" style="width: 40px; height: 40px; color: #02252d;"></i>`;
 
                 scrollArea.innerHTML = `
-                    <div class="cabecera-detalle" style="justify-content: flex-start; gap: 15px; margin-bottom: 20px;">
+                    <div class="cabecera-detalle cabecera-destinos-pais">
                         <button class="btn-volver" onclick="renderizarPantallaRecuerdos()" title="Volver"><i data-lucide="arrow-left"></i></button>
-                        <h2 style="margin:0;"><i data-lucide="map"></i> Destinos en ${pais.nombre}</h2>
+                        <h2 class="titulo-destinos-pais"><i data-lucide="map" class="icono-mapa-destino"></i> Destinos en ${pais.nombre}</h2>
                     </div>
                     
-                    <div style="background: #E1F5FE; padding: 15px; border-radius: 12px; margin-bottom: 20px; color: #0288D1; display: flex; align-items: center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
-                        <span style="font-weight: bold; flex: 1;">Selecciona la ciudad/provincia para ver o añadir sus recuerdos:</span>
-                        <button onclick="mostrarSelectorNuevaCiudad('${idPais}')" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px; white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                    <div class="panel-acciones-ciudad">
+                        <button id="btn-agregar-ciudad-${idPais}" class="btn-agregar-ciudad" onclick="mostrarSelectorNuevaCiudad('${idPais}')">
                             <i data-lucide="plus-circle" style="width: 18px;"></i> Agregar ciudad
                         </button>
                     </div>
@@ -1485,13 +1488,14 @@ const firebaseConfig = {
                     <div class="galeria-grid">
                         ${idsProvincias.length === 0 ? '<div style="grid-column: 1/-1; text-align: center; color: #90A4AE; padding: 30px; font-style: italic; background: white; border-radius: 12px; border: 1px dashed #CFD8DC;">Aún no has agregado ninguna ciudad a este país. Toca "Agregar ciudad" para empezar.</div>' : ''}
                         ${idsProvincias.map(pid => `
-                            <div class="tarjeta-agregar" style="height: auto; padding: 20px; border: 3px solid var(--secondary); background: #F0FBFF; cursor: pointer;" onclick="window.abrirAlbumDetalle('${idPais}', '${pid}')">
-                                <i data-lucide="map-pin" style="width: 40px; height: 40px; color: var(--secondary);"></i>
-                                <span style="color: var(--secondary); margin-top: 10px; text-align: center; font-weight: bold;">${provs[pid].nombre}</span>
+                            <div class="tarjeta-agregar tarjeta-ciudad" onclick="window.abrirAlbumDetalle('${idPais}', '${pid}')">
+                                ${iconoCiudadHTML}
+                                <span class="nombre-ciudad-tarjeta">${provs[pid].nombre}</span>
                             </div>
                         `).join('')}
                     </div>
                 `;
+                scrollArea.scrollTop = 0;
                 lucide.createIcons();
                 return;
             }
@@ -1502,7 +1506,10 @@ const firebaseConfig = {
 
         window.mostrarSelectorNuevaCiudad = function(idPais) {
             const pais = paisesVisitados[idPais];
+            const btnAgregarCiudad = document.getElementById(`btn-agregar-ciudad-${idPais}`);
+            btnAgregarCiudad?.classList.add('btn-agregar-ciudad-activo');
             const modal = document.createElement('div');
+            modal.className = "modal-nueva-ciudad";
             modal.style = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px;";
             modal.innerHTML = `
                 <div style="background:white; padding: 25px; border-radius:15px; width:100%; max-width:400px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
@@ -1512,13 +1519,21 @@ const firebaseConfig = {
                         <option value="" disabled selected>Cargando ciudades...</option>
                     </select>
                     <div style="display:flex; justify-content: flex-end; gap: 10px;">
-                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="background: #ECEFF1; color: #546E7A; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">Cancelar</button>
+                        <button id="btn-cancelar-nueva-ciudad" style="background: #ECEFF1; color: #546E7A; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">Cancelar</button>
                         <button id="btn-guardar-ciudad" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold;">Guardar Ciudad</button>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
             lucide.createIcons();
+            const cerrarModalNuevaCiudad = () => {
+                modal.remove();
+                btnAgregarCiudad?.classList.remove('btn-agregar-ciudad-activo');
+            };
+            document.getElementById('btn-cancelar-nueva-ciudad')?.addEventListener('click', cerrarModalNuevaCiudad);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModalNuevaCiudad();
+            });
 
             // Cargamos las provincias desde la fuente remota
             d3.json(ESTADOS_PROVINCIAS_URL).then(function(data){
@@ -1582,30 +1597,8 @@ const firebaseConfig = {
                     try {
                         d3.select(`#${CSS.escape(idPathProvincia)}`).classed('visitada', true).style("fill", "#FF0000");
                     } catch(e) { console.log("No se pudo pintar la ciudad aún"); }
-
-                    modal.remove(); 
+                    cerrarModalNuevaCiudad();
                     window.abrirAlbum(idPais);
-
-                    // Aseguramos que el país quede marcado como totalmente nuestro
-                    if(!paisesVisitados[idPais]){
-                        paisesVisitados[idPais] = {
-                            nombre: pais.nombre,
-                            albumes: [],
-                            historias: [],
-                            musica: null
-                        };
-                    }
-
-                    // Le damos el colorcito de "visitado" al país entero en el mapa mundial
-                    d3.select(`.pais[id="${idPais}"]`).classed('visitado', true);
-
-                    // Intentamos pintar la provincia si tenemos el mapita detallado abierto en el fondo
-                    try {
-                        d3.select(`#${CSS.escape(idPathProvincia)}`).classed('visitada', true).style("fill", "#FF0000");
-                    } catch(e) {}
-
-                    modal.remove(); 
-                    window.abrirAlbum(idPais); 
                 } else {
                     alert("elegí una ciudad primero para que guardemos el recuerdo.");
                 }
