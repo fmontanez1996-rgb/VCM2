@@ -1815,9 +1815,7 @@ const firebaseConfig = {
                 </div>
 
                 <div class="linea-tiempo" id="linea-tiempo-${idPais}"></div>
-                <div class="placeholder-calendario-itinerario" id="placeholder-calendario-${idPais}" style="display:none;">
-                    Próximamente
-                </div>
+                <div class="calendario-itinerario" id="calendario-itinerario-${idPais}" style="display:none;"></div>
             `;
 
             lucide.createIcons();
@@ -1835,15 +1833,147 @@ const firebaseConfig = {
             const btnLista = document.getElementById(`btn-modo-lista-${idPais}`);
             const btnCalendario = document.getElementById(`btn-modo-calendario-${idPais}`);
             const lineaTiempo = document.getElementById(`linea-tiempo-${idPais}`);
-            const placeholderCalendario = document.getElementById(`placeholder-calendario-${idPais}`);
+            const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
 
-            if (!btnLista || !btnCalendario || !lineaTiempo || !placeholderCalendario) return;
+            if (!btnLista || !btnCalendario || !lineaTiempo || !calendario) return;
 
             const esLista = modoNormalizado === 'lista';
             btnLista.classList.toggle('activo', esLista);
             btnCalendario.classList.toggle('activo', !esLista);
             lineaTiempo.style.display = esLista ? 'block' : 'none';
-            placeholderCalendario.style.display = esLista ? 'none' : 'block';
+            calendario.style.display = esLista ? 'none' : 'grid';
+
+            if (!esLista) {
+                renderizarCalendarioItinerario(idPais);
+            }
+        };
+
+        function normalizarDiaItinerario(dia) {
+            const texto = (dia || '').toString().trim();
+            if (!texto) {
+                return { etiqueta: 'Sin día', orden: Number.MAX_SAFE_INTEGER };
+            }
+            const sinAcentos = texto.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+            const matchDia = sinAcentos.match(/dia\s*(\d+)/i);
+            if (matchDia) {
+                const nroDia = Number(matchDia[1]);
+                return { etiqueta: `Día ${nroDia}`, orden: nroDia };
+            }
+            return { etiqueta: texto, orden: Number.MAX_SAFE_INTEGER - 1 };
+        }
+
+        function obtenerMinutosHorario(item) {
+            const candidatos = [item?.llegada, item?.partida];
+            for (const horario of candidatos) {
+                if (typeof horario !== 'string') continue;
+                const match = horario.trim().match(/^(\d{1,2}):(\d{2})$/);
+                if (!match) continue;
+                const horas = Number(match[1]);
+                const minutos = Number(match[2]);
+                if (Number.isNaN(horas) || Number.isNaN(minutos)) continue;
+                return (horas * 60) + minutos;
+            }
+            return Number.POSITIVE_INFINITY;
+        }
+
+        function obtenerMetaItinerario(item = {}) {
+            if (item.tipo === 'viaje') {
+                return {
+                    icono: 'bus',
+                    titulo: `Viaje en ${item.medio || 'transporte'}`,
+                    detalle: `Escala: ${item.destino || 'Sin destino'}${item.ciudad ? `, ${item.ciudad}` : ''}`
+                };
+            }
+            if (item.tipo === 'hospedaje') {
+                return {
+                    icono: 'hotel',
+                    titulo: item.hotel || 'Hospedaje',
+                    detalle: `${item.noches || '1'} noches · Total: $${item.costo || '0'}`
+                };
+            }
+            if (item.tipo === 'aventura') {
+                return {
+                    icono: 'mountain',
+                    titulo: item.lugar || 'Aventura',
+                    detalle: `Costo: $${item.costo || '0'}`
+                };
+            }
+            if (item.tipo === 'restaurante') {
+                return {
+                    icono: 'utensils',
+                    titulo: item.plato || 'Restaurante',
+                    detalle: `Gasto estimado: $${item.precio || '0'}`
+                };
+            }
+            return {
+                icono: 'circle',
+                titulo: item.tipo || 'Actividad',
+                detalle: ''
+            };
+        }
+
+        window.renderizarCalendarioItinerario = function(idPais) {
+            const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
+            const destino = destinosSonados[idPais];
+            if (!calendario || !destino) return;
+
+            const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
+            calendario.innerHTML = '';
+
+            if (items.length === 0) {
+                calendario.innerHTML = `<div class="calendario-vacio">No hay actividades para mostrar.</div>`;
+                lucide.createIcons();
+                return;
+            }
+
+            const grupos = new Map();
+            items.forEach((item, indiceCreacion) => {
+                const diaNormalizado = normalizarDiaItinerario(item?.dia);
+                const clave = `${diaNormalizado.orden}-${diaNormalizado.etiqueta}`;
+                if (!grupos.has(clave)) {
+                    grupos.set(clave, {
+                        etiqueta: diaNormalizado.etiqueta,
+                        orden: diaNormalizado.orden,
+                        items: []
+                    });
+                }
+                grupos.get(clave).items.push({ ...item, _ordenCreacion: indiceCreacion });
+            });
+
+            const columnas = Array.from(grupos.values())
+                .sort((a, b) => a.orden - b.orden || a.etiqueta.localeCompare(b.etiqueta))
+                .map(grupo => {
+                    grupo.items.sort((a, b) => {
+                        const minutosA = obtenerMinutosHorario(a);
+                        const minutosB = obtenerMinutosHorario(b);
+                        if (minutosA !== minutosB) return minutosA - minutosB;
+                        return a._ordenCreacion - b._ordenCreacion;
+                    });
+
+                    const tarjetas = grupo.items.map(item => {
+                        const meta = obtenerMetaItinerario(item);
+                        const horario = [item.llegada, item.partida].filter(Boolean).join(' - ') || 'Sin horario';
+                        return `
+                            <article class="tarjeta-calendario-itinerario ${item.tipo || ''}">
+                                <div class="tarjeta-calendario-header">
+                                    <h4><i data-lucide="${meta.icono}"></i> ${meta.titulo}</h4>
+                                    <span class="badge-horario"><i data-lucide="clock-3"></i> ${horario}</span>
+                                </div>
+                                <p>${meta.detalle || 'Sin detalle.'}</p>
+                            </article>
+                        `;
+                    }).join('');
+
+                    return `
+                        <section class="columna-dia-itinerario">
+                            <header>${grupo.etiqueta}</header>
+                            <div class="columna-dia-lista">${tarjetas}</div>
+                        </section>
+                    `;
+                }).join('');
+
+            calendario.innerHTML = columnas;
+            lucide.createIcons();
         };
 
         window.manual_Hospedaje = (btn) => mostrarFormularioItinerario('hospedaje', btn);
@@ -2159,6 +2289,9 @@ const firebaseConfig = {
                     </div>`;
             });
             lucide.createIcons();
+            if (estadoVistaItinerario?.modo === 'calendario') {
+                renderizarCalendarioItinerario(idPais);
+            }
         };
 
         window.guardarPortadaItinerario = function(idPais) {
