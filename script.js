@@ -23,6 +23,7 @@ const firebaseConfig = {
         let sincronizacionLocalEnCurso = false;
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
+        let estadoEdicionPortadaItinerario = {};
 
         const RUTA_ESTADO_COMPARTIDO = "nuestraHistoria/estadoCompartido";
 
@@ -2023,6 +2024,9 @@ const firebaseConfig = {
             const nombrePrincipal = obtenerNombreCabeceraDestino(pais);
             const escalasResumen = obtenerResumenEscalas(pais);
             const portadaActual = pais.portadaUrl || "";
+            const mostrarEditorPortada = Object.prototype.hasOwnProperty.call(estadoEdicionPortadaItinerario, idPais)
+                ? Boolean(estadoEdicionPortadaItinerario[idPais])
+                : !portadaActual;
             estadoVistaItinerario = { modo: 'lista', idPais };
 
             scrollArea.innerHTML = `
@@ -2049,10 +2053,18 @@ const firebaseConfig = {
                 <div class="panel-creacion">
                     <div class="portada-itinerario-wrap">
                         <img class="portada-itinerario-preview" src="${portadaActual || 'https://via.placeholder.com/240x150?text=Sin+Portada'}" alt="Portada del itinerario">
-                        <div style="display:flex; gap:10px; flex:1; min-width: 240px;">
-                            <input type="url" id="input-portada-itinerario" placeholder="URL de portada del itinerario..." value="${portadaActual}" style="flex:1; padding:10px 12px; border-radius:10px; border:2px solid #F8BBD0; font-family: inherit;">
-                            <button class="btn-tipo-item" style="border-color:#F48FB1; color:#D81B60;" onclick="guardarPortadaItinerario('${idPais}')"><i data-lucide="image-plus"></i> Guardar portada</button>
-                        </div>
+                        ${mostrarEditorPortada ? `
+                            <div style="display:flex; gap:10px; flex:1; min-width: 240px;">
+                                <input type="url" id="input-portada-itinerario" placeholder="URL de portada del itinerario..." value="${portadaActual}" style="flex:1; padding:10px 12px; border-radius:10px; border:2px solid #F8BBD0; font-family: inherit;">
+                                <button class="btn-tipo-item" style="border-color:#F48FB1; color:#D81B60;" onclick="guardarPortadaItinerario('${idPais}')"><i data-lucide="image-plus"></i> Guardar portada</button>
+                            </div>
+                        ` : `
+                            <div class="acciones-portada-itinerario">
+                                <button class="btn-editar-portada" onclick="activarEdicionPortadaItinerario('${idPais}')" title="Editar portada">
+                                    <i data-lucide="pencil"></i>
+                                </button>
+                            </div>
+                        `}
                     </div>
                     <h3 style="margin-top:0; color: #455A64;">Agregar nuevo paso:</h3>
                     <div class="botones-tipos">
@@ -2930,6 +2942,12 @@ const firebaseConfig = {
             const input = document.getElementById('input-portada-itinerario');
             if (!input || !destinosSonados[idPais]) return;
             destinosSonados[idPais].portadaUrl = input.value.trim();
+            estadoEdicionPortadaItinerario[idPais] = false;
+            abrirPlanificador(idPais);
+        };
+
+        window.activarEdicionPortadaItinerario = function(idPais) {
+            estadoEdicionPortadaItinerario[idPais] = true;
             abrirPlanificador(idPais);
         };
         document.addEventListener("DOMContentLoaded", iniciarSincronizacionFirebase);
