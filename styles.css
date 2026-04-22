@@ -1,12 +1,12 @@
         /* === VARIABLES Y DISEÑO === */
         :root {
-            --bg-main: #E1F5FE;
-            --panel-bg: #FFFFFF;
+            --bg-main: #081320;
+            --panel-bg: rgba(13, 25, 41, 0.92);
             --primary: #FF4081; 
             --secondary: #00BCD4; 
-            --text-main: #455A64; 
-            --btn-glow: rgba(255, 64, 129, 0.6); 
-            --btn-glow-sec: rgba(0, 188, 212, 0.6); 
+            --text-main: #E3F2FD; 
+            --btn-glow: rgba(255, 64, 129, 0.8); 
+            --btn-glow-sec: rgba(0, 188, 212, 0.75); 
         }
 
         body {
@@ -18,7 +18,7 @@
             display: flex;
             height: 100vh;
             overflow: hidden;
-            background: radial-gradient(circle at top left, #FFFFFF 0%, #E1F5FE 100%);
+            background: radial-gradient(circle at top left, #22354A 0%, #081320 100%);
         }
 
         /* === CONTENEDORES === */
@@ -31,8 +31,9 @@
             display: flex;
             flex-direction: column;
             border-radius: 35px;
-            box-shadow: 0 10px 25px rgba(0, 188, 212, 0.15), 0 0 0 6px #B3E5FC; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(79, 195, 247, 0.35); 
             z-index: 10;
+            backdrop-filter: blur(6px);
         }
 
         .logo-titulo { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--primary); margin-bottom: 30px; }
@@ -42,20 +43,21 @@
         .menu-lateral { display: flex; flex-direction: column; gap: 18px; }
 
         .btn-menu {
-            background: #FFF8FA; border: 3px solid #F8BBD0; color: #D81B60;
+            background: #1A2C40; border: 2px solid #35506E; color: #F8BBD0;
             padding: 14px 20px; border-radius: 50px; cursor: pointer; text-align: left;
             display: flex; align-items: center; gap: 12px; 
             transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             font-family: 'Quicksand', sans-serif; font-size: 1.05rem; font-weight: 700;
         }
 
-        .btn-menu:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 20px var(--btn-glow); border-color: var(--primary); }
+        .btn-menu:hover { transform: translateY(-4px) scale(1.02); box-shadow: 0 8px 20px var(--btn-glow); border-color: #F06292; }
         .btn-menu.activo { background: var(--primary); border-color: var(--primary); color: white; box-shadow: 0 0 25px var(--btn-glow), 0 8px 15px rgba(255, 64, 129, 0.3); transform: translateY(-2px); }
 
         .contenido-principal {
             flex-grow: 1; position: relative; display: flex; flex-direction: column;
-            background: #FFFFFF; border-radius: 35px; box-shadow: 0 10px 25px rgba(0, 188, 212, 0.15), 0 0 0 6px #B3E5FC;
+            background: rgba(13, 25, 41, 0.9); border-radius: 35px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35), 0 0 0 3px rgba(79, 195, 247, 0.3);
             overflow: hidden;
+            backdrop-filter: blur(6px);
         }
 
         .pantalla { display: none; width: 100%; height: 100%; flex-direction: column; }
@@ -70,9 +72,9 @@
             overflow: hidden;
             border-radius: 35px;
             background:
-                radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.85) 0 12%, transparent 14%),
-                radial-gradient(circle at 83% 22%, rgba(255, 255, 255, 0.8) 0 10%, transparent 13%),
-                linear-gradient(180deg, #B3E5FC 0%, #E1F5FE 45%, #FCE4EC 100%);
+                radial-gradient(circle at 20% 18%, rgba(255, 255, 255, 0.3) 0 12%, transparent 14%),
+                radial-gradient(circle at 83% 22%, rgba(255, 255, 255, 0.28) 0 10%, transparent 13%),
+                linear-gradient(180deg, #133451 0%, #0C253A 45%, #1E1B37 100%);
         }
         #mapa-svg { width: 100%; height: 100%; cursor: grab; }
         #mapa-svg:active { cursor: grabbing; }
