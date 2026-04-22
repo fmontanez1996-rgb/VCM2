@@ -1130,9 +1130,9 @@ const firebaseConfig = {
             const idsPaises = Object.keys(destinosSonados);
 
             contenedor.innerHTML = `
-                <div id="encabezado-sonados" class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center;">
-                    <h2><i data-lucide="heart"></i> Destinos por Vivir</h2>
-                    <button id="btn-nueva-aventura-sonados" class="btn-nueva-aventura" onclick="mostrarSelectorNuevoDestino()" style="background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(255, 64, 129, 0.3);">
+                <div id="encabezado-sonados" class="encabezado-seccion encabezado-sonados-metal" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="titulo-sonados-metal"><i data-lucide="heart"></i> Proximos Destinos</h2>
+                    <button id="btn-nueva-aventura-sonados" class="btn-nueva-aventura" onclick="mostrarSelectorNuevoDestino()" style="border: none; padding: 10px 15px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                         <i data-lucide="plus-circle"></i> Nueva Aventura
                     </button>
                 </div>
@@ -1148,7 +1148,7 @@ const firebaseConfig = {
                 </select>
                     <div style="display: flex; gap: 10px;">
                         <button onclick="confirmarNuevoDestino()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #4CAF50; color: white; font-weight: bold; cursor: pointer;">Crear Aventura</button>
-                        <button onclick="document.getElementById('selector-nuevo-destino').style.display='none'" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
+                        <button onclick="ocultarSelectorNuevoDestino()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
                     </div>
                 </div>
                 <div class="contenedor-scroll" id="scroll-sonados"></div>
@@ -1180,7 +1180,7 @@ const firebaseConfig = {
                 scrollArea.innerHTML = `<div class="mensaje-vacio"><i data-lucide="compass"></i><p>No tienes aventuras planeadas todavía.</p></div>`;
             } else {
                 const listaHTML = document.createElement('div');
-                listaHTML.className = 'lista-paises';
+                listaHTML.className = 'lista-paises lista-sonados';
                 idsPaises.forEach(id => {
                     const pais = destinosSonados[id];
                     const totalEscalas = contarEscalasDestino(pais);
@@ -1188,17 +1188,16 @@ const firebaseConfig = {
                     const escalasResumen = obtenerResumenEscalas(pais);
                     const portadaLista = pais.portadaUrl || 'https://via.placeholder.com/240x150?text=Sin+Portada';
                     listaHTML.innerHTML += `
-                        <div class="tarjeta-pais">
-                            <div class="info-pais">
-                                <div class="icono-bandera" style="background: #FFF8E1; color: #FFB300;"><i data-lucide="star"></i></div>
+                        <div class="tarjeta-pais tarjeta-sonado">
+                            <img class="miniatura-portada-lista imagen-sonado" src="${portadaLista}" alt="Imagen de ${nombrePrincipal}" onclick="abrirModalUrlsAventuras('${id}')" role="button" tabindex="0" onkeydown="manejarTeclaMiniatura(event, '${id}')">
+                            <div class="info-pais info-sonado">
                                 <div>
-                                    <h3 class="destino-principal dorado">${nombrePrincipal}</h3>
+                                    <h3 class="destino-principal rojo-metal">${nombrePrincipal}</h3>
                                     ${escalasResumen ? `<div class="destino-escalas">(${escalasResumen})</div>` : ''}
                                     <span class="zonas-badge">${totalEscalas} escalas</span>
                                 </div>
                             </div>
                             <div class="acciones-itinerario-card">
-                                <img class="miniatura-portada-lista" src="${portadaLista}" alt="Portada de ${nombrePrincipal}" onclick="abrirModalUrlsAventuras('${id}')" role="button" tabindex="0" onkeydown="manejarTeclaMiniatura(event, '${id}')">
                                 <button class="btn-accion-pais secundario" onclick="abrirPlanificador('${id}')">Ver Itinerario <i data-lucide="calendar"></i></button>
                             </div>
                         </div>`;
@@ -2138,8 +2137,19 @@ const firebaseConfig = {
 
         window.mostrarSelectorNuevoDestino = function() {
             const el = document.getElementById('selector-nuevo-destino');
-            el.style.display = 'block';
-            el.scrollIntoView({ behavior: 'smooth' });
+            const boton = document.getElementById('btn-nueva-aventura-sonados');
+            if (el) {
+                el.style.display = 'block';
+                el.scrollIntoView({ behavior: 'smooth' });
+            }
+            if (boton) boton.classList.add('activo-form');
+        };
+
+        window.ocultarSelectorNuevoDestino = function() {
+            const el = document.getElementById('selector-nuevo-destino');
+            const boton = document.getElementById('btn-nueva-aventura-sonados');
+            if (el) el.style.display = 'none';
+            if (boton) boton.classList.remove('activo-form');
         };
 
         window.confirmarNuevoDestino = function() {
@@ -2152,7 +2162,7 @@ const firebaseConfig = {
             if (!id || id === "") return;
 
             // Ocultar el panel de selección para que no estorbe
-            document.getElementById('selector-nuevo-destino').style.display = 'none';
+            ocultarSelectorNuevoDestino();
 
             if (!destinosSonados[id]) {
                 destinosSonados[id] = {
