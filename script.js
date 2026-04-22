@@ -273,6 +273,31 @@ const firebaseConfig = {
             });
         }
 
+        function asegurarDiaIdEnItem(destino, item) {
+            if (!destino || !item || typeof item !== 'object') return;
+
+            if (!Array.isArray(destino.dias) || !destino.dias.length) {
+                destino.dias = [crearDia(1, 'Llegada')];
+            }
+
+            const diaPorId = new Map(destino.dias.map(dia => [dia.id, dia]));
+            if (typeof item.diaId === 'string' && diaPorId.has(item.diaId)) {
+                return;
+            }
+
+            const diaDesdeTexto = normalizarDiaItinerario(item.dia || '').orden;
+            if (Number.isFinite(diaDesdeTexto) && diaDesdeTexto > 0) {
+                const encontrado = destino.dias.find(dia => dia.numero === diaDesdeTexto);
+                if (encontrado) {
+                    item.diaId = encontrado.id;
+                    return;
+                }
+            }
+
+            const primerDia = destino.dias[0] || crearDia(1, 'Llegada');
+            item.diaId = primerDia.id;
+        }
+
         function obtenerDiaDeItem(destino, item) {
             if (!destino || !item) return null;
             return destino.dias.find(d => d.id === item.diaId) || destino.dias[0] || null;
