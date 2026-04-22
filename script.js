@@ -93,6 +93,26 @@ const firebaseConfig = {
             };
         }
 
+        function contarMemoriasPais(idPais) {
+            const provinciasDelPais = provinciasVisitadas?.[idPais];
+            let totalMemorias = 0;
+
+            if (provinciasDelPais && typeof provinciasDelPais === "object") {
+                Object.values(provinciasDelPais).forEach((provincia) => {
+                    const totalAlbumes = Array.isArray(provincia?.albumes) ? provincia.albumes.length : 0;
+                    const totalHistorias = Array.isArray(provincia?.historias) ? provincia.historias.length : 0;
+                    totalMemorias += totalAlbumes + totalHistorias;
+                });
+            }
+
+            // Mantener compatibilidad con recuerdos guardados a nivel país
+            const pais = paisesVisitados?.[idPais];
+            const totalAlbumesPais = Array.isArray(pais?.albumes) ? pais.albumes.length : 0;
+            const totalHistoriasPais = Array.isArray(pais?.historias) ? pais.historias.length : 0;
+
+            return totalMemorias + totalAlbumesPais + totalHistoriasPais;
+        }
+
         function serializarEstable(valor) {
             if (Array.isArray(valor)) {
                 return valor.map(item => serializarEstable(item));
@@ -1193,12 +1213,12 @@ const firebaseConfig = {
                 listaHTML.className = 'lista-paises';
                 idsPaises.forEach(id => {
                     const pais = paisesVisitados[id];
-                    const numAlbumes = (pais.albumes ? pais.albumes.length : 0) + (pais.historias ? pais.historias.length : 0);
+                    const numMemorias = contarMemoriasPais(id);
                     listaHTML.innerHTML += `
                         <div class="tarjeta-pais">
                             <div class="info-pais">
                                 <div class="icono-bandera"><i data-lucide="map-pin"></i></div>
-                                <div><h3 class="nombre-pais-lista">${pais.nombre}</h3><span class="zonas-badge">${numAlbumes} memorias</span></div>
+                                <div><h3 class="nombre-pais-lista">${pais.nombre}</h3><span class="zonas-badge">${numMemorias} memorias</span></div>
                             </div>
                             <button class="btn-accion-pais" onclick="abrirAlbum('${id}')">Ver Álbumes <i data-lucide="chevron-right"></i></button>
                         </div>`;
@@ -1831,7 +1851,7 @@ const firebaseConfig = {
 
                 idsPaises.forEach(id => {
     const pais = paisesVisitados[id];
-    const numAlbumes = (pais.albumes ? pais.albumes.length : 0) + (pais.historias ? pais.historias.length : 0);
+    const numMemorias = contarMemoriasPais(id);
 
     let provinciasHTML = "";
 
@@ -1856,7 +1876,7 @@ const firebaseConfig = {
                 <div class="icono-bandera"><i data-lucide="map-pin"></i></div>
                 <div>
                     <h3 class="nombre-pais-lista">${pais.nombre}</h3>
-                    <span class="zonas-badge">${numAlbumes} memorias</span>
+                    <span class="zonas-badge">${numMemorias} memorias</span>
                     ${provinciasHTML}
                 </div>
             </div>
