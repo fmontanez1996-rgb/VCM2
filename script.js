@@ -2504,11 +2504,14 @@ const firebaseConfig = {
         };
 
         window.dibujarItinerario = function(idPais) {
-            const timeline = document.getElementById(`linea-tiempo-${idPais}`);
-            const calendario = document.getElementById(`placeholder-calendario-${idPais}`);
-            if (!timeline || !calendario || !destinosSonados[idPais]) return;
             const destino = destinosSonados[idPais];
-            const items = destino.itinerario;
+            if (!destino) return;
+
+            const timeline = document.getElementById(`linea-tiempo-${idPais}`);
+            const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
+            if (!timeline || !calendario) return;
+
+            const items = Array.isArray(destino.itinerario) ? destino.itinerario : [];
             timeline.innerHTML = '';
             calendario.innerHTML = '';
             if (items.length === 0) {
