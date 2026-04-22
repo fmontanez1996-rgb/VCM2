@@ -1201,10 +1201,17 @@ const firebaseConfig = {
 
             const urlsAventuras = (Array.isArray(destino.itinerario) ? destino.itinerario : [])
                 .filter(item => item?.tipo === 'aventura' && typeof item?.miniatura === 'string' && item.miniatura.trim())
-                .map(item => ({
-                    nombre: item.lugar || 'Aventura',
-                    url: item.miniatura.trim()
-                }));
+                .map(item => {
+                    const urlMiniatura = item.miniatura.trim();
+                    const urlEnlace = typeof item.url === 'string' && item.url.trim()
+                        ? item.url.trim()
+                        : urlMiniatura;
+                    return {
+                        nombre: item.lugar || 'Aventura',
+                        urlMiniatura,
+                        urlEnlace
+                    };
+                });
 
             const modal = document.createElement('div');
             modal.className = 'modal-url-aventuras';
@@ -1218,8 +1225,11 @@ const firebaseConfig = {
                 ? `<ul class="modal-url-aventuras-lista">
                     ${urlsAventuras.map((item, index) => `
                         <li class="modal-url-aventuras-item">
-                            <strong>${index + 1}. ${item.nombre}</strong><br>
-                            <a href="${item.url}" target="_blank" rel="noopener noreferrer">${item.url}</a>
+                            <img class="modal-url-aventuras-miniatura" src="${item.urlMiniatura}" alt="Imagen de ${item.nombre}" loading="lazy">
+                            <div class="modal-url-aventuras-detalle">
+                                <strong>${index + 1}. ${item.nombre}</strong>
+                                <a href="${item.urlEnlace}" target="_blank" rel="noopener noreferrer">${item.urlEnlace}</a>
+                            </div>
                         </li>
                     `).join('')}
                   </ul>`
