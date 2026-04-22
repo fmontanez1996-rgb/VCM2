@@ -1111,6 +1111,9 @@
 
         /* === ITINERARIO === */
         .panel-creacion { background: #FFFFFF; border: 3px solid #E1F5FE; border-radius: 25px; padding: 20px; margin-bottom: 30px; }
+        .panel-creacion {
+            box-shadow: inset -18px 0 28px rgba(133, 221, 255, 0.35), 0 10px 22px rgba(0, 0, 0, 0.12);
+        }
         .botones-tipos { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
         .btn-tipo-item { 
             background: #F5F5F5; border: 2px solid #CFD8DC; color: #546E7A; padding: 10px 15px; border-radius: 15px;
@@ -1352,23 +1355,47 @@
             border: none;
         }
         .titulo-destino-itinerario-wrap .destino-escalas {
-            color: #F5F5F5;
-            font-size: 0.8rem;
-            text-shadow: 1px 1px 0 rgba(0,0,0,0.4);
+            margin-top: 8px;
+            color: #111111;
+            font-size: 1.02rem;
+            font-weight: 900;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            text-shadow:
+                0 1px 0 rgba(255,255,255,0.45),
+                0 2px 2px rgba(0,0,0,0.55);
+            background: linear-gradient(145deg, rgba(245,245,245,0.2), rgba(20,20,20,0.6));
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(0,0,0,0.6);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 10px rgba(0,0,0,0.38);
         }
         .titulo-destino-itinerario {
             margin: 0;
             display: inline-block;
-            padding: 8px 16px;
-            border: 3px solid #000;
-            border-radius: 14px;
-            background: #FFF8D1;
-            color: #0D1B2A;
-            font-size: 1.65rem;
+            width: fit-content;
+            max-width: 100%;
+            padding: 12px 22px;
+            border: 3px solid #AEB8C2;
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%),
+                linear-gradient(135deg, #f9fcff 0%, #ccd4db 42%, #8f9ba7 52%, #e3e9ef 76%, #aeb9c5 100%);
+            color: #4F0000;
+            font-size: clamp(2rem, 3.2vw, 2.65rem);
             font-weight: 900;
             text-transform: uppercase;
-            letter-spacing: 0.02em;
-            box-shadow: 3px 3px 0 rgba(0,0,0,0.28);
+            letter-spacing: 0.06em;
+            text-shadow:
+                0 -1px 0 #ffb8b8,
+                0 1px 0 #6d0000,
+                0 2px 0 #440000,
+                0 0 12px rgba(255, 66, 66, 0.4);
+            box-shadow:
+                inset 0 2px 0 rgba(255,255,255,0.85),
+                inset 0 -2px 0 rgba(0,0,0,0.25),
+                0 8px 18px rgba(0,0,0,0.36);
         }
         .acciones-itinerario-superior {
             display: flex;
@@ -1376,19 +1403,34 @@
             align-self: flex-start;
         }
         .btn-mini-accion-itinerario {
-            width: 34px;
-            height: 34px;
-            border-radius: 10px;
-            border: 2px solid #000;
-            background: #FFFFFF;
-            color: #263238;
+            min-width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            border: 2px solid #2b2b2b;
+            background: linear-gradient(145deg, #fff59d 0%, #ffd54f 46%, #fbc02d 62%, #ffe082 100%);
+            color: #111111;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            transition: all 0.2s ease;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.55), 0 2px 2px rgba(0,0,0,0.35);
+            box-shadow: inset 0 2px 1px rgba(255,255,255,0.75), inset 0 -2px 1px rgba(0,0,0,0.25), 0 4px 10px rgba(0,0,0,0.22);
         }
-        .btn-mini-accion-itinerario.peligro { color: #D32F2F; }
-        .btn-mini-accion-itinerario.confirmando { background: #D32F2F; color: #FFF; }
+        .btn-mini-accion-itinerario:hover,
+        .btn-mini-accion-itinerario.activo {
+            transform: translateY(-1px);
+        }
+        .btn-mini-accion-itinerario.activo {
+            box-shadow: inset 0 2px 1px rgba(255,255,255,0.75), inset 0 -2px 1px rgba(0,0,0,0.25), 0 0 0 2px rgba(255,255,255,0.65), 0 0 16px rgba(255, 214, 65, 0.9);
+        }
+        .btn-mini-accion-itinerario.peligro {
+            background: linear-gradient(145deg, #ffcdd2 0%, #ef5350 44%, #c62828 70%, #ff8a80 100%);
+            color: #111111;
+        }
+        .btn-mini-accion-itinerario.peligro.activo {
+            box-shadow: inset 0 2px 1px rgba(255,255,255,0.68), inset 0 -2px 1px rgba(0,0,0,0.3), 0 0 0 2px rgba(255,255,255,0.5), 0 0 16px rgba(255, 77, 77, 0.95);
+        }
         .portada-itinerario-editor {
             display: flex;
             gap: 10px;
@@ -1398,8 +1440,8 @@
         .btn-tipo-item {
             background: linear-gradient(155deg, #F8FAFC, #CDD3DD);
             border: 2px solid #6E7788;
-            color: #37474F;
-            text-shadow: 0 1px 0 rgba(255,255,255,0.65);
+            color: #101010;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.75), 0 2px 2px rgba(0,0,0,0.35);
             box-shadow: inset 0 1px 0 rgba(255,255,255,0.9), 0 4px 10px rgba(0,0,0,0.08);
         }
         .btn-tipo-item.btn-tipo-viaje { border-color: #FFB300; color: #7A4D00; }
@@ -1415,6 +1457,41 @@
         .btn-tipo-item.btn-tipo-hospedaje.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(156,39,176,0.65), 0 8px 16px rgba(0,0,0,0.2); }
         .btn-tipo-item.btn-tipo-aventura.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(76,175,80,0.65), 0 8px 16px rgba(0,0,0,0.2); }
         .btn-tipo-item.btn-tipo-restaurante.seleccionado { box-shadow: 0 0 0 2px rgba(255,255,255,0.5), 0 0 18px rgba(255,82,82,0.65), 0 8px 16px rgba(0,0,0,0.2); }
+
+        .modal-confirmacion-itinerario {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.62);
+            z-index: 2500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .modal-confirmacion-itinerario-contenido {
+            width: min(480px, 92vw);
+            background: linear-gradient(145deg, #f8fbff 0%, #d5dde5 45%, #aeb8c2 54%, #edf2f8 100%);
+            border: 3px solid #7d8794;
+            border-radius: 20px;
+            padding: 20px;
+            color: #111;
+            box-shadow: inset 0 2px 0 rgba(255,255,255,0.75), inset 0 -2px 0 rgba(0,0,0,0.2), 0 20px 40px rgba(0,0,0,0.45);
+        }
+        .modal-confirmacion-itinerario h3 { margin: 0 0 10px; font-size: 1.35rem; letter-spacing: 0.04em; }
+        .modal-confirmacion-itinerario p { margin: 0 0 18px; font-weight: 700; color: #1f1f1f; }
+        .modal-confirmacion-itinerario-botones { display: flex; gap: 10px; justify-content: flex-end; }
+        .btn-modal-metal {
+            border: 2px solid #303030;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-weight: 900;
+            color: #101010;
+            cursor: pointer;
+            text-shadow: 0 1px 0 rgba(255,255,255,0.75), 0 2px 2px rgba(0,0,0,0.3);
+            box-shadow: inset 0 2px 1px rgba(255,255,255,0.75), inset 0 -2px 1px rgba(0,0,0,0.22), 0 4px 10px rgba(0,0,0,0.22);
+        }
+        .btn-modal-metal.cancelar { background: linear-gradient(145deg, #ffffff, #dfe4ea, #f8fbff); }
+        .btn-modal-metal.eliminar { background: linear-gradient(145deg, #ffcdd2, #ef5350, #c62828); }
 
         .tarjeta-calendario-itinerario.viaje { border-left: 5px solid #FFB300; background: #FFF7E0; }
         .tarjeta-calendario-itinerario.hospedaje { border-left: 5px solid #9C27B0; background: #F4E8FF; }
