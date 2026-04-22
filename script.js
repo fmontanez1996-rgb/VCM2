@@ -1768,6 +1768,7 @@ const firebaseConfig = {
             const nombrePrincipal = obtenerNombreCabeceraDestino(pais);
             const escalasResumen = obtenerResumenEscalas(pais);
             const portadaActual = pais.portadaUrl || "";
+            estadoVistaItinerario = { modo: 'lista', idPais };
 
             scrollArea.innerHTML = `
                 <div class="cabecera-detalle">
@@ -1808,11 +1809,41 @@ const firebaseConfig = {
                     <div id="contenedor-formularios"></div>
                 </div>
 
+                <div class="selector-modo-itinerario">
+                    <button id="btn-modo-lista-${idPais}" class="btn-modo-itinerario activo" onclick="cambiarModoItinerario('lista')">Modo Lista</button>
+                    <button id="btn-modo-calendario-${idPais}" class="btn-modo-itinerario" onclick="cambiarModoItinerario('calendario')">Modo Calendario</button>
+                </div>
+
                 <div class="linea-tiempo" id="linea-tiempo-${idPais}"></div>
+                <div class="placeholder-calendario-itinerario" id="placeholder-calendario-${idPais}" style="display:none;">
+                    Próximamente
+                </div>
             `;
 
             lucide.createIcons();
             dibujarItinerario(idPais);
+            cambiarModoItinerario('lista');
+        };
+
+        window.cambiarModoItinerario = function(modo) {
+            const modoNormalizado = modo === 'calendario' ? 'calendario' : 'lista';
+            const { idPais } = estadoVistaItinerario;
+            if (!idPais) return;
+
+            estadoVistaItinerario.modo = modoNormalizado;
+
+            const btnLista = document.getElementById(`btn-modo-lista-${idPais}`);
+            const btnCalendario = document.getElementById(`btn-modo-calendario-${idPais}`);
+            const lineaTiempo = document.getElementById(`linea-tiempo-${idPais}`);
+            const placeholderCalendario = document.getElementById(`placeholder-calendario-${idPais}`);
+
+            if (!btnLista || !btnCalendario || !lineaTiempo || !placeholderCalendario) return;
+
+            const esLista = modoNormalizado === 'lista';
+            btnLista.classList.toggle('activo', esLista);
+            btnCalendario.classList.toggle('activo', !esLista);
+            lineaTiempo.style.display = esLista ? 'block' : 'none';
+            placeholderCalendario.style.display = esLista ? 'none' : 'block';
         };
 
         window.manual_Hospedaje = (btn) => mostrarFormularioItinerario('hospedaje', btn);
