@@ -256,6 +256,96 @@
         #scroll-recuerdos {
             background: #000000;
         }
+        .selector-nuevo-recuerdo {
+            display: none;
+            background: linear-gradient(145deg, #f7fcff 0%, #ebf8ff 100%);
+            margin: 15px;
+            padding: 22px;
+            border-radius: 18px;
+            border: 4px solid rgba(74, 225, 255, 0.95);
+            box-shadow:
+                0 0 0 3px rgba(191, 244, 255, 0.9),
+                0 0 25px rgba(91, 231, 255, 0.85),
+                0 0 45px rgba(85, 217, 255, 0.72),
+                inset 0 0 18px rgba(169, 239, 255, 0.6);
+            animation: fadeIn 0.3s ease;
+        }
+        .select-recuerdo {
+            width: 100%;
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid #7ddfff;
+            margin-bottom: 15px;
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #000000;
+            background: linear-gradient(145deg, #ddf7ff 0%, #c6ecff 100%);
+            box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.65), 0 4px 10px rgba(80, 176, 214, 0.25);
+        }
+        .select-recuerdo option {
+            background: #ccefff;
+            color: #000000;
+            font-weight: 800;
+        }
+        .select-recuerdo:focus {
+            outline: none;
+            border-color: #2ecbff;
+            box-shadow: 0 0 0 3px rgba(125, 223, 255, 0.45);
+        }
+        .contenedor-ciudad-recuerdo { display:none; margin-bottom: 15px; }
+        .acciones-selector-recuerdo { display: flex; gap: 10px; }
+        .btn-recuerdo {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.52);
+            color: #ffffff;
+            font-weight: 900;
+            letter-spacing: 0.02em;
+            cursor: pointer;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35);
+            transition: transform 0.18s ease, box-shadow 0.22s ease, filter 0.22s ease;
+        }
+        .btn-recuerdo:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.07);
+        }
+        .btn-recuerdo:active { transform: translateY(1px); }
+        .btn-recuerdo-guardar {
+            background:
+                linear-gradient(165deg, #d9ffe5 0%, #4dd173 35%, #20944a 65%, #7af2a2 100%);
+            box-shadow:
+                inset 0 2px 1px rgba(255, 255, 255, 0.75),
+                inset 0 -6px 9px rgba(16, 94, 48, 0.6),
+                0 7px 0 #15763a,
+                0 13px 20px rgba(13, 88, 42, 0.4);
+        }
+        .btn-recuerdo-guardar:hover {
+            box-shadow:
+                inset 0 2px 1px rgba(255, 255, 255, 0.78),
+                inset 0 -6px 9px rgba(16, 94, 48, 0.6),
+                0 8px 0 #15763a,
+                0 0 18px rgba(95, 255, 155, 0.95),
+                0 0 32px rgba(95, 255, 155, 0.62);
+        }
+        .btn-recuerdo-cancelar {
+            background:
+                linear-gradient(165deg, #ffe3e3 0%, #ff6565 35%, #b81f1f 65%, #ff8f8f 100%);
+            box-shadow:
+                inset 0 2px 1px rgba(255, 255, 255, 0.75),
+                inset 0 -6px 9px rgba(117, 20, 20, 0.58),
+                0 7px 0 #8e1e1e,
+                0 13px 20px rgba(110, 18, 18, 0.42);
+        }
+        .btn-recuerdo-cancelar:hover {
+            box-shadow:
+                inset 0 2px 1px rgba(255, 255, 255, 0.8),
+                inset 0 -6px 9px rgba(117, 20, 20, 0.58),
+                0 8px 0 #8e1e1e,
+                0 0 18px rgba(255, 124, 124, 0.95),
+                0 0 32px rgba(255, 124, 124, 0.62);
+        }
 
         .lista-paises {
             display: grid;
