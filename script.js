@@ -1117,9 +1117,6 @@ const firebaseConfig = {
                 <div class="encabezado-seccion" style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
                     <h2><i data-lucide="camera"></i> Galería de Recuerdos</h2>
                     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <button onclick="document.getElementById('selector-nuevo-recuerdo').style.display='none'" style="background: #ECEFF1; color: #546E7A; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="eye"></i> Ver recuerdo
-                        </button>
                         <button class="btn-nueva-aventura" onclick="mostrarSelectorNuevoRecuerdo()" style="background: var(--secondary); color: white; border: none; padding: 10px 15px; border-radius: 20px; font-family: inherit; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(0, 188, 212, 0.3);">
                             <i data-lucide="plus-circle"></i> + Nuevo Recuerdo
                         </button>
