@@ -438,6 +438,74 @@ const firebaseConfig = {
             return `${String(partes.dia).padStart(2, '0')}/${String(partes.mes).padStart(2, '0')}/${partes.anio}`;
         }
 
+        function formatearMonedaItinerario(valor) {
+            const numero = Number(valor);
+            if (Number.isNaN(numero)) return '$0';
+            return `$${numero.toLocaleString('es-AR')}`;
+        }
+
+        function obtenerLineaDiaItem(destino, item) {
+            const etiquetaDia = obtenerEtiquetaDia(destino, item);
+            return etiquetaDia.replace(/^DÍA/i, 'Día');
+        }
+
+        function obtenerResumenTarjetaItinerario(destino, item = {}) {
+            const diaLinea = obtenerLineaDiaItem(destino, item);
+            const fechaInicio = formatearFechaCortaItinerario(obtenerFechaBaseItem(destino, item));
+            const { fechaFin, horaFin } = obtenerRangoTemporalItem(destino, item);
+            const fechaFinTexto = formatearFechaCortaItinerario(fechaFin);
+            const horaSalida = normalizarHoraItinerario(item.llegada) || 'Sin horario';
+            const horaLlegada = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
+            const costoBase = formatearMonedaItinerario(item.costo ?? item.precio ?? 0);
+
+            if (item.tipo === 'viaje') {
+                const origen = item.origen || 'Origen por definir';
+                const destinoViaje = `${item.destino || 'Destino por definir'}${item.ciudad ? `, ${item.ciudad}` : ''}`;
+                return [
+                    `MEDIO: ${item.medio || 'Sin definir'}`,
+                    `${origen} - ${destinoViaje}`,
+                    `SALIDA: ${fechaInicio || 'Sin fecha'} ${horaSalida} · (${diaLinea})`,
+                    `LLEGADA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} ${horaLlegada} · (${diaLinea})`,
+                    `COSTO POR PERSONA: ${costoBase}`,
+                    `COSTO TOTAL: ${costoBase}`
+                ];
+            }
+
+            if (item.tipo === 'aventura') {
+                return [
+                    `NOMBRE DE AVENTURA: ${item.lugar || 'Aventura'}`,
+                    `INICIO-FIN: ${horaSalida} - ${horaLlegada} · ${diaLinea}`,
+                    `PRECIO POR PERSONA: ${costoBase}`,
+                    `PRECIO TOTAL: ${costoBase}`
+                ];
+            }
+
+            if (item.tipo === 'hospedaje') {
+                const noches = Number(item.noches) || 1;
+                const precioPorNoche = formatearMonedaItinerario(noches > 0 ? Number(item.costo || 0) / noches : item.costo || 0);
+                return [
+                    `NOMBRE DE HOSPEDAJE: ${item.hotel || 'Hospedaje'}`,
+                    `CANTIDAD DE NOCHES: ${noches}`,
+                    `FECHA DE LLEGADA: ${fechaInicio || 'Sin fecha'} · (${diaLinea})`,
+                    `HORARIO CHECK-IN: ${horaSalida}`,
+                    `FECHA DE SALIDA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} · (${diaLinea})`,
+                    `HORARIO CHECK-OUT: ${horaLlegada}`,
+                    `PRECIO POR NOCHE: ${precioPorNoche}`,
+                    `PRECIO TOTAL: ${costoBase}`
+                ];
+            }
+
+            return [
+                `NOMBRE DE RESTAURANTE: ${item.plato || 'Restaurante'}`,
+                `UBICACIÓN: ${item.ubicacion || item.ciudad || item.destino || 'No especificada'}`,
+                `PLATO SUGERIDO: ${item.plato || 'No especificado'}`,
+                `FECHA: ${fechaInicio || 'Sin fecha'} · (${diaLinea})`,
+                `HORARIO ENTRADA-SALIDA: ${horaSalida} - ${horaLlegada}`,
+                `PRECIO POR PERSONA: ${costoBase}`,
+                `PRECIO TOTAL: ${costoBase}`
+            ];
+        }
+
         function renderCampoFechaItinerario(fechaActual = '') {
             return `
                 <div class="campo-form"><label>Fecha de actividad</label>
@@ -2793,13 +2861,16 @@ const firebaseConfig = {
 
                     const tarjetas = itemsDia.map(item => {
                         const meta = obtenerMetaItinerario(item, destino);
+                        const resumen = obtenerResumenTarjetaItinerario(destino, item)
+                            .map(linea => `<p>${linea}</p>`)
+                            .join('');
                         return `
                             <article class="tarjeta-calendario-itinerario ${item.tipo || ''}" data-itinerario-item-id="${item.id}">
                                 <div class="tarjeta-calendario-header">
                                     <h4><i data-lucide="${meta.icono}"></i> ${meta.titulo}</h4>
                                     <span class="badge-horario"><i data-lucide="clock-3"></i> ${meta.horario}</span>
                                 </div>
-                                <p>${meta.detalle || 'Sin detalle.'}</p>
+                                <div class="item-detalles">${resumen}</div>
                             </article>
                         `;
                     }).join('');
@@ -3232,13 +3303,14 @@ const firebaseConfig = {
             `;
 
             items.forEach((item, index) => {
-                let icono = 'circle'; let titulo = ''; let detalles = '';
-                const etiquetaDia = obtenerEtiquetaDia(destino, item);
-                const horario = formatearRangoTemporalItem(destino, item);
-                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; detalles = `${etiquetaDia}<br>Escala: ${item.destino}${item.ciudad ? `, ${item.ciudad}` : ''}<br>Horario: ${horario}<br>Costo: $${item.costo}`; }
-                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; detalles = `${etiquetaDia}<br>${item.noches} noches - Total: $${item.costo}<br>Horario: ${horario}`; }
-                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; detalles = `${etiquetaDia} ($${item.costo})<br>Horario: ${horario}`; }
-                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; detalles = `${etiquetaDia}<br>Gasto: $${item.precio}<br>Horario: ${horario}`; }
+                let icono = 'circle'; let titulo = '';
+                if (item.tipo === 'viaje') { icono = 'bus'; titulo = `Viaje en ${item.medio}`; }
+                else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = item.hotel; }
+                else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = item.lugar; }
+                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; }
+                const detalles = obtenerResumenTarjetaItinerario(destino, item)
+                    .map(linea => `<p>${linea}</p>`)
+                    .join('');
                 const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
                     ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
                     : '';
