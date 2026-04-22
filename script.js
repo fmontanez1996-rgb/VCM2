@@ -2219,7 +2219,7 @@ const firebaseConfig = {
                         items: []
                     });
                 }
-                grupos.get(claveDia).items.push({ ...item, _ordenCreacion: indiceCreacion });
+                grupos.get(clave).items.push({ ...item, _ordenCreacion: indiceCreacion });
             });
 
             const columnas = Array.from(grupos.values())
