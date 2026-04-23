@@ -544,7 +544,7 @@ const firebaseConfig = {
                     `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${numeroDiaFechaFin})`,
                     `Check out: ${horaLlegada}`,
                     `Precio por noche ${precioPorNoche}`,
-                    `Precio total ${costoBase}`
+                    `Precio por persona ${costoBase}`
                 ];
             }
 
@@ -556,29 +556,6 @@ const firebaseConfig = {
                 `PRECIO: ${costoBase}`
             ];
         }
-
-        function renderCampoFechaItinerario(fechaActual = '') {
-            return `
-                <div class="campo-form"><label>Fecha de actividad</label>
-                    <input type="date" id="input-item-fecha" value="${fechaActual}">
-                </div>
-            `;
-        }
-
-        window.calcularPrecioTotalHospedaje = function(noches = 0, precioPorNoche = 0) {
-            const nochesValidas = Math.max(0, Number(noches) || 0);
-            const precioValido = Math.max(0, Number(precioPorNoche) || 0);
-            return String(Math.round(nochesValidas * precioValido));
-        };
-
-        window.sincronizarPrecioHospedaje = function() {
-            const inputNoches = document.getElementById('input-hospedaje-noches');
-            const inputPrecioNoche = document.getElementById('input-hospedaje-precio-noche');
-            const inputTotal = document.getElementById('input-hospedaje-costo-total');
-            if (!inputNoches || !inputPrecioNoche || !inputTotal) return;
-            inputTotal.value = window.calcularPrecioTotalHospedaje(inputNoches.value, inputPrecioNoche.value);
-        };
-
         function guardarEstadoEnFirebase(forzar = false) {
             if (!firebaseDb || !estadoInicialSincronizado || !rutaEstadoFirebase) return;
 
@@ -2642,6 +2619,29 @@ const firebaseConfig = {
             return `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}`;
         }
 
+        function normalizarFechaItinerario(valor = '') {
+            const fecha = String(valor || '').trim();
+            return esFechaActividadValida(fecha) ? fecha : '';
+        }
+
+        function normalizarDuracionViaje(valor = '') {
+            const texto = String(valor || '').trim();
+            if (!texto) return '0:30';
+            const match = texto.match(/^(\d{1,2}):([03]0)$/);
+            if (!match) return '0:30';
+            return `${Number(match[1])}:${match[2]}`;
+        }
+
+        function limpiarNumeroMoneda(valor = '') {
+            return String(valor || '').replace(/[^\d]/g, '');
+        }
+
+        function formatearMilesConPuntos(valor = '') {
+            const limpio = limpiarNumeroMoneda(valor).replace(/^0+(?=\d)/, '');
+            if (!limpio) return '';
+            return limpio.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        }
+
         function formatearHorarioItinerario(llegada = '', partida = '') {
             const llegadaNormalizada = normalizarHoraItinerario(llegada);
             const partidaNormalizada = normalizarHoraItinerario(partida);
@@ -2669,10 +2669,21 @@ const firebaseConfig = {
         }
 
         function obtenerRangoTemporalItem(destino, item = {}) {
-            const fechaInicio = obtenerFechaBaseItem(destino, item);
-            const horaInicio = normalizarHoraItinerario(item.llegada);
-            const horaFin = normalizarHoraItinerario(item.partida);
+            let fechaInicio = obtenerFechaBaseItem(destino, item);
+            let horaInicio = normalizarHoraItinerario(item.llegada);
+            let horaFin = normalizarHoraItinerario(item.partida);
             let fechaFin = fechaInicio;
+
+            if (item.tipo === 'viaje') {
+                const fechaPartida = normalizarFechaItinerario(item.fechaPartida);
+                const fechaLlegada = normalizarFechaItinerario(item.fechaLlegada);
+                const horaPartida = normalizarHoraItinerario(item.partida);
+                const horaLlegada = normalizarHoraItinerario(item.llegada);
+                fechaInicio = fechaPartida || fechaInicio;
+                fechaFin = fechaLlegada || fechaInicio;
+                horaInicio = horaPartida || horaInicio;
+                horaFin = horaLlegada || horaFin;
+            }
 
             if (item.tipo === 'hospedaje') {
                 fechaFin = obtenerFechaCheckoutHospedaje(item, fechaInicio) || fechaInicio;
@@ -3146,9 +3157,18 @@ const firebaseConfig = {
                     .sort((a, b) => a.nombre.localeCompare(b.nombre))
                     .map(p => `<option value="${p.id}" ${itemExistente?.destinoId === p.id ? 'selected' : ''}>${p.nombre}</option>` )
                     .join('');
-                const horas = itemExistente?.horas || '';
-                const minutos = itemExistente?.minutos || '';
-                const costo = itemExistente?.costo || '';
+                const duracion = normalizarDuracionViaje(itemExistente?.duracion || `${itemExistente?.horas || 0}:${String(itemExistente?.minutos || '00').padStart(2, '0')}`);
+                const costo = formatearMilesConPuntos(itemExistente?.costo || '');
+                const fechaPartida = normalizarFechaItinerario(itemExistente?.fechaPartida || itemExistente?.fechaActividad || '');
+                const fechaLlegada = normalizarFechaItinerario(itemExistente?.fechaLlegada || itemExistente?.fechaActividad || '');
+
+                const opcionesDuracion = Array.from({ length: 49 }, (_, i) => {
+                    const totalMinutos = (i + 1) * 30;
+                    const horasDuracion = Math.floor(totalMinutos / 60);
+                    const minutosDuracion = totalMinutos % 60;
+                    const valor = `${horasDuracion}:${String(minutosDuracion).padStart(2, '0')}`;
+                    return `<option value="${valor}" ${duracion === valor ? 'selected' : ''}>${valor}</option>`;
+                }).join('');
 
                 formHTML += `
                     <div class="campo-form"><label>Medio de transporte</label>
@@ -3160,21 +3180,24 @@ const firebaseConfig = {
                     <div class="campo-form" id="campo-viaje-ciudad" style="display:none;"><label>Ciudad de Escala</label>
                         <select id="input-viaje-ciudad"><option value="" disabled selected>Selecciona una ciudad...</option></select>
                     </div>
-                    <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Horas</label><input type="number" id="input-viaje-horas" placeholder="0" value="${horas}"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Minutos</label><input type="number" id="input-viaje-minutos" placeholder="0" value="${minutos}"></div>
+                    <div class="campo-form"><label>Duración estimada</label>
+                        <select id="input-viaje-duracion">${opcionesDuracion}</select>
                     </div>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-viaje-llegada" value="${itemExistente?.llegada || ''}"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-viaje-partida" value="${itemExistente?.partida || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Partida - Fecha</label><input type="date" id="input-viaje-fecha-partida" value="${fechaPartida}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Partida - Hora</label><input type="time" id="input-viaje-partida" value="${itemExistente?.partida || ''}"></div>
                     </div>
-                    <div class="campo-form"><label>Costo Pasaje ($)</label><input type="number" id="input-viaje-costo" placeholder="Ej. 150000" value="${costo}"></div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="campo-form" style="flex: 1;"><label>Llegada - Fecha</label><input type="date" id="input-viaje-fecha-llegada" value="${fechaLlegada}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Llegada - Hora</label><input type="time" id="input-viaje-llegada" value="${itemExistente?.llegada || ''}"></div>
+                    </div>
+                    <div class="campo-form"><label>Costo Pasaje ($)</label><input type="text" inputmode="numeric" id="input-viaje-costo" placeholder="Ej. 150.000" value="${costo}"></div>
                 `;
             } else if (tipo === 'hospedaje') {
                 const fechaCheckoutExistente = itemExistente?.fechaCheckout || obtenerFechaCheckoutHospedaje(itemExistente, fechaActual);
                 const fechaCheckinExistente = itemExistente?.fechaActividad || '';
                 const precioPorNocheExistente = itemExistente?.precioPorNoche || ((Number(itemExistente?.noches) || 0) > 0 ? Math.round((Number(itemExistente?.costo) || 0) / (Number(itemExistente?.noches) || 1)) : '');
-                const costoTotalExistente = window.calcularPrecioTotalHospedaje(itemExistente?.noches || 0, precioPorNocheExistente || 0);
+                const costoTotalExistente = calcularPrecioTotalHospedaje(itemExistente?.noches || 0, precioPorNocheExistente || 0);
                 formHTML += `
                     <div class="campo-form"><label>Nombre del Hotel</label><input type="text" id="input-hospedaje-nombre" placeholder="Ej. Hotel Copacabana" value="${itemExistente?.hotel || ''}"></div>
                     <div style="display: flex; gap: 10px;">
@@ -3192,9 +3215,20 @@ const firebaseConfig = {
                     </div>
                 `;
             } else if (tipo === 'aventura') {
+                const miniaturaExistente = itemExistente?.miniatura || '';
+                const mostrarMiniaturaBloqueada = esEdicion && Boolean(miniaturaExistente);
                 formHTML += `
                     <div class="campo-form"><label>Lugar a visitar</label><input type="text" id="input-aventura-lugar" placeholder="Ej. Cristo Redentor" value="${itemExistente?.lugar || ''}"></div>
-                    <div class="campo-form"><label>Miniatura (URL)</label><input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${itemExistente?.miniatura || ''}"></div>
+                    <div class="campo-form">
+                        <label>Miniatura (URL)</label>
+                        ${mostrarMiniaturaBloqueada ? `
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                                <img src="${miniaturaExistente}" alt="Miniatura actual de ${itemExistente?.lugar || 'aventura'}" class="miniatura-aventura">
+                                <button type="button" id="btn-editar-url-aventura" class="btn-mini-accion-itinerario" onclick="habilitarEdicionUrlAventura()">Editar</button>
+                            </div>
+                        ` : ''}
+                        <input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${miniaturaExistente}" ${mostrarMiniaturaBloqueada ? 'readonly' : ''} style="${mostrarMiniaturaBloqueada ? 'display:none;' : ''}">
+                    </div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Precio ($)</label><input type="number" id="input-aventura-costo" placeholder="0" value="${itemExistente?.costo || ''}"></div>
                     </div>
@@ -3214,8 +3248,12 @@ const firebaseConfig = {
                 `;
             }
 
-            if (tipo !== 'hospedaje') {
-                formHTML += renderCampoFechaItinerario(fechaActual);
+            if (tipo !== 'viaje') {
+                formHTML += `
+                    <div class="campo-form"><label>Fecha de actividad</label>
+                        <input type="date" id="input-item-fecha" value="${fechaActual}">
+                    </div>
+                `;
             }
             if (esEdicion) {
                 formHTML += `<div style="display:flex; gap:10px;"><button class="btn-guardar-item" onclick="actualizarItemItinerario('${idPais}', ${itemExistente.id}, '${tipo}')">Guardar cambios ✨</button><button class="btn-cancelar-item" onclick="cancelarFormularioItinerario()">Cancelar</button></div></div>`;
@@ -3232,12 +3270,24 @@ const firebaseConfig = {
                     }
                 });
             }
-
-            if (tipo === 'hospedaje') {
-                document.getElementById('input-hospedaje-noches')?.addEventListener('input', window.sincronizarPrecioHospedaje);
-                document.getElementById('input-hospedaje-precio-noche')?.addEventListener('input', window.sincronizarPrecioHospedaje);
-                window.sincronizarPrecioHospedaje();
+            if (tipo === 'viaje') {
+                const inputCosto = document.getElementById('input-viaje-costo');
+                if (inputCosto) {
+                    inputCosto.addEventListener('input', (event) => {
+                        event.target.value = formatearMilesConPuntos(event.target.value);
+                    });
+                }
             }
+        };
+
+        window.habilitarEdicionUrlAventura = function() {
+            const inputUrl = document.getElementById('input-aventura-miniatura');
+            const botonEditar = document.getElementById('btn-editar-url-aventura');
+            if (!inputUrl) return;
+            inputUrl.style.display = '';
+            inputUrl.readOnly = false;
+            inputUrl.focus();
+            if (botonEditar) botonEditar.style.display = 'none';
         };
 
         window.guardarItemItinerario = function(idPais, tipo) {
@@ -3247,7 +3297,9 @@ const firebaseConfig = {
             if (!dataPais.destinoFinal) dataPais.destinoFinal = dataPais.nombre;
             if (!dataPais.escalas) dataPais.escalas = [];
             if (!dataPais.escalasCiudades) dataPais.escalasCiudades = [];
-            nuevoItem.fechaActividad = document.getElementById('input-item-fecha')?.value || '';
+            nuevoItem.fechaActividad = tipo === 'viaje'
+                ? (document.getElementById('input-viaje-fecha-partida')?.value || '')
+                : (document.getElementById('input-item-fecha')?.value || '');
             const diaSeleccionado = document.getElementById('input-item-dia')?.value;
             nuevoItem.diaId = diaSeleccionado || dataPais.dias?.[0]?.id || crearDia(1, 'Llegada').id;
             if (!dataPais.dias?.length) {
@@ -3265,11 +3317,13 @@ const firebaseConfig = {
                 nuevoItem.destino = escalaNombre;
                 nuevoItem.destinoId = escalaId;
                 nuevoItem.ciudad = ciudadEscala;
-                nuevoItem.horas = document.getElementById('input-viaje-horas').value || '0';
-                nuevoItem.minutos = document.getElementById('input-viaje-minutos').value || '0';
-                nuevoItem.costo = document.getElementById('input-viaje-costo').value || '0';
-                nuevoItem.llegada = document.getElementById('input-viaje-llegada').value;
+                nuevoItem.duracion = normalizarDuracionViaje(document.getElementById('input-viaje-duracion').value || '0:30');
+                nuevoItem.costo = limpiarNumeroMoneda(document.getElementById('input-viaje-costo').value || '0') || '0';
+                nuevoItem.fechaPartida = document.getElementById('input-viaje-fecha-partida').value || '';
+                nuevoItem.fechaLlegada = document.getElementById('input-viaje-fecha-llegada').value || nuevoItem.fechaPartida;
                 nuevoItem.partida = document.getElementById('input-viaje-partida').value;
+                nuevoItem.llegada = document.getElementById('input-viaje-llegada').value;
+                nuevoItem.fechaActividad = nuevoItem.fechaPartida || nuevoItem.fechaActividad;
                 const escN = escalaNombre ? escalaNombre.toUpperCase() : "";
                 if (escN && escN !== dataPais.destinoFinal.toUpperCase() && !dataPais.escalas.includes(escN)) {
                     dataPais.escalas.push(escN);
@@ -3282,7 +3336,7 @@ const firebaseConfig = {
                 nuevoItem.hotel = document.getElementById('input-hospedaje-nombre').value || 'Alojamiento';
                 nuevoItem.noches = document.getElementById('input-hospedaje-noches').value || '1';
                 nuevoItem.precioPorNoche = document.getElementById('input-hospedaje-precio-noche').value || '0';
-                nuevoItem.costo = document.getElementById('input-hospedaje-costo-total').value || window.calcularPrecioTotalHospedaje(nuevoItem.noches, nuevoItem.precioPorNoche);
+                nuevoItem.costo = document.getElementById('input-hospedaje-costo-total').value || calcularPrecioTotalHospedaje(nuevoItem.noches, nuevoItem.precioPorNoche);
                 nuevoItem.partida = document.getElementById('input-hospedaje-checkin-hora').value;
                 nuevoItem.llegada = document.getElementById('input-hospedaje-checkout-hora').value;
                 nuevoItem.fechaActividad = document.getElementById('input-hospedaje-checkin-fecha')?.value || '';
@@ -3331,7 +3385,9 @@ const firebaseConfig = {
             if (idx === -1) return;
 
             const itemActualizado = { ...destino.itinerario[idx], tipo };
-            itemActualizado.fechaActividad = document.getElementById('input-item-fecha')?.value || '';
+            itemActualizado.fechaActividad = tipo === 'viaje'
+                ? (document.getElementById('input-viaje-fecha-partida')?.value || itemActualizado.fechaActividad || '')
+                : (document.getElementById('input-item-fecha')?.value || '');
 
             if (tipo === 'viaje') {
                 const selectPaisEscala = document.getElementById('input-viaje-destino');
@@ -3343,16 +3399,18 @@ const firebaseConfig = {
                 itemActualizado.destino = escalaNombre;
                 itemActualizado.destinoId = escalaId;
                 itemActualizado.ciudad = ciudadEscala;
-                itemActualizado.horas = document.getElementById('input-viaje-horas').value || '0';
-                itemActualizado.minutos = document.getElementById('input-viaje-minutos').value || '0';
-                itemActualizado.costo = document.getElementById('input-viaje-costo').value || '0';
-                itemActualizado.llegada = document.getElementById('input-viaje-llegada').value;
+                itemActualizado.duracion = normalizarDuracionViaje(document.getElementById('input-viaje-duracion').value || '0:30');
+                itemActualizado.costo = limpiarNumeroMoneda(document.getElementById('input-viaje-costo').value || '0') || '0';
+                itemActualizado.fechaPartida = document.getElementById('input-viaje-fecha-partida').value || '';
+                itemActualizado.fechaLlegada = document.getElementById('input-viaje-fecha-llegada').value || itemActualizado.fechaPartida;
                 itemActualizado.partida = document.getElementById('input-viaje-partida').value;
+                itemActualizado.llegada = document.getElementById('input-viaje-llegada').value;
+                itemActualizado.fechaActividad = itemActualizado.fechaPartida || itemActualizado.fechaActividad;
             } else if (tipo === 'hospedaje') {
                 itemActualizado.hotel = document.getElementById('input-hospedaje-nombre').value || 'Alojamiento';
                 itemActualizado.noches = document.getElementById('input-hospedaje-noches').value || '1';
                 itemActualizado.precioPorNoche = document.getElementById('input-hospedaje-precio-noche').value || '0';
-                itemActualizado.costo = document.getElementById('input-hospedaje-costo-total').value || window.calcularPrecioTotalHospedaje(itemActualizado.noches, itemActualizado.precioPorNoche);
+                itemActualizado.costo = document.getElementById('input-hospedaje-costo-total').value || calcularPrecioTotalHospedaje(itemActualizado.noches, itemActualizado.precioPorNoche);
                 itemActualizado.partida = document.getElementById('input-hospedaje-checkin-hora').value;
                 itemActualizado.llegada = document.getElementById('input-hospedaje-checkout-hora').value;
                 itemActualizado.fechaActividad = document.getElementById('input-hospedaje-checkin-fecha')?.value || '';
