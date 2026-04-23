@@ -24,8 +24,105 @@ const firebaseConfig = {
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
         let estadoEdicionPortadaItinerario = {};
+        let playersMusica = {};
+        window.playersMusica = playersMusica;
+        let youtubeApiPromise = null;
+        let youtubeApiReadyResolver = null;
 
         const RUTA_ESTADO_COMPARTIDO = "nuestraHistoria/estadoCompartido";
+
+        function cargarYoutubeIframeApiUnaVez() {
+            if (window.YT && typeof window.YT.Player === 'function') {
+                return Promise.resolve(window.YT);
+            }
+            if (youtubeApiPromise) return youtubeApiPromise;
+
+            youtubeApiPromise = new Promise((resolve) => {
+                youtubeApiReadyResolver = resolve;
+            });
+
+            const scriptExistente = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+            if (!scriptExistente) {
+                const tag = document.createElement('script');
+                tag.src = "https://www.youtube.com/iframe_api";
+                document.head.appendChild(tag);
+            }
+
+            return youtubeApiPromise;
+        }
+
+        window.onYouTubeIframeAPIReady = function() {
+            if (typeof youtubeApiReadyResolver === 'function') {
+                youtubeApiReadyResolver(window.YT);
+                youtubeApiReadyResolver = null;
+            }
+        };
+
+        function obtenerIdPlayerMusica(idPais, idProvincia = null) {
+            return idProvincia ? `player-musica-${idPais}-${idProvincia}` : `player-musica-${idPais}`;
+        }
+
+        function limpiarPlayersMusica() {
+            Object.keys(playersMusica).forEach((idPlayer) => {
+                const player = playersMusica[idPlayer];
+                if (player && typeof player.destroy === 'function') {
+                    player.destroy();
+                }
+                delete playersMusica[idPlayer];
+            });
+        }
+
+        function actualizarEstadoBotonesMusica(idPlayer, estado) {
+            const btnPlay = document.getElementById(`btn-play-${idPlayer}`);
+            const btnPause = document.getElementById(`btn-pause-${idPlayer}`);
+            if (!btnPlay || !btnPause) return;
+
+            if (estado === window.YT?.PlayerState?.PLAYING) {
+                btnPlay.classList.add('activo');
+                btnPause.classList.remove('activo');
+            } else if (estado === window.YT?.PlayerState?.PAUSED) {
+                btnPause.classList.add('activo');
+                btnPlay.classList.remove('activo');
+            } else {
+                btnPlay.classList.remove('activo');
+                btnPause.classList.remove('activo');
+            }
+        }
+
+        function inicializarPlayerMusica(idPlayer, videoIdMusica) {
+            if (!videoIdMusica) return;
+
+            cargarYoutubeIframeApiUnaVez().then(() => {
+                if (!document.getElementById(idPlayer)) return;
+                if (playersMusica[idPlayer] && typeof playersMusica[idPlayer].destroy === 'function') {
+                    playersMusica[idPlayer].destroy();
+                }
+
+                playersMusica[idPlayer] = new window.YT.Player(idPlayer, {
+                    events: {
+                        onReady: () => actualizarEstadoBotonesMusica(idPlayer, null),
+                        onStateChange: (event) => actualizarEstadoBotonesMusica(idPlayer, event.data)
+                    }
+                });
+            });
+        }
+
+        window.playMusica = function(idPlayer) {
+            const player = playersMusica[idPlayer];
+            if (player && typeof player.playVideo === 'function') player.playVideo();
+        };
+
+        window.pauseMusica = function(idPlayer) {
+            const player = playersMusica[idPlayer];
+            if (player && typeof player.pauseVideo === 'function') player.pauseVideo();
+        };
+
+        window.reiniciarMusica = function(idPlayer) {
+            const player = playersMusica[idPlayer];
+            if (!player) return;
+            if (typeof player.seekTo === 'function') player.seekTo(0, true);
+            if (typeof player.playVideo === 'function') player.playVideo();
+        };
 
         function obtenerRutaEstadoFirebase(uid = "") {
             return RUTA_ESTADO_COMPARTIDO;
@@ -1827,6 +1924,7 @@ const firebaseConfig = {
         };
 
         window.abrirAlbumDetalle = function(idPais, idProvincia, submodo = null) {
+            limpiarPlayersMusica();
             const pais = paisesVisitados[idPais];
             if (!pais) {
                 renderizarPantallaRecuerdos();
@@ -1863,6 +1961,7 @@ const firebaseConfig = {
                 ? window.extraerIDYoutube(objDestino.musica)
                 : null;
             const musicaValida = !!videoIdMusica;
+            const idPlayerMusica = obtenerIdPlayerMusica(idPais, idProvincia);
 
             // Lógica de navegación: si estamos dentro de una ciudad, "Volver" nos lleva a la lista de ciudades.
             const btnVolverAccion = idProvincia ? `abrirAlbum('${idPais}')` : `renderizarPantallaRecuerdos()`;
@@ -1926,13 +2025,25 @@ const firebaseConfig = {
                             ${musicaValida ? `
                                 <div class="contenedor-iframe-musica-metal">
                                     <iframe
-                                        src="https://www.youtube.com/embed/${videoIdMusica}?rel=0&modestbranding=1&playsinline=1"
+                                        id="${idPlayerMusica}"
+                                        src="https://www.youtube.com/embed/${videoIdMusica}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1"
                                         title="Música para la memoria"
                                         class="iframe-musica-audio"
                                         loading="lazy"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                         allowfullscreen>
                                     </iframe>
+                                </div>
+                                <div class="controles-musica-metal" style="display:flex; gap:8px; margin-top:10px;">
+                                    <button id="btn-play-${idPlayerMusica}" onclick="playMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
+                                        <i data-lucide="play" style="width:14px;"></i> Play
+                                    </button>
+                                    <button id="btn-pause-${idPlayerMusica}" onclick="pauseMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
+                                        <i data-lucide="pause" style="width:14px;"></i> Pausa
+                                    </button>
+                                    <button onclick="reiniciarMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
+                                        <i data-lucide="rotate-ccw" style="width:14px;"></i> Reiniciar
+                                    </button>
                                 </div>
                                 <a href="${objDestino.musica}" target="_blank" rel="noopener noreferrer" class="link-youtube-fallback-metal">
                                     Abrir en YouTube
@@ -1978,6 +2089,9 @@ const firebaseConfig = {
                 actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
             }
             lucide.createIcons();
+            if (musicaValida) {
+                inicializarPlayerMusica(idPlayerMusica, videoIdMusica);
+            }
         };
 
         window.cambiarSubmodoRecuerdos = function(submodo, idPais, idProvincia = null) {
