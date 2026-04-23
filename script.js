@@ -2023,31 +2023,25 @@ const firebaseConfig = {
                     <div id="vista-musica-guardada" class="vista-musica-metal" style="display: ${tieneMusica ? 'flex' : 'none'};">
                         <div style="flex: 1;">
                             ${musicaValida ? `
-                                <div class="contenedor-iframe-musica-metal">
+                                <div class="contenedor-iframe-musica-metal" aria-hidden="true">
                                     <iframe
                                         id="${idPlayerMusica}"
                                         src="https://www.youtube.com/embed/${videoIdMusica}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1"
-                                        title="Música para la memoria"
-                                        class="iframe-musica-audio"
+                                        title="Reproductor de música oculto"
+                                        class="iframe-musica-audio iframe-musica-oculto"
                                         loading="lazy"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                         allowfullscreen>
                                     </iframe>
                                 </div>
-                                <div class="controles-musica-metal" style="display:flex; gap:8px; margin-top:10px;">
+                                <div class="controles-musica-metal" style="display:flex; gap:8px; margin-top:0;">
                                     <button id="btn-play-${idPlayerMusica}" onclick="playMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
                                         <i data-lucide="play" style="width:14px;"></i> Play
                                     </button>
                                     <button id="btn-pause-${idPlayerMusica}" onclick="pauseMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
                                         <i data-lucide="pause" style="width:14px;"></i> Pausa
                                     </button>
-                                    <button onclick="reiniciarMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
-                                        <i data-lucide="rotate-ccw" style="width:14px;"></i> Reiniciar
-                                    </button>
                                 </div>
-                                <a href="${objDestino.musica}" target="_blank" rel="noopener noreferrer" class="link-youtube-fallback-metal">
-                                    Abrir en YouTube
-                                </a>
                             ` : `
                                 <div class="mensaje-musica-invalida-metal">
                                     <i data-lucide="alert-triangle"></i>

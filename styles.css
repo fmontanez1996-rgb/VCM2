@@ -1019,26 +1019,21 @@
             gap: 10px;
         }
         .contenedor-iframe-musica-metal {
-            --alto-player-youtube: 220px;
-            --alto-controles-youtube: 66px;
-            position: relative;
-            width: 100%;
-            height: var(--alto-controles-youtube);
-            border-radius: 12px;
+            position: absolute;
+            width: 1px;
+            height: 1px;
             overflow: hidden;
-            border: 1px solid #95a4ba;
-            background: #0b1220;
-            box-shadow:
-                inset 0 2px 0 rgba(255, 255, 255, 0.22),
-                0 4px 12px rgba(10, 20, 36, 0.35);
+            opacity: 0;
+            pointer-events: none;
         }
         .contenedor-iframe-musica-metal iframe {
-            position: absolute;
-            top: calc(var(--alto-controles-youtube) - var(--alto-player-youtube));
-            left: 0;
-            width: 100%;
-            height: var(--alto-player-youtube);
+            width: 1px;
+            height: 1px;
             border: 0;
+        }
+        .controles-musica-metal {
+            position: relative;
+            z-index: 2;
         }
         .mensaje-musica-invalida-metal {
             display: flex;
