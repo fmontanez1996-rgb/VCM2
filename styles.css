@@ -1116,20 +1116,39 @@
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background:
-                linear-gradient(180deg, rgba(20, 56, 93, 0.75) 0%, rgba(8, 24, 43, 0.96) 100%);
-            border: 3px solid #5ca8da;
             min-height: 380px;
-            box-shadow:
-                inset 0 1px 0 rgba(255,255,255,0.75),
-                inset 0 -3px 8px rgba(65, 79, 95, 0.5),
-                0 0 0 2px rgba(77, 177, 255, 0.28),
-                0 0 20px rgba(60, 160, 240, 0.28),
-                0 8px 16px rgba(0,0,0,0.38);
             cursor: pointer;
             transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.25s ease;
         }
-        .tarjeta-memoria-cuadrada:hover {
+        .tarjeta-memoria-cuadrada.memoria-drive {
+            background:
+                linear-gradient(168deg, rgba(228, 244, 255, 0.94) 0%, rgba(153, 204, 248, 0.66) 16%, rgba(59, 132, 212, 0.74) 38%, rgba(17, 53, 106, 0.92) 74%, rgba(8, 30, 64, 0.96) 100%),
+                repeating-linear-gradient(118deg, rgba(255, 255, 255, 0.18) 0 2px, rgba(151, 198, 243, 0.08) 2px 4px, rgba(24, 79, 150, 0.12) 4px 6px),
+                linear-gradient(180deg, rgba(20, 56, 93, 0.8) 0%, rgba(8, 24, 43, 0.98) 100%);
+            border: 3px solid #5ca8da;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.78),
+                inset 0 -4px 10px rgba(35, 74, 123, 0.46),
+                inset 1px 0 0 rgba(219, 239, 255, 0.45),
+                0 0 0 2px rgba(77, 177, 255, 0.3),
+                0 0 20px rgba(60, 160, 240, 0.3),
+                0 8px 16px rgba(0,0,0,0.38);
+        }
+        .tarjeta-memoria-cuadrada.memoria-historia {
+            background:
+                linear-gradient(168deg, rgba(255, 230, 233, 0.95) 0%, rgba(247, 173, 178, 0.7) 16%, rgba(197, 67, 83, 0.78) 38%, rgba(110, 22, 37, 0.93) 74%, rgba(58, 11, 21, 0.97) 100%),
+                repeating-linear-gradient(118deg, rgba(255, 255, 255, 0.15) 0 2px, rgba(255, 174, 184, 0.08) 2px 4px, rgba(140, 30, 50, 0.12) 4px 6px),
+                linear-gradient(180deg, rgba(84, 22, 36, 0.8) 0%, rgba(43, 10, 19, 0.98) 100%);
+            border: 3px solid #d26f7d;
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.74),
+                inset 0 -4px 10px rgba(108, 28, 43, 0.5),
+                inset 1px 0 0 rgba(255, 224, 230, 0.38),
+                0 0 0 2px rgba(240, 120, 140, 0.26),
+                0 0 20px rgba(233, 93, 118, 0.3),
+                0 8px 16px rgba(0,0,0,0.4);
+        }
+        .tarjeta-memoria-cuadrada.memoria-drive:hover {
             border-color: #8adfff;
             transform: translateY(-7px) scale(1.015);
             box-shadow:
@@ -1139,6 +1158,17 @@
                 0 0 25px rgba(80, 192, 255, 0.9),
                 0 0 50px rgba(66, 154, 255, 0.8),
                 0 16px 28px rgba(0,0,0,0.5);
+        }
+        .tarjeta-memoria-cuadrada.memoria-historia:hover {
+            border-color: #ff9eac;
+            transform: translateY(-7px) scale(1.015);
+            box-shadow:
+                inset 0 1px 0 rgba(255,255,255,0.8),
+                inset 0 -4px 10px rgba(71, 35, 45, 0.58),
+                0 0 0 3px rgba(255, 177, 190, 0.58),
+                0 0 25px rgba(255, 135, 157, 0.84),
+                0 0 50px rgba(230, 91, 118, 0.7),
+                0 16px 28px rgba(0,0,0,0.52);
         }
         .imagen-memoria {
             flex: 1;
@@ -1174,8 +1204,8 @@
             text-shadow: 0 1px 0 #d9f1ff, 0 0 12px rgba(80, 183, 255, 0.48);
         }
         .titulo-memoria.historia {
-            color: #62d770;
-            text-shadow: 0 1px 0 #eaffec, 0 0 12px rgba(98, 215, 112, 0.4);
+            color: #ff7f93;
+            text-shadow: 0 1px 0 #ffe5ea, 0 0 12px rgba(255, 127, 147, 0.42);
         }
         .menu-contextual-memoria {
             position: fixed;
