@@ -1189,10 +1189,10 @@
             transform: translateY(-7px) scale(1.015);
             box-shadow:
                 inset 0 1px 0 rgba(255,255,255,0.8),
-                inset 0 -4px 10px rgba(35, 52, 71, 0.55),
-                0 0 0 3px rgba(133, 220, 255, 0.65),
-                0 0 25px rgba(80, 192, 255, 0.9),
-                0 0 50px rgba(66, 154, 255, 0.8),
+                inset 0 -4px 10px rgba(77, 26, 41, 0.48),
+                0 0 0 3px rgba(255, 118, 152, 0.72),
+                0 0 28px rgba(255, 95, 134, 0.9),
+                0 0 56px rgba(255, 64, 112, 0.78),
                 0 16px 28px rgba(0,0,0,0.5);
         }
         .tarjeta-memoria-cuadrada.memoria-historia:hover {
