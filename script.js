@@ -541,7 +541,7 @@ const firebaseConfig = {
                     `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${numeroDiaFechaFin})`,
                     `Check out: ${horaLlegada}`,
                     `Precio por noche ${precioPorNoche}`,
-                    `Precio total ${costoBase}`
+                    `Precio por persona ${costoBase}`
                 ];
             }
 
@@ -3159,7 +3159,7 @@ const firebaseConfig = {
                     <div class="campo-form"><label>Nombre del Hotel</label><input type="text" id="input-hospedaje-nombre" placeholder="Ej. Hotel Copacabana" value="${itemExistente?.hotel || ''}"></div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Noches</label><input type="number" id="input-hospedaje-noches" placeholder="Ej. 5" value="${itemExistente?.noches || ''}"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Precio Total ($)</label><input type="number" id="input-hospedaje-costo" placeholder="Ej. 80000" value="${itemExistente?.costo || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Precio por persona ($)</label><input type="number" id="input-hospedaje-costo" placeholder="Ej. 80000" value="${itemExistente?.costo || ''}"></div>
                     </div>
                     <div class="campo-form"><label>Fecha de check-out</label><input type="date" id="input-hospedaje-checkout" value="${fechaCheckoutExistente || ''}"></div>
                     <div style="display: flex; gap: 10px;">
@@ -3168,9 +3168,20 @@ const firebaseConfig = {
                     </div>
                 `;
             } else if (tipo === 'aventura') {
+                const miniaturaExistente = itemExistente?.miniatura || '';
+                const mostrarMiniaturaBloqueada = esEdicion && Boolean(miniaturaExistente);
                 formHTML += `
                     <div class="campo-form"><label>Lugar a visitar</label><input type="text" id="input-aventura-lugar" placeholder="Ej. Cristo Redentor" value="${itemExistente?.lugar || ''}"></div>
-                    <div class="campo-form"><label>Miniatura (URL)</label><input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${itemExistente?.miniatura || ''}"></div>
+                    <div class="campo-form">
+                        <label>Miniatura (URL)</label>
+                        ${mostrarMiniaturaBloqueada ? `
+                            <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+                                <img src="${miniaturaExistente}" alt="Miniatura actual de ${itemExistente?.lugar || 'aventura'}" class="miniatura-aventura">
+                                <button type="button" id="btn-editar-url-aventura" class="btn-mini-accion-itinerario" onclick="habilitarEdicionUrlAventura()">Editar</button>
+                            </div>
+                        ` : ''}
+                        <input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${miniaturaExistente}" ${mostrarMiniaturaBloqueada ? 'readonly' : ''} style="${mostrarMiniaturaBloqueada ? 'display:none;' : ''}">
+                    </div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Precio ($)</label><input type="number" id="input-aventura-costo" placeholder="0" value="${itemExistente?.costo || ''}"></div>
                     </div>
@@ -3206,6 +3217,16 @@ const firebaseConfig = {
                     }
                 });
             }
+        };
+
+        window.habilitarEdicionUrlAventura = function() {
+            const inputUrl = document.getElementById('input-aventura-miniatura');
+            const botonEditar = document.getElementById('btn-editar-url-aventura');
+            if (!inputUrl) return;
+            inputUrl.style.display = '';
+            inputUrl.readOnly = false;
+            inputUrl.focus();
+            if (botonEditar) botonEditar.style.display = 'none';
         };
 
         window.guardarItemItinerario = function(idPais, tipo) {
