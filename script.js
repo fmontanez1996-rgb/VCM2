@@ -2507,7 +2507,11 @@ const firebaseConfig = {
             const mostrarEditorPortada = Object.prototype.hasOwnProperty.call(estadoEdicionPortadaItinerario, idPais)
                 ? Boolean(estadoEdicionPortadaItinerario[idPais])
                 : !portadaActual;
-            estadoVistaItinerario = { modo: 'lista', idPais };
+            const modoPrevioMismoDestino = estadoVistaItinerario?.idPais === idPais
+                ? estadoVistaItinerario?.modo
+                : null;
+            const modoInicial = modoPrevioMismoDestino === 'calendario' ? 'calendario' : 'lista';
+            estadoVistaItinerario = { modo: modoInicial, idPais };
             const encabezadoSonados = document.getElementById('encabezado-sonados');
             if (encabezadoSonados) encabezadoSonados.style.display = 'none';
             const selectorNuevoDestino = document.getElementById('selector-nuevo-destino');
@@ -2568,15 +2572,17 @@ const firebaseConfig = {
 
             lucide.createIcons();
             dibujarItinerario(idPais);
-            cambiarModoItinerario('lista');
+            cambiarModoItinerario(modoInicial);
         };
 
         window.cambiarModoItinerario = function(modo) {
             const modoNormalizado = modo === 'calendario' ? 'calendario' : 'lista';
-            const { idPais } = estadoVistaItinerario;
+            const idPais = estadoVistaItinerario?.idPais
+                || (document.querySelector('.linea-tiempo[id^="linea-tiempo-"]')?.id || '').replace('linea-tiempo-', '');
             if (!idPais) return;
 
             estadoVistaItinerario.modo = modoNormalizado;
+            estadoVistaItinerario.idPais = idPais;
             dibujarItinerario(idPais);
 
             const btnLista = document.getElementById(`btn-modo-lista-${idPais}`);
