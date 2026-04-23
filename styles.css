@@ -1255,13 +1255,10 @@
             white-space: nowrap;
             width: 100%;
         }
-        .titulo-memoria.drive {
-            color: #58b7ff;
-            text-shadow: 0 1px 0 #d9f1ff, 0 0 12px rgba(80, 183, 255, 0.48);
-        }
+        .titulo-memoria.drive,
         .titulo-memoria.historia {
-            color: #ff7f93;
-            text-shadow: 0 1px 0 #ffe5ea, 0 0 12px rgba(255, 127, 147, 0.42);
+            color: #fff;
+            text-shadow: 0 1px 0 rgba(255, 255, 255, 0.45), 0 0 10px rgba(255, 255, 255, 0.3);
         }
         .menu-contextual-memoria {
             position: fixed;
