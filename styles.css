@@ -1190,11 +1190,12 @@
             transform: translateY(-7px) scale(1.015);
             box-shadow:
                 inset 0 1px 0 rgba(255,255,255,0.8),
-                inset 0 -4px 10px rgba(77, 26, 41, 0.48),
-                0 0 0 3px rgba(255, 118, 152, 0.72),
-                0 0 28px rgba(255, 95, 134, 0.9),
-                0 0 56px rgba(255, 64, 112, 0.78),
-                0 16px 28px rgba(0,0,0,0.5);
+                inset 0 -4px 10px rgba(26, 73, 122, 0.5),
+                0 0 0 3px rgba(130, 213, 255, 0.7),
+                0 0 28px rgba(89, 187, 255, 0.88),
+                0 0 58px rgba(43, 152, 255, 0.78),
+                0 14px 26px rgba(0, 27, 58, 0.52),
+                0 22px 46px rgba(28, 125, 218, 0.38);
         }
         .tarjeta-memoria-cuadrada.memoria-historia:hover {
             border-color: #ff9eac;
