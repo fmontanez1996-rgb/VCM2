@@ -1934,9 +1934,6 @@ const firebaseConfig = {
                                         allowfullscreen>
                                     </iframe>
                                 </div>
-                                <a href="${objDestino.musica}" target="_blank" rel="noopener noreferrer" class="link-youtube-fallback-metal">
-                                    Abrir en YouTube
-                                </a>
                             ` : `
                                 <div class="mensaje-musica-invalida-metal">
                                     <i data-lucide="alert-triangle"></i>
