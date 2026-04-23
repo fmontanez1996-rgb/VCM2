@@ -531,7 +531,7 @@ const firebaseConfig = {
                 return [
                     `${fechaInicio || 'Sin fecha'}-${fechaFinTexto || fechaInicio || 'Sin fecha'}`,
                     `(${noches} ${noches === 1 ? 'Noche' : 'Noches'})`,
-                    `Check-out: ${horaLlegada}`
+                    `Check-out: ${horaInicio}`
                 ];
             }
 
