@@ -1926,13 +1926,24 @@ const firebaseConfig = {
                             ${musicaValida ? `
                                 <div class="contenedor-iframe-musica-metal">
                                     <iframe
-                                        src="https://www.youtube.com/embed/${videoIdMusica}?rel=0&modestbranding=1&playsinline=1"
+                                        src="https://www.youtube.com/embed/${videoIdMusica}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1"
                                         title="Música para la memoria"
-                                        class="iframe-musica-audio"
+                                        id="iframe-musica-${idPais}-${idProvincia || 'pais'}" class="iframe-musica-audio"
                                         loading="lazy"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                         allowfullscreen>
                                     </iframe>
+                                </div>
+                                <div id="barra-controles-${idPais}-${idProvincia || 'pais'}" class="barra-controles-metal" role="group" aria-label="Controles de reproducción de música">
+                                    <button type="button" class="btn-metal-play" onclick="controlMusica('${idPais}-${idProvincia || 'pais'}', 'play')" aria-label="Reproducir música">
+                                        <i data-lucide="play"></i>
+                                    </button>
+                                    <button type="button" class="btn-metal-pause" onclick="controlMusica('${idPais}-${idProvincia || 'pais'}', 'pause')" aria-label="Pausar música">
+                                        <i data-lucide="pause"></i>
+                                    </button>
+                                    <button type="button" class="btn-metal-restart" onclick="controlMusica('${idPais}-${idProvincia || 'pais'}', 'restart')" aria-label="Reiniciar música">
+                                        <i data-lucide="rotate-ccw"></i>
+                                    </button>
                                 </div>
                                 <a href="${objDestino.musica}" target="_blank" rel="noopener noreferrer" class="link-youtube-fallback-metal">
                                     Abrir en YouTube
@@ -1978,12 +1989,99 @@ const firebaseConfig = {
                 actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
             }
             lucide.createIcons();
+            if (musicaValida) {
+                prepararControlesMusica({
+                    claveControl: `${idPais}-${idProvincia || 'pais'}`,
+                    iframeId: `iframe-musica-${idPais}-${idProvincia || 'pais'}`,
+                    barraId: `barra-controles-${idPais}-${idProvincia || 'pais'}`
+                });
+            }
         };
 
         window.cambiarSubmodoRecuerdos = function(submodo, idPais, idProvincia = null) {
             const destino = submodo === 'nuevo' ? 'nuevo' : 'ver';
             estadoVistaRecuerdos.submodo = destino;
             window.abrirAlbumDetalle(idPais, idProvincia, destino);
+        };
+
+
+        let youtubeApiReadyPromise = null;
+        let youtubeApiReadyResolver = null;
+        const reproductoresMusica = new Map();
+
+        function asegurarYoutubeAPI() {
+            if (youtubeApiReadyPromise) return youtubeApiReadyPromise;
+            youtubeApiReadyPromise = new Promise((resolve) => {
+                youtubeApiReadyResolver = resolve;
+            });
+
+            if (window.YT && typeof window.YT.Player === 'function') {
+                youtubeApiReadyResolver?.();
+                return youtubeApiReadyPromise;
+            }
+
+            const scriptExistente = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+            if (!scriptExistente) {
+                const tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                document.head.appendChild(tag);
+            }
+
+            return youtubeApiReadyPromise;
+        }
+
+        window.onYouTubeIframeAPIReady = function() {
+            if (typeof youtubeApiReadyResolver === 'function') {
+                youtubeApiReadyResolver();
+                youtubeApiReadyResolver = null;
+            }
+        };
+
+        function actualizarEstadoControlesMusica(state, barra) {
+            if (!barra) return;
+            barra.classList.remove('is-playing', 'is-paused');
+            if (state === window.YT?.PlayerState?.PLAYING) barra.classList.add('is-playing');
+            if (state === window.YT?.PlayerState?.PAUSED) barra.classList.add('is-paused');
+        }
+
+        function prepararControlesMusica({ claveControl, iframeId, barraId }) {
+            if (!claveControl || !iframeId || !barraId) return;
+            const iframe = document.getElementById(iframeId);
+            const barra = document.getElementById(barraId);
+            if (!iframe || !barra) return;
+
+            asegurarYoutubeAPI().then(() => {
+                if (!document.getElementById(iframeId) || !document.getElementById(barraId)) return;
+
+                const previo = reproductoresMusica.get(claveControl);
+                if (previo?.player && typeof previo.player.destroy === 'function') {
+                    previo.player.destroy();
+                }
+
+                const player = new window.YT.Player(iframeId, {
+                    events: {
+                        onStateChange: (event) => actualizarEstadoControlesMusica(event.data, barra),
+                        onReady: () => actualizarEstadoControlesMusica(window.YT.PlayerState.UNSTARTED, barra)
+                    }
+                });
+
+                reproductoresMusica.set(claveControl, { player, barraId });
+            }).catch(() => {
+                if (barra) barra.classList.add('is-paused');
+            });
+        }
+
+        window.controlMusica = function(claveControl, accion) {
+            const entrada = reproductoresMusica.get(claveControl);
+            const player = entrada?.player;
+            if (!player || typeof player.getPlayerState !== 'function') return;
+
+            if (accion === 'play') player.playVideo();
+            if (accion === 'pause') player.pauseVideo();
+            if (accion === 'restart') player.seekTo(0, true), player.playVideo();
+
+            const barra = document.getElementById(entrada.barraId);
+            actualizarEstadoControlesMusica(player.getPlayerState(), barra);
         };
 
         window.extraerIDYoutube = function(url) {
