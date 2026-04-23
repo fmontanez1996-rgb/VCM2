@@ -476,6 +476,15 @@ const firebaseConfig = {
             return 'Mendoza, Argentina';
         }
 
+        function obtenerHorasViaje(item = {}) {
+            const horaSalida = normalizarHoraItinerario(item.partida);
+            const horaLlegada = normalizarHoraItinerario(item.llegada);
+            return {
+                horaSalida: horaSalida || horaLlegada || 'Sin horario',
+                horaLlegada: horaLlegada || horaSalida || 'Sin horario'
+            };
+        }
+
         function obtenerResumenTarjetaItinerario(destino, item = {}) {
             const dia = obtenerDiaDeItem(destino, item);
             const numeroDia = dia?.numero || 1;
@@ -484,26 +493,27 @@ const firebaseConfig = {
             const fechaInicio = formatearFechaCortaItinerario(fechaInicioISO);
             const { fechaFin, horaFin } = obtenerRangoTemporalItem(destino, item);
             const fechaFinTexto = formatearFechaCortaItinerario(fechaFin);
-            const horaSalida = normalizarHoraItinerario(item.llegada) || 'Sin horario';
-            const horaLlegada = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
+            const horaInicio = normalizarHoraItinerario(item.llegada) || 'Sin horario';
+            const horaSalida = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
             const costoBase = formatearMonedaItinerario(item.costo ?? item.precio ?? 0);
             const numeroDiaFechaFin = (Array.isArray(destino?.dias) && esFechaActividadValida(fechaFin))
                 ? (destino.dias.find((diaActual) => diaActual?.fecha === fechaFin)?.numero || numeroDia)
                 : numeroDia;
+            const { horaSalida: horaSalidaViaje, horaLlegada: horaLlegadaViaje } = obtenerHorasViaje(item);
 
             if (item._esSalidaViajeVirtual) {
                 const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
                 const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
                 return [
                     `Origen: ${origen}`,
-                    `Salida: ${fechaInicio || 'Sin fecha'} - ${horaSalida}`
+                    `Salida: ${fechaInicio || 'Sin fecha'} - ${horaSalidaViaje}`
                 ];
             }
 
             if (item._esLlegadaViajeVirtual) {
                 return [
                     `Destino: ${obtenerDestinoViajeFormateado(item)}`,
-                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'} - ${horaLlegada}`
+                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'} - ${horaLlegadaViaje}`
                 ];
             }
 
@@ -532,16 +542,20 @@ const firebaseConfig = {
                 return [
                     `Origen: ${origen}`,
                     `Destino: ${destinoViaje}`,
-                    `Salida: ${fechaInicio || 'Sin fecha'}, ${horaSalida} (día ${numeroDia})`,
-                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada} (día ${numeroDiaFechaFin})`,
+                    `Salida: ${fechaInicio || 'Sin fecha'}, ${horaSalidaViaje} (día ${numeroDia})`,
+                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegadaViaje} (día ${numeroDiaFechaFin})`,
                     `Precio por persona ${costoBase}`
                 ];
             }
 
             if (item.tipo === 'aventura') {
+                const fechaAventura = fechaInicio || fechaFinTexto || 'Sin fecha';
+                const horaLlegada = normalizarHoraItinerario(item.llegada) || 'Sin horario';
+                const horaPartida = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
                 return [
                     `DÍA ${numeroDia}`,
-                    `${fechaInicio || 'Sin fecha'}, ${horaSalida} - ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada}`,
+                    `Fecha: ${fechaAventura}`,
+                    `Horarios: ${horaLlegada} - ${horaPartida}`,
                     `Precio por persona: ${costoBase}`
                 ];
             }
@@ -555,9 +569,9 @@ const firebaseConfig = {
                 return [
                     `Cantidad de Noches: ${noches}`,
                     `Fecha de Llegada: ${fechaInicio || 'Sin fecha'} (día ${numeroDia})`,
-                    `Check in: ${horaSalida}`,
+                    `Check in: ${horaInicio}`,
                     `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${numeroDiaFechaFin})`,
-                    `Check out: ${horaLlegada}`,
+                    `Check out: ${horaSalida}`,
                     `Precio por noche ${precioPorNoche}`,
                     `Total ${costoBase}`
                 ];
@@ -568,8 +582,8 @@ const firebaseConfig = {
                 ? 'HAMBURGUESAS'
                 : platoRestaurante;
             return [
-                `Horario de llegada: ${horaSalida}`,
-                `Horario de Salida: ${horaLlegada}`,
+                `Horario de llegada: ${horaInicio}`,
+                `Horario de Salida: ${horaSalida}`,
                 `Comida: ${platoFormateado}`,
                 `Precio por persona: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
             ];
@@ -2745,7 +2759,7 @@ const firebaseConfig = {
                     icono: 'bus',
                     titulo: `${item.medio || 'Viaje'}`.toUpperCase(),
                     detalle: `ORIGEN ${origen.toUpperCase()}`,
-                    horario: `Salida: ${normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
+                    horario: `Salida: ${normalizarHoraItinerario(item.partida) || normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
                 };
             }
 
@@ -2754,7 +2768,7 @@ const firebaseConfig = {
                     icono: 'bus',
                     titulo: `${item.medio || 'Viaje'}`.toUpperCase(),
                     detalle: `DESTINO ${obtenerDestinoViajeFormateado(item).toUpperCase()}`,
-                    horario: `Llegada: ${normalizarHoraItinerario(item.partida) || normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
+                    horario: `Llegada: ${normalizarHoraItinerario(item.llegada) || normalizarHoraItinerario(item.partida) || 'Sin horario'}`
                 };
             }
 
@@ -3048,11 +3062,11 @@ const firebaseConfig = {
 
                 if (item?.tipo === 'viaje') {
                     agregarItemEnDia(diaInicio, item, indiceCreacion, {
-                        _horaOrden: item?.llegada || '',
+                        _horaOrden: item?.partida || item?.llegada || '',
                         _esSalidaViajeVirtual: true
                     });
                     agregarItemEnDia(diaFin, item, indiceCreacion, {
-                        _horaOrden: horaFin || item?.partida || item?.llegada || '',
+                        _horaOrden: horaFin || item?.llegada || item?.partida || '',
                         _esLlegadaViajeVirtual: true
                     });
                     return;
