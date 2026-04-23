@@ -557,7 +557,6 @@ const firebaseConfig = {
             }
 
             return [
-                `NOMBRE DE RESTAURANTE: ${item.restaurante || item.plato || 'Restaurante'}`,
                 `HORARIO DE LLEGADA: ${horaSalida}`,
                 `HORARIO DE SALIDA: ${horaLlegada}`,
                 `COMIDA: ${item.plato || 'No especificada'}`,
@@ -3680,7 +3679,7 @@ const firebaseConfig = {
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}" data-itinerario-item-id="${item.id}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}${botonUbicacion}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">${miniaturaAventura}${botonUbicacion}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
@@ -3735,8 +3734,7 @@ const firebaseConfig = {
             if (!destino || !Array.isArray(destino.itinerario)) return;
             const item = destino.itinerario.find(i => Number(i.id) === Number(idItem));
             if (!item || item.tipo !== 'restaurante') return;
-            const ubicacion = String(item.ubicacion || '').trim();
-            alert(ubicacion ? `Ubicación guardada:\n${ubicacion}` : 'Este restaurante no tiene una ubicación guardada.');
+            window.verUbicacionRestaurante(idPais, idItem);
         };
 
         window.guardarPortadaItinerario = function(idPais) {
