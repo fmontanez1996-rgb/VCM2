@@ -1247,19 +1247,18 @@ const firebaseConfig = {
                         <i data-lucide="plus-circle"></i> Nueva Aventura
                     </button>
                 </div>
-                <div id="selector-nuevo-destino" style="display:none; background: #FFF8F1; margin: 15px; padding: 20px; border-radius: 15px; border: 2px dashed var(--primary); animation: fadeIn 0.3s ease;">
-                    <h3 style="margin-top:0; color: var(--primary);">¿A dónde quieres ir?</h3>
-                    <p style="font-size: 0.9rem; color: #607D8B;">Selecciona tu destino final para empezar a planear:</p>
-                    <select id="select-pais-nuevo" onchange="cargarCiudadesAventura()" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CFD8DC; margin-bottom: 10px; font-family: inherit; font-size: 1rem; background: white;">
+                <div id="selector-nuevo-destino" class="selector-nuevo-destino">
+                    <h3 class="titulo-selector-destino">¿A dónde quieres ir?</h3>
+                    <select id="select-pais-nuevo" class="select-aventura-metal" onchange="cargarCiudadesAventura()">
                     <option value="" disabled selected>Elige un país...</option>
                 </select>
 
-                <select id="select-ciudad-aventura" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CFD8DC; margin-bottom: 15px; font-family: inherit; font-size: 1rem; background: white;">
+                <select id="select-ciudad-aventura" class="select-aventura-metal">
                     <option value="" disabled selected>Elige una ciudad...</option>
                 </select>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="confirmarNuevoDestino()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #4CAF50; color: white; font-weight: bold; cursor: pointer;">Crear Aventura</button>
-                        <button onclick="ocultarSelectorNuevoDestino()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
+                    <div class="acciones-selector-aventura">
+                        <button onclick="confirmarNuevoDestino()" class="btn-aventura-metal btn-aventura-crear">Crear Aventura</button>
+                        <button onclick="ocultarSelectorNuevoDestino()" class="btn-aventura-metal btn-aventura-cancelar">Cancelar</button>
                     </div>
                 </div>
                 <div class="contenedor-scroll" id="scroll-sonados"></div>
@@ -2318,15 +2317,14 @@ const firebaseConfig = {
                         <i data-lucide="plus-circle"></i> Nueva Aventura
                     </button>
                 </div>
-                <div id="selector-nuevo-destino" style="display:none; background: #FFF8F1; margin: 15px; padding: 20px; border-radius: 15px; border: 2px dashed var(--primary); animation: fadeIn 0.3s ease;">
-                    <h3 style="margin-top:0; color: var(--primary);">¿A dónde quieres ir?</h3>
-                    <p style="font-size: 0.9rem; color: #607D8B;">Selecciona tu destino final para empezar a planear:</p>
-                    <select id="select-pais-nuevo" style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #CFD8DC; margin-bottom: 15px; font-family: inherit; font-size: 1rem; background: white;">
+                <div id="selector-nuevo-destino" class="selector-nuevo-destino">
+                    <h3 class="titulo-selector-destino">¿A dónde quieres ir?</h3>
+                    <select id="select-pais-nuevo" class="select-aventura-metal" style="margin-bottom: 15px;">
                         <option value="" disabled selected>Cargando países...</option>
                     </select>
-                    <div style="display: flex; gap: 10px;">
-                        <button onclick="confirmarNuevoDestino()" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #4CAF50; color: white; font-weight: bold; cursor: pointer;">Crear Aventura</button>
-                        <button onclick="document.getElementById('selector-nuevo-destino').style.display='none'" style="flex: 1; padding: 12px; border-radius: 10px; border: none; background: #ECEFF1; color: #546E7A; font-weight: bold; cursor: pointer;">Cancelar</button>
+                    <div class="acciones-selector-aventura">
+                        <button onclick="confirmarNuevoDestino()" class="btn-aventura-metal btn-aventura-crear">Crear Aventura</button>
+                        <button onclick="document.getElementById('selector-nuevo-destino').style.display='none'" class="btn-aventura-metal btn-aventura-cancelar">Cancelar</button>
                     </div>
                 </div>
                 <div class="contenedor-scroll" id="scroll-sonados"></div>
