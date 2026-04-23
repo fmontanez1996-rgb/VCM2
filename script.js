@@ -554,8 +554,7 @@ const firebaseConfig = {
                 const horaPartida = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
                 return [
                     `DÍA ${numeroDia}`,
-                    `Fecha: ${fechaAventura}`,
-                    `Horarios: ${horaLlegada} - ${horaPartida}`,
+                    `${fechaAventura} ${horaLlegada} (de entrada) - ${horaPartida} (de salida)`,
                     `Precio por persona: ${costoBase}`
                 ];
             }
@@ -3135,7 +3134,7 @@ const firebaseConfig = {
                                             <i data-lucide="pencil"></i>
                                         </button>
                                     </div>
-                                    <span class="cabecera-dia-subtitulo">Día ${dia.numero || 1} ${fechaDia}</span>
+                                    <span class="cabecera-dia-subtitulo">${fechaDia} - Día ${dia.numero || 1}</span>
                                 </div>
                             </header>
                             <div class="columna-dia-lista">${tarjetas || '<div class="estado-dia-vacio">Sin actividades para este día.</div>'}</div>
