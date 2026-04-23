@@ -2079,7 +2079,7 @@ const firebaseConfig = {
 
                 ${bloqueNuevo}
 
-                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fit, minmax(220px, 260px)); justify-content: center; gap: 24px;">
                 </div>
             `;
 
