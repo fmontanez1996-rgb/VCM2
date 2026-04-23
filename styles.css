@@ -892,14 +892,14 @@
                 0 5px 12px rgba(18, 30, 46, 0.24);
         }
         .input-musica-metal {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
+            display: flex;
             gap: 10px;
             align-items: center;
             width: 100%;
         }
         .campo-musica-metal {
-            flex: 1;
+            flex: 0 1 72%;
+            min-width: 0;
             position: relative;
         }
         .icono-musica-metal {
@@ -925,6 +925,7 @@
         }
         .btn-guardar-musica-metal {
             min-width: 118px;
+            flex-shrink: 0;
             margin-left: auto;
             background: linear-gradient(165deg, #d9ecff 0%, #4ca6ff 30%, #0a5ad4 62%, #8ec4ff 100%);
             color: #fff;
