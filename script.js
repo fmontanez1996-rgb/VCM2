@@ -1859,6 +1859,10 @@ const firebaseConfig = {
 
             const scrollArea = document.getElementById('scroll-recuerdos');
             const tieneMusica = !!objDestino.musica;
+            const videoIdMusica = tieneMusica && typeof window.extraerIDYoutube === 'function'
+                ? window.extraerIDYoutube(objDestino.musica)
+                : null;
+            const musicaValida = !!videoIdMusica;
 
             // Lógica de navegación: si estamos dentro de una ciudad, "Volver" nos lleva a la lista de ciudades.
             const btnVolverAccion = idProvincia ? `abrirAlbum('${idPais}')` : `renderizarPantallaRecuerdos()`;
@@ -1917,16 +1921,34 @@ const firebaseConfig = {
                 </div>
 
                 <div id="seccion-musica" class="seccion-musica-metal">
-                    <div id="vista-musica-guardada" style="display: ${tieneMusica ? 'flex' : 'none'}; align-items: center; justify-content: space-between; gap: 10px;">
-                        <a href="${objDestino.musica}" target="_blank" style="flex: 1; background: #3b82f6; color: white; text-decoration: none; padding: 12px; border-radius: 10px; font-weight: bold; text-align: center; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i data-lucide="play-circle"></i> MÚSICA PARA LA MEMORIA
-                        </a>
-                        <button onclick="cambiarMusica('${idPais}', ${paramProv})" title="Cambiar enlace" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #64748b; padding: 12px; border-radius: 10px; cursor: pointer;">
+                    <div id="vista-musica-guardada" class="vista-musica-metal" style="display: ${tieneMusica ? 'flex' : 'none'};">
+                        <div style="flex: 1;">
+                            ${musicaValida ? `
+                                <div class="contenedor-iframe-musica-metal">
+                                    <iframe
+                                        src="https://www.youtube.com/embed/${videoIdMusica}?rel=0&modestbranding=1"
+                                        title="Música para la memoria"
+                                        loading="lazy"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowfullscreen>
+                                    </iframe>
+                                </div>
+                                <a href="${objDestino.musica}" target="_blank" rel="noopener noreferrer" class="link-youtube-fallback-metal">
+                                    Abrir en YouTube
+                                </a>
+                            ` : `
+                                <div class="mensaje-musica-invalida-metal">
+                                    <i data-lucide="alert-triangle"></i>
+                                    <span>El enlace de YouTube guardado es inválido. Pegá una URL válida para corregirlo.</span>
+                                </div>
+                            `}
+                        </div>
+                        <button onclick="cambiarMusica('${idPais}', ${paramProv})" title="Cambiar enlace" class="btn-cambiar-musica-metal">
                             <i data-lucide="refresh-cw" style="width:18px;"></i>
                         </button>
                     </div>
                     
-                    <div id="input-musica" class="input-musica-metal" style="display: ${tieneMusica ? 'none' : 'flex'};">
+                    <div id="input-musica" class="input-musica-metal" style="display: ${!tieneMusica || !musicaValida ? 'flex' : 'none'};">
                         <div class="campo-musica-metal">
                             <i data-lucide="music" class="icono-musica-metal"></i>
                             <input type="text" id="url-musica" placeholder="Pega el link de la canción..." class="texto-musica-metal">
