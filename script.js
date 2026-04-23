@@ -449,14 +449,21 @@ const firebaseConfig = {
             return etiquetaDia.replace(/^DÍA/i, 'Día');
         }
 
+        function obtenerDestinoViajeFormateado(item = {}) {
+            const ciudad = typeof item?.ciudad === 'string' ? item.ciudad.trim() : '';
+            const pais = typeof item?.destino === 'string' ? item.destino.trim() : '';
+            if (ciudad && pais) return `${ciudad}, ${pais}`;
+            if (ciudad) return `${ciudad}, País por definir`;
+            if (pais) return `Ciudad por definir, ${pais}`;
+            return 'Destino por definir';
+        }
+
         function obtenerOrigenViajePorDefecto(destino, indiceActual = -1) {
             if (!destino || !Array.isArray(destino.itinerario)) return 'Mendoza, Argentina';
             for (let i = indiceActual - 1; i >= 0; i--) {
                 const previo = destino.itinerario[i];
                 if (!previo || previo.tipo !== 'viaje') continue;
-                if (previo.ciudad && previo.destino) return `${previo.ciudad}, ${previo.destino}`;
-                if (previo.ciudad) return `${previo.ciudad}, Argentina`;
-                if (previo.destino) return `${previo.destino}, Argentina`;
+                return obtenerDestinoViajeFormateado(previo);
             }
             return 'Mendoza, Argentina';
         }
@@ -477,15 +484,17 @@ const firebaseConfig = {
                 : numeroDia;
 
             if (item._esSalidaViajeVirtual) {
+                const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
+                const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
                 return [
-                    `ORIGEN ${item.origen || 'POR DEFINIR'}:`,
+                    `ORIGEN ${origen.toUpperCase()}:`,
                     `SALIDA: ${fechaInicio || 'Sin fecha'} ${horaSalida}`
                 ];
             }
 
             if (item._esLlegadaViajeVirtual) {
                 return [
-                    `DESTINO ${item.destino || 'POR DEFINIR'}`,
+                    `DESTINO ${obtenerDestinoViajeFormateado(item).toUpperCase()}`,
                     `LLEGADA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} ${horaLlegada}`
                 ];
             }
@@ -511,9 +520,7 @@ const firebaseConfig = {
             if (item.tipo === 'viaje') {
                 const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
                 const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
-                const destinoViaje = item.ciudad && item.destino
-                    ? `${item.ciudad}, ${item.destino}`
-                    : (item.ciudad || item.destino || 'Destino por definir');
+                const destinoViaje = obtenerDestinoViajeFormateado(item);
                 return [
                     `Origen: ${origen}`,
                     `Destino: ${destinoViaje}`,
@@ -2714,10 +2721,12 @@ const firebaseConfig = {
 
         function obtenerMetaItinerario(item = {}, destino = null) {
             if (item._esSalidaViajeVirtual) {
+                const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
+                const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
                 return {
                     icono: 'bus',
                     titulo: `${item.medio || 'Viaje'}`.toUpperCase(),
-                    detalle: `ORIGEN ${item.origen || 'POR DEFINIR'}`,
+                    detalle: `ORIGEN ${origen.toUpperCase()}`,
                     horario: `Salida: ${normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
                 };
             }
@@ -2726,7 +2735,7 @@ const firebaseConfig = {
                 return {
                     icono: 'bus',
                     titulo: `${item.medio || 'Viaje'}`.toUpperCase(),
-                    detalle: `DESTINO ${item.destino || 'POR DEFINIR'}`,
+                    detalle: `DESTINO ${obtenerDestinoViajeFormateado(item).toUpperCase()}`,
                     horario: `Llegada: ${normalizarHoraItinerario(item.partida) || normalizarHoraItinerario(item.llegada) || 'Sin horario'}`
                 };
             }
@@ -2752,10 +2761,12 @@ const firebaseConfig = {
 
             const horario = formatearRangoTemporalItem(destino, item);
             if (item.tipo === 'viaje') {
+                const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
+                const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
                 return {
                     icono: 'bus',
                     titulo: `Viaje en ${item.medio || 'transporte'}`,
-                    detalle: `Escala: ${item.destino || 'Sin destino'}${item.ciudad ? `, ${item.ciudad}` : ''}`,
+                    detalle: `Origen: ${origen} → Destino: ${obtenerDestinoViajeFormateado(item)}`,
                     horario
                 };
             }
