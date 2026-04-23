@@ -2334,12 +2334,13 @@ const firebaseConfig = {
             const imagen = tipo === 'drive' ? (item.portada || placeholder) : (item.img || placeholder);
             const titulo = tipo === 'drive' ? (item.nombre || 'Sin nombre') : (item.titulo || 'Sin título');
             const claseTitulo = tipo === 'drive' ? 'drive' : 'historia';
+            const claseTipoMemoria = tipo === 'drive' ? 'memoria-drive' : 'memoria-historia';
             const abrir = tipo === 'drive'
                 ? `abrirMemoriaDrive('${idPais}', ${paramProv}, ${index})`
                 : `leerHistoria('${idPais}', ${paramProv}, ${index})`;
 
             return `
-                <article class="tarjeta-memoria-cuadrada" onclick="${abrir}" oncontextmenu="abrirMenuMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
+                <article class="tarjeta-memoria-cuadrada ${claseTipoMemoria}" onclick="${abrir}" oncontextmenu="abrirMenuMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
                     <div class="imagen-memoria" style="background-image: url('${imagen}');"></div>
                     <footer class="pie-memoria">
                         <h3 class="titulo-memoria ${claseTitulo}" title="${titulo}">${titulo}</h3>
