@@ -2012,6 +2012,20 @@ const firebaseConfig = {
                     <button class="btn-volver" onclick="${btnVolverAccion}" title="Volver"><i data-lucide="arrow-left"></i></button>
                     <h2 class="titulo-memorias-ciudad">Memorias de ${nombreCiudad}${idProvincia ? ` <span class="pais-parentesis">(${nombrePais})</span>` : ''}</h2>
                 </div>
+                <div class="tabs-memoria-metal">
+                    <button
+                        type="button"
+                        class="btn-tab-memoria tab-ver ${submodoActual === 'ver' ? 'activo' : ''}"
+                        onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})">
+                        <i data-lucide="images"></i> Ver Recuerdos
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-tab-memoria tab-nuevo ${submodoActual === 'nuevo' ? 'activo' : ''}"
+                        onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})">
+                        <i data-lucide="plus-circle"></i> Agregar Memoria
+                    </button>
+                </div>
 
                 <div id="seccion-musica" class="seccion-musica-metal">
                     <div id="vista-musica-guardada" class="vista-musica-metal" style="display: ${tieneMusica ? 'flex' : 'none'};">
