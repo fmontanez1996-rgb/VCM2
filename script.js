@@ -495,15 +495,15 @@ const firebaseConfig = {
                 const indiceItem = Array.isArray(destino?.itinerario) ? destino.itinerario.findIndex((actual) => actual?.id === item?.id) : -1;
                 const origen = item.origen || obtenerOrigenViajePorDefecto(destino, indiceItem);
                 return [
-                    `ORIGEN ${origen.toUpperCase()}:`,
-                    `SALIDA: ${fechaInicio || 'Sin fecha'} ${horaSalida}`
+                    `Origen: ${origen}`,
+                    `Salida: ${fechaInicio || 'Sin fecha'} - ${horaSalida}`
                 ];
             }
 
             if (item._esLlegadaViajeVirtual) {
                 return [
-                    `DESTINO ${obtenerDestinoViajeFormateado(item).toUpperCase()}`,
-                    `LLEGADA: ${fechaFinTexto || fechaInicio || 'Sin fecha'} ${horaLlegada}`
+                    `Destino: ${obtenerDestinoViajeFormateado(item)}`,
+                    `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'} - ${horaLlegada}`
                 ];
             }
 
@@ -511,8 +511,8 @@ const firebaseConfig = {
                 const noches = Number(item.noches) || 1;
                 return [
                     `${fechaInicio || 'Sin fecha'}-${fechaFinTexto || fechaInicio || 'Sin fecha'}`,
-                    `(${noches === 1 ? 'UNA NOCHE' : `${noches} NOCHES`})`,
-                    `CHECK-IN: ${horaSalida}`
+                    `(${noches} ${noches === 1 ? 'Noche' : 'Noches'})`,
+                    `Chek-in: ${horaSalida}`
                 ];
             }
 
@@ -520,8 +520,8 @@ const firebaseConfig = {
                 const noches = Number(item.noches) || 1;
                 return [
                     `${fechaInicio || 'Sin fecha'}-${fechaFinTexto || fechaInicio || 'Sin fecha'}`,
-                    `(${noches === 1 ? 'UNA NOCHE' : `${noches} NOCHES`})`,
-                    `CHECK-OUT: ${horaLlegada}`
+                    `(${noches} ${noches === 1 ? 'Noche' : 'Noches'})`,
+                    `Check-out: ${horaLlegada}`
                 ];
             }
 
@@ -3097,7 +3097,7 @@ const firebaseConfig = {
                             ? [
                                 `${normalizarHoraItinerario(item.llegada) || 'Sin horario'} - ${normalizarHoraItinerario(item.partida) || 'Sin horario'}`,
                                 `${item.plato || 'Comida'}`,
-                                `Costo: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
+                                `Precio: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
                             ].map(linea => `<p>${linea}</p>`).join('')
                             : obtenerResumenTarjetaItinerario(destino, item)
                                 .map(linea => `<p>${linea}</p>`)
