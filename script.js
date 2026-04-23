@@ -2102,17 +2102,17 @@ const firebaseConfig = {
 
 
         let youtubeApiReadyPromise = null;
-        let youtubeApiReadyResolver = null;
+        let youtubeApiReadyResolverControles = null;
         const reproductoresMusica = new Map();
 
         function asegurarYoutubeAPI() {
             if (youtubeApiReadyPromise) return youtubeApiReadyPromise;
             youtubeApiReadyPromise = new Promise((resolve) => {
-                youtubeApiReadyResolver = resolve;
+                youtubeApiReadyResolverControles = resolve;
             });
 
             if (window.YT && typeof window.YT.Player === 'function') {
-                youtubeApiReadyResolver?.();
+                youtubeApiReadyResolverControles?.();
                 return youtubeApiReadyPromise;
             }
 
@@ -2126,10 +2126,14 @@ const firebaseConfig = {
             return youtubeApiReadyPromise;
         }
 
+        const onYouTubeIframeAPIReadyPrevio = window.onYouTubeIframeAPIReady;
         window.onYouTubeIframeAPIReady = function() {
-            if (typeof youtubeApiReadyResolver === 'function') {
-                youtubeApiReadyResolver();
-                youtubeApiReadyResolver = null;
+            if (typeof onYouTubeIframeAPIReadyPrevio === 'function') {
+                onYouTubeIframeAPIReadyPrevio();
+            }
+            if (typeof youtubeApiReadyResolverControles === 'function') {
+                youtubeApiReadyResolverControles();
+                youtubeApiReadyResolverControles = null;
             }
         };
 
