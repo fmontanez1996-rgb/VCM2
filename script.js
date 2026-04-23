@@ -534,16 +534,15 @@ const firebaseConfig = {
                     `Destino: ${destinoViaje}`,
                     `Salida: ${fechaInicio || 'Sin fecha'}, ${horaSalida} (día ${numeroDia})`,
                     `Llegada: ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada} (día ${numeroDiaFechaFin})`,
-                    `Costo por persona ${costoBase}`
+                    `Precio por persona ${costoBase}`
                 ];
             }
 
             if (item.tipo === 'aventura') {
                 return [
-                    `Día: ${numeroDia}`,
-                    `${fechaInicio || 'Sin fecha'}`,
-                    `${horaSalida} (Entrada) ${horaLlegada} (Salida)`,
-                    `Precio: ${costoBase}`
+                    `DÍA ${numeroDia}`,
+                    `${fechaInicio || 'Sin fecha'}, ${horaSalida} - ${fechaFinTexto || fechaInicio || 'Sin fecha'}, ${horaLlegada}`,
+                    `Precio por persona: ${costoBase}`
                 ];
             }
 
@@ -560,15 +559,19 @@ const firebaseConfig = {
                     `Fecha de salida: ${fechaFinTexto || fechaInicio || 'Sin fecha'} (día ${numeroDiaFechaFin})`,
                     `Check out: ${horaLlegada}`,
                     `Precio por noche ${precioPorNoche}`,
-                    `Precio por persona ${costoBase}`
+                    `Total ${costoBase}`
                 ];
             }
 
+            const platoRestaurante = String(item.plato || 'No especificada').trim();
+            const platoFormateado = platoRestaurante.toLowerCase() === 'hamburguesas'
+                ? 'HAMBURGUESAS'
+                : platoRestaurante;
             return [
-                `HORARIO DE LLEGADA: ${horaSalida}`,
-                `HORARIO DE SALIDA: ${horaLlegada}`,
-                `COMIDA: ${item.plato || 'No especificada'}`,
-                `Precio: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
+                `Horario de llegada: ${horaSalida}`,
+                `Horario de Salida: ${horaLlegada}`,
+                `Comida: ${platoFormateado}`,
+                `Precio por persona: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
             ];
         }
         function guardarEstadoEnFirebase(forzar = false) {
@@ -3680,8 +3683,8 @@ const firebaseConfig = {
                 const detalles = obtenerResumenTarjetaItinerario(destino, item)
                     .map(linea => `<p>${linea}</p>`)
                     .join('');
-                const miniaturaAventura = item.tipo === 'aventura' && item.miniatura
-                    ? `<img src="${item.miniatura}" alt="Miniatura de ${item.lugar || 'aventura'}" class="miniatura-aventura">`
+                const botonImagenAventura = item.tipo === 'aventura'
+                    ? `<button class="btn-accion-rapida-calendario" onclick="verImagenAventura('${idPais}', '${item.id}')" title="Ver imagen">🖼️</button>`
                     : '';
                 const deshabilitarSubir = index === 0;
                 const deshabilitarBajar = index === (items.length - 1);
@@ -3691,7 +3694,7 @@ const firebaseConfig = {
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}" data-itinerario-item-id="${item.id}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}${botonUbicacion}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">${botonImagenAventura}${botonUbicacion}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
