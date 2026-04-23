@@ -1040,17 +1040,6 @@
             height: var(--alto-player-youtube);
             border: 0;
         }
-        .link-youtube-fallback-metal {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            margin-top: 8px;
-            font-size: 0.85rem;
-            color: #334155;
-            text-decoration: underline;
-            text-underline-offset: 2px;
-            font-weight: 700;
-        }
         .mensaje-musica-invalida-metal {
             display: flex;
             align-items: center;
