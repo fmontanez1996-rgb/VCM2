@@ -549,10 +549,11 @@ const firebaseConfig = {
             }
 
             return [
-                `Llegada: ${horaSalida}`,
-                `Salida: ${horaLlegada}`,
-                `${item.plato || 'Comida'}`,
-                `Precio: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
+                `NOMBRE DE RESTAURANTE: ${item.restaurante || item.plato || 'Restaurante'}`,
+                `HORARIO DE LLEGADA: ${horaSalida}`,
+                `HORARIO DE SALIDA: ${horaLlegada}`,
+                `COMIDA: ${item.plato || 'No especificada'}`,
+                `PRECIO POR PERSONA: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
             ];
         }
         function guardarEstadoEnFirebase(forzar = false) {
@@ -2641,6 +2642,12 @@ const firebaseConfig = {
             return limpio.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         }
 
+        function calcularPrecioTotalHospedaje(noches = 0, precioPorNoche = 0) {
+            const nochesNumero = Math.max(0, Number(limpiarNumeroMoneda(noches)) || Number(noches) || 0);
+            const precioNumero = Math.max(0, Number(limpiarNumeroMoneda(precioPorNoche)) || Number(precioPorNoche) || 0);
+            return String(Math.round(nochesNumero * precioNumero));
+        }
+
         function formatearHorarioItinerario(llegada = '', partida = '') {
             const llegadaNormalizada = normalizarHoraItinerario(llegada);
             const partidaNormalizada = normalizarHoraItinerario(partida);
@@ -3221,21 +3228,27 @@ const firebaseConfig = {
                 `;
             } else if (tipo === 'aventura') {
                 const miniaturaExistente = itemExistente?.miniatura || '';
-                const mostrarMiniaturaBloqueada = esEdicion && Boolean(miniaturaExistente);
+                const mostrarMiniaturaBloqueada = Boolean(miniaturaExistente);
                 formHTML += `
                     <div class="campo-form"><label>Lugar a visitar</label><input type="text" id="input-aventura-lugar" placeholder="Ej. Cristo Redentor" value="${itemExistente?.lugar || ''}"></div>
-                    <div class="campo-form">
-                        <label>Miniatura (URL)</label>
+                    <details id="detalle-aventura-miniatura" class="campo-ubicacion-desplegable" ${mostrarMiniaturaBloqueada ? '' : 'open'}>
+                        <summary>Portada (URL)</summary>
                         ${mostrarMiniaturaBloqueada ? `
                             <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
                                 <img src="${miniaturaExistente}" alt="Miniatura actual de ${itemExistente?.lugar || 'aventura'}" class="miniatura-aventura">
-                                <button type="button" id="btn-editar-url-aventura" class="btn-mini-accion-itinerario" onclick="habilitarEdicionUrlAventura()">Editar</button>
                             </div>
                         ` : ''}
-                        <input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${miniaturaExistente}" ${mostrarMiniaturaBloqueada ? 'readonly' : ''} style="${mostrarMiniaturaBloqueada ? 'display:none;' : ''}">
-                    </div>
+                        <div class="campo-form">
+                            <label>Enlace de portada</label>
+                            <input type="url" id="input-aventura-miniatura" placeholder="Ej. https://.../cristo-redentor.jpg" value="${miniaturaExistente}" ${mostrarMiniaturaBloqueada ? 'readonly' : ''}>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button type="button" id="btn-guardar-url-aventura" class="btn-mini-accion-itinerario" onclick="guardarUrlAventura()">Guardar URL</button>
+                            ${mostrarMiniaturaBloqueada ? `<button type="button" id="btn-editar-url-aventura" class="btn-mini-accion-itinerario" onclick="habilitarEdicionUrlAventura()">Editar URL</button>` : ''}
+                        </div>
+                    </details>
                     <div style="display: flex; gap: 10px;">
-                        <div class="campo-form" style="flex: 1;"><label>Precio ($)</label><input type="number" id="input-aventura-costo" placeholder="0" value="${itemExistente?.costo || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Precio por persona ($)</label><input type="text" inputmode="numeric" id="input-aventura-costo" placeholder="0" value="${formatearMilesConPuntos(itemExistente?.costo || '')}"></div>
                     </div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-aventura-llegada" value="${itemExistente?.llegada || ''}"></div>
@@ -3247,7 +3260,7 @@ const firebaseConfig = {
                     <div class="campo-form"><label>Restaurante</label><input type="text" id="input-rest-restaurante" placeholder="Ej. Fogo de Chão" value="${itemExistente?.restaurante || ''}"></div>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 2;"><label>Plato</label><input type="text" id="input-rest-plato" placeholder="Ej. Feijoada" value="${itemExistente?.plato || ''}"></div>
-                        <div class="campo-form" style="flex: 1;"><label>Costo ($)</label><input type="number" id="input-rest-costo" placeholder="Ej. 25000" value="${itemExistente?.costo ?? itemExistente?.precio ?? ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Costo por persona ($)</label><input type="text" inputmode="numeric" id="input-rest-costo" placeholder="Ej. 25.000" value="${formatearMilesConPuntos(itemExistente?.costo ?? itemExistente?.precio ?? '')}"></div>
                     </div>
                     <details class="campo-ubicacion-desplegable" ${itemExistente?.ubicacion ? 'open' : ''}>
                         <summary>Ubicación</summary>
@@ -3293,16 +3306,41 @@ const firebaseConfig = {
                     });
                 }
             }
+            if (tipo === 'aventura') {
+                const inputCostoAventura = document.getElementById('input-aventura-costo');
+                if (inputCostoAventura) {
+                    inputCostoAventura.addEventListener('input', (event) => {
+                        event.target.value = formatearMilesConPuntos(event.target.value);
+                    });
+                }
+            }
+            if (tipo === 'restaurante') {
+                const inputCostoRest = document.getElementById('input-rest-costo');
+                if (inputCostoRest) {
+                    inputCostoRest.addEventListener('input', (event) => {
+                        event.target.value = formatearMilesConPuntos(event.target.value);
+                    });
+                }
+            }
         };
 
         window.habilitarEdicionUrlAventura = function() {
             const inputUrl = document.getElementById('input-aventura-miniatura');
-            const botonEditar = document.getElementById('btn-editar-url-aventura');
+            const detalle = document.getElementById('detalle-aventura-miniatura');
             if (!inputUrl) return;
+            if (detalle) detalle.open = true;
             inputUrl.style.display = '';
             inputUrl.readOnly = false;
             inputUrl.focus();
-            if (botonEditar) botonEditar.style.display = 'none';
+        };
+
+        window.guardarUrlAventura = function() {
+            const detalle = document.getElementById('detalle-aventura-miniatura');
+            const inputUrl = document.getElementById('input-aventura-miniatura');
+            if (!inputUrl || !detalle) return;
+            inputUrl.value = inputUrl.value.trim();
+            inputUrl.readOnly = true;
+            detalle.open = false;
         };
 
         window.guardarItemItinerario = function(idPais, tipo) {
@@ -3360,13 +3398,13 @@ const firebaseConfig = {
             } else if (tipo === 'aventura') {
                 nuevoItem.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 nuevoItem.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
-                nuevoItem.costo = document.getElementById('input-aventura-costo').value || '0';
+                nuevoItem.costo = limpiarNumeroMoneda(document.getElementById('input-aventura-costo').value || '0') || '0';
                 nuevoItem.llegada = document.getElementById('input-aventura-llegada').value;
                 nuevoItem.partida = document.getElementById('input-aventura-partida').value;
             } else if (tipo === 'restaurante') {
                 nuevoItem.restaurante = document.getElementById('input-rest-restaurante').value || 'Restaurante';
                 nuevoItem.plato = document.getElementById('input-rest-plato').value || 'No especificado';
-                nuevoItem.costo = document.getElementById('input-rest-costo').value || '0';
+                nuevoItem.costo = limpiarNumeroMoneda(document.getElementById('input-rest-costo').value || '0') || '0';
                 nuevoItem.ubicacion = document.getElementById('input-rest-ubicacion')?.value?.trim() || '';
                 nuevoItem.llegada = document.getElementById('input-rest-llegada').value;
                 nuevoItem.partida = document.getElementById('input-rest-partida').value;
@@ -3436,13 +3474,13 @@ const firebaseConfig = {
             } else if (tipo === 'aventura') {
                 itemActualizado.lugar = document.getElementById('input-aventura-lugar').value || 'Aventura';
                 itemActualizado.miniatura = document.getElementById('input-aventura-miniatura').value.trim();
-                itemActualizado.costo = document.getElementById('input-aventura-costo').value || '0';
+                itemActualizado.costo = limpiarNumeroMoneda(document.getElementById('input-aventura-costo').value || '0') || '0';
                 itemActualizado.llegada = document.getElementById('input-aventura-llegada').value;
                 itemActualizado.partida = document.getElementById('input-aventura-partida').value;
             } else if (tipo === 'restaurante') {
                 itemActualizado.restaurante = document.getElementById('input-rest-restaurante').value || 'Restaurante';
                 itemActualizado.plato = document.getElementById('input-rest-plato').value || 'No especificado';
-                itemActualizado.costo = document.getElementById('input-rest-costo').value || '0';
+                itemActualizado.costo = limpiarNumeroMoneda(document.getElementById('input-rest-costo').value || '0') || '0';
                 itemActualizado.ubicacion = document.getElementById('input-rest-ubicacion')?.value?.trim() || '';
                 itemActualizado.llegada = document.getElementById('input-rest-llegada').value;
                 itemActualizado.partida = document.getElementById('input-rest-partida').value;
