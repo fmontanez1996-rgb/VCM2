@@ -3074,6 +3074,11 @@ const firebaseConfig = {
 
                     const tarjetas = itemsDia.map(item => {
                         const meta = obtenerMetaItinerario(item, destino);
+                        const botonAccionRapida = item.tipo === 'restaurante'
+                            ? `<button class="btn-accion-rapida-calendario" onclick="verUbicacionRestaurante('${idPais}', '${item.id}')" title="Ver ubicación">📍</button>`
+                            : item.tipo === 'aventura'
+                                ? `<button class="btn-accion-rapida-calendario" onclick="verImagenAventura('${idPais}', '${item.id}')" title="Ver imagen">🖼️</button>`
+                                : '';
                         const resumen = item.tipo === 'restaurante'
                             ? [
                                 `${normalizarHoraItinerario(item.llegada) || 'Sin horario'} - ${normalizarHoraItinerario(item.partida) || 'Sin horario'}`,
