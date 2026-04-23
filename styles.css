@@ -1019,9 +1019,11 @@
             gap: 10px;
         }
         .contenedor-iframe-musica-metal {
+            --alto-player-youtube: 220px;
+            --alto-controles-youtube: 66px;
             position: relative;
             width: 100%;
-            padding-top: 56.25%;
+            height: var(--alto-controles-youtube);
             border-radius: 12px;
             overflow: hidden;
             border: 1px solid #95a4ba;
@@ -1032,10 +1034,10 @@
         }
         .contenedor-iframe-musica-metal iframe {
             position: absolute;
-            top: 0;
+            top: calc(var(--alto-controles-youtube) - var(--alto-player-youtube));
             left: 0;
             width: 100%;
-            height: 100%;
+            height: var(--alto-player-youtube);
             border: 0;
         }
         .link-youtube-fallback-metal {
