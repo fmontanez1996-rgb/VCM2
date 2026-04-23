@@ -1966,12 +1966,6 @@ const firebaseConfig = {
             // Lógica de navegación: si estamos dentro de una ciudad, "Volver" nos lleva a la lista de ciudades.
             const btnVolverAccion = idProvincia ? `abrirAlbum('${idPais}')` : `renderizarPantallaRecuerdos()`;
             const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
-            const botonNuevoEstilo = submodoActual === 'nuevo'
-                ? 'activo'
-                : '';
-            const botonVerEstilo = submodoActual === 'ver'
-                ? 'activo'
-                : '';
             const nombreCiudad = idProvincia ? objDestino.nombre : nombreTitulo;
             const nombrePais = idProvincia ? pais.nombre : '';
             const bloqueNuevo = submodoActual === 'nuevo' ? `
@@ -2023,24 +2017,21 @@ const firebaseConfig = {
                     <div id="vista-musica-guardada" class="vista-musica-metal" style="display: ${tieneMusica ? 'flex' : 'none'};">
                         <div style="flex: 1;">
                             ${musicaValida ? `
-                                <div class="contenedor-iframe-musica-metal" aria-hidden="true">
+                                <div class="player-musica-oculto-metal">
+                                    <div class="barra-controles-metal">
+                                        <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')">Play</button>
+                                        <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')">Pause</button>
+                                        <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')">Restart</button>
+                                    </div>
                                     <iframe
                                         id="${idPlayerMusica}"
                                         src="https://www.youtube.com/embed/${videoIdMusica}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1"
-                                        title="Reproductor de música oculto"
-                                        class="iframe-musica-audio iframe-musica-oculto"
+                                        title="Música para la memoria"
+                                        id="iframe-musica-${idPais}-${idProvincia || 'pais'}" class="iframe-musica-audio"
                                         loading="lazy"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                         allowfullscreen>
                                     </iframe>
-                                </div>
-                                <div class="controles-musica-metal" style="display:flex; gap:8px; margin-top:0;">
-                                    <button id="btn-play-${idPlayerMusica}" onclick="playMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
-                                        <i data-lucide="play" style="width:14px;"></i> Play
-                                    </button>
-                                    <button id="btn-pause-${idPlayerMusica}" onclick="pauseMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
-                                        <i data-lucide="pause" style="width:14px;"></i> Pausa
-                                    </button>
                                 </div>
                             ` : `
                                 <div class="mensaje-musica-invalida-metal">
@@ -2062,18 +2053,9 @@ const firebaseConfig = {
                         <button onclick="guardarMusica('${idPais}', ${paramProv})" class="btn-guardar-musica-metal">Guardar</button>
                     </div>
                 </div>
-                <div class="tabs-memoria-metal">
-                    <button onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})" class="btn-tab-memoria tab-nuevo ${botonNuevoEstilo}">
-                        <i data-lucide="plus-circle" style="width:16px;"></i> AGREGAR MEMORIAS
-                    </button>
-                    <button onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})" class="btn-tab-memoria tab-ver ${botonVerEstilo}">
-                        <i data-lucide="images" style="width:16px;"></i> VER RECUERDOS
-                    </button>
-                </div>
-
                 ${bloqueNuevo}
 
-                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+                <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fit, minmax(220px, 260px)); justify-content: center; gap: 24px;">
                 </div>
             `;
 
@@ -2094,10 +2076,120 @@ const firebaseConfig = {
             window.abrirAlbumDetalle(idPais, idProvincia, destino);
         };
 
+
+        let youtubeApiReadyPromise = null;
+        let youtubeApiReadyResolverControles = null;
+        const reproductoresMusica = new Map();
+
+        function asegurarYoutubeAPI() {
+            if (youtubeApiReadyPromise) return youtubeApiReadyPromise;
+            youtubeApiReadyPromise = new Promise((resolve) => {
+                youtubeApiReadyResolverControles = resolve;
+            });
+
+            if (window.YT && typeof window.YT.Player === 'function') {
+                youtubeApiReadyResolverControles?.();
+                return youtubeApiReadyPromise;
+            }
+
+            const scriptExistente = document.querySelector('script[src="https://www.youtube.com/iframe_api"]');
+            if (!scriptExistente) {
+                const tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                document.head.appendChild(tag);
+            }
+
+            return youtubeApiReadyPromise;
+        }
+
+        const onYouTubeIframeAPIReadyPrevio = window.onYouTubeIframeAPIReady;
+        window.onYouTubeIframeAPIReady = function() {
+            if (typeof onYouTubeIframeAPIReadyPrevio === 'function') {
+                onYouTubeIframeAPIReadyPrevio();
+            }
+            if (typeof youtubeApiReadyResolverControles === 'function') {
+                youtubeApiReadyResolverControles();
+                youtubeApiReadyResolverControles = null;
+            }
+        };
+
+        function actualizarEstadoControlesMusica(state, barra) {
+            if (!barra) return;
+            barra.classList.remove('is-playing', 'is-paused');
+            if (state === window.YT?.PlayerState?.PLAYING) barra.classList.add('is-playing');
+            if (state === window.YT?.PlayerState?.PAUSED) barra.classList.add('is-paused');
+        }
+
+        function prepararControlesMusica({ claveControl, iframeId, barraId }) {
+            if (!claveControl || !iframeId || !barraId) return;
+            const iframe = document.getElementById(iframeId);
+            const barra = document.getElementById(barraId);
+            if (!iframe || !barra) return;
+
+            asegurarYoutubeAPI().then(() => {
+                if (!document.getElementById(iframeId) || !document.getElementById(barraId)) return;
+
+                const previo = reproductoresMusica.get(claveControl);
+                if (previo?.player && typeof previo.player.destroy === 'function') {
+                    previo.player.destroy();
+                }
+
+                const player = new window.YT.Player(iframeId, {
+                    events: {
+                        onStateChange: (event) => actualizarEstadoControlesMusica(event.data, barra),
+                        onReady: () => actualizarEstadoControlesMusica(window.YT.PlayerState.UNSTARTED, barra)
+                    }
+                });
+
+                reproductoresMusica.set(claveControl, { player, barraId });
+            }).catch(() => {
+                if (barra) barra.classList.add('is-paused');
+            });
+        }
+
+        window.controlMusica = function(claveControl, accion) {
+            const entrada = reproductoresMusica.get(claveControl);
+            const player = entrada?.player;
+            if (!player || typeof player.getPlayerState !== 'function') return;
+
+            if (accion === 'play') player.playVideo();
+            if (accion === 'pause') player.pauseVideo();
+            if (accion === 'restart') player.seekTo(0, true), player.playVideo();
+
+            const barra = document.getElementById(entrada.barraId);
+            actualizarEstadoControlesMusica(player.getPlayerState(), barra);
+        };
+
         window.extraerIDYoutube = function(url) {
             const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
             const match = url.match(regExp);
             return (match && match[7].length === 11) ? match[7] : null;
+        };
+
+        window.controlMusicaMetal = function(accion) {
+            const iframe = document.querySelector('#seccion-musica .iframe-musica-audio');
+            if (!iframe || !iframe.contentWindow) return;
+
+            if (accion === 'restart') {
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'seekTo',
+                    args: [0, true]
+                }), '*');
+                iframe.contentWindow.postMessage(JSON.stringify({
+                    event: 'command',
+                    func: 'playVideo',
+                    args: []
+                }), '*');
+                return;
+            }
+
+            const comando = accion === 'pause' ? 'pauseVideo' : 'playVideo';
+            iframe.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: comando,
+                args: []
+            }), '*');
         };
 
         window.guardarMusica = function(idPais, idProvincia = null) {
@@ -2213,12 +2305,13 @@ const firebaseConfig = {
             const imagen = tipo === 'drive' ? (item.portada || placeholder) : (item.img || placeholder);
             const titulo = tipo === 'drive' ? (item.nombre || 'Sin nombre') : (item.titulo || 'Sin título');
             const claseTitulo = tipo === 'drive' ? 'drive' : 'historia';
+            const claseTipoMemoria = tipo === 'drive' ? 'memoria-drive' : 'memoria-historia';
             const abrir = tipo === 'drive'
                 ? `abrirMemoriaDrive('${idPais}', ${paramProv}, ${index})`
                 : `leerHistoria('${idPais}', ${paramProv}, ${index})`;
 
             return `
-                <article class="tarjeta-memoria-cuadrada" onclick="${abrir}" oncontextmenu="abrirMenuMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
+                <article class="tarjeta-memoria-cuadrada ${claseTipoMemoria}" onclick="${abrir}" oncontextmenu="abrirMenuMemoria(event, '${idPais}', ${paramProv}, ${index}, '${tipo}')">
                     <div class="imagen-memoria" style="background-image: url('${imagen}');"></div>
                     <footer class="pie-memoria">
                         <h3 class="titulo-memoria ${claseTitulo}" title="${titulo}">${titulo}</h3>
