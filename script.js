@@ -2020,8 +2020,8 @@ const firebaseConfig = {
                                 <div class="player-musica-oculto-metal">
                                     <div class="barra-controles-metal">
                                         <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')">Play</button>
-                                        <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')">Pause</button>
-                                        <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')">Restart</button>
+                                        <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')">Pausa</button>
+                                        <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')">Reiniciar</button>
                                     </div>
                                     <iframe
                                         id="${idPlayerMusica}"
@@ -2040,9 +2040,6 @@ const firebaseConfig = {
                                 </div>
                             `}
                         </div>
-                        <button onclick="cambiarMusica('${idPais}', ${paramProv})" title="Cambiar enlace" class="btn-cambiar-musica-metal">
-                            <i data-lucide="refresh-cw" style="width:18px;"></i>
-                        </button>
                     </div>
                     
                     <div id="input-musica" class="input-musica-metal" style="display: ${!tieneMusica || !musicaValida ? 'flex' : 'none'};">
