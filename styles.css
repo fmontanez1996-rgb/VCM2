@@ -1193,6 +1193,16 @@
                 inset 0 1px 0 rgba(255, 255, 255, 0.96),
                 inset 0 -2px 4px rgba(132, 166, 188, 0.18);
         }
+        .texto-calculado-itinerario {
+            margin: 0;
+            padding: 12px;
+            border: 1px dashed rgba(107, 145, 170, 0.45);
+            border-radius: 14px;
+            background: linear-gradient(180deg, rgba(239, 246, 251, 0.95), rgba(228, 239, 247, 0.96));
+            color: #2f4a5c;
+            font-weight: 700;
+            min-height: 22px;
+        }
         .btn-guardar-item { background: var(--secondary); color: white; border: none; padding: 12px 20px; border-radius: 15px; font-weight: bold; font-family: 'Quicksand'; font-size: 1.1rem; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn-guardar-item:hover { background: #00ACC1; transform: translateY(-2px); box-shadow: 0 5px 15px var(--btn-glow-sec); }
         .btn-cancelar-item {
