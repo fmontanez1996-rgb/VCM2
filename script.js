@@ -2887,6 +2887,85 @@ const firebaseConfig = {
             });
         }
 
+        function escaparHtmlPlano(texto = '') {
+            return String(texto || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function esUrlValidaAbsoluta(valor = '') {
+            return /^https?:\/\/\S+$/i.test(String(valor || '').trim());
+        }
+
+        window.cerrarModalVistaRapidaItinerario = function() {
+            const modal = document.getElementById('modal-vista-rapida-itinerario');
+            if (modal) modal.remove();
+        };
+
+        window.abrirModalVistaRapidaItinerario = function({ titulo = 'Detalle', contenido = '', subtitulo = '' } = {}) {
+            cerrarModalVistaRapidaItinerario();
+            const modal = document.createElement('div');
+            modal.className = 'modal-vista-rapida-itinerario';
+            modal.id = 'modal-vista-rapida-itinerario';
+            modal.onclick = (event) => {
+                if (event.target === modal) cerrarModalVistaRapidaItinerario();
+            };
+
+            modal.innerHTML = `
+                <div class="modal-vista-rapida-itinerario-contenido" role="dialog" aria-modal="true" aria-label="${escaparHtmlPlano(titulo)}">
+                    <div class="modal-vista-rapida-header">
+                        <div>
+                            <h3>${escaparHtmlPlano(titulo)}</h3>
+                            ${subtitulo ? `<p>${escaparHtmlPlano(subtitulo)}</p>` : ''}
+                        </div>
+                        <button class="btn-cerrar-menu" onclick="cerrarModalVistaRapidaItinerario()" aria-label="Cerrar vista rápida">×</button>
+                    </div>
+                    <div class="modal-vista-rapida-body">${contenido}</div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            lucide.createIcons();
+        };
+
+        window.verUbicacionRestaurante = function(idPais, idItem) {
+            const destino = destinosSonados[idPais];
+            const item = Array.isArray(destino?.itinerario) ? destino.itinerario.find((actual) => String(actual?.id) === String(idItem)) : null;
+            if (!item) return;
+            const ubicacion = String(item.ubicacion || '').trim();
+            const titulo = item.restaurante || 'Restaurante';
+            const contenido = ubicacion
+                ? (esUrlValidaAbsoluta(ubicacion)
+                    ? `<a class="enlace-vista-rapida-itinerario" href="${ubicacion}" target="_blank" rel="noopener noreferrer">${escaparHtmlPlano(ubicacion)}</a>`
+                    : `<p class="texto-vista-rapida-itinerario">${escaparHtmlPlano(ubicacion)}</p>`)
+                : `<p class="texto-vista-rapida-itinerario vacio">No hay una ubicación guardada para este restaurante.</p>`;
+
+            abrirModalVistaRapidaItinerario({
+                titulo: `📍 ${titulo}`,
+                subtitulo: 'Ubicación guardada en el formulario',
+                contenido
+            });
+        };
+
+        window.verImagenAventura = function(idPais, idItem) {
+            const destino = destinosSonados[idPais];
+            const item = Array.isArray(destino?.itinerario) ? destino.itinerario.find((actual) => String(actual?.id) === String(idItem)) : null;
+            if (!item) return;
+            const miniatura = String(item.miniatura || '').trim();
+            const titulo = item.lugar || 'Aventura';
+            const contenido = miniatura
+                ? `<img class="imagen-vista-rapida-itinerario" src="${miniatura}" alt="Imagen de ${escaparHtmlPlano(titulo)}" loading="lazy">`
+                : `<p class="texto-vista-rapida-itinerario vacio">No hay una imagen guardada para esta aventura.</p>`;
+
+            abrirModalVistaRapidaItinerario({
+                titulo: `📷 ${titulo}`,
+                subtitulo: 'Imagen cargada por URL en el formulario',
+                contenido
+            });
+        };
+
         window.renderizarCalendarioItinerario = function(idPais) {
             const calendario = document.getElementById(`calendario-itinerario-${idPais}`);
             const destino = destinosSonados[idPais];
@@ -2983,10 +3062,16 @@ const firebaseConfig = {
                         const resumen = obtenerResumenTarjetaItinerario(destino, item)
                             .map(linea => `<p>${linea}</p>`)
                             .join('');
+                        const botonAccionRapida = item.tipo === 'restaurante'
+                            ? `<button class="btn-accion-rapida-calendario" type="button" title="Ver ubicación guardada" onclick="verUbicacionRestaurante('${idPais}', '${item.id}')">📍</button>`
+                            : (item.tipo === 'aventura'
+                                ? `<button class="btn-accion-rapida-calendario" type="button" title="Ver imagen guardada" onclick="verImagenAventura('${idPais}', '${item.id}')">📷</button>`
+                                : '');
                         return `
                             <article class="tarjeta-calendario-itinerario ${item.tipo || ''}" data-itinerario-item-id="${item.id}">
                                 <div class="tarjeta-calendario-header">
                                     <h4><i data-lucide="${meta.icono}"></i> ${meta.titulo}</h4>
+                                    ${botonAccionRapida}
                                 </div>
                                 <div class="item-detalles">${resumen}</div>
                             </article>
