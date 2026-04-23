@@ -1515,7 +1515,7 @@
             border-radius: 22px;
             overflow: hidden;
             position: relative;
-            min-height: 170px;
+            min-height: 210px;
             border: 2px solid rgba(171, 215, 255, 0.45);
             box-shadow:
                 inset 0 1px 0 rgba(255,255,255,0.45),
@@ -1528,7 +1528,7 @@
             inset: 0;
             background:
                 radial-gradient(circle at 22% 16%, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 42%),
-                linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.55));
+                linear-gradient(180deg, rgba(0,0,0,0.02), rgba(0,0,0,0.45));
         }
         .cabecera-itinerario-contenido {
             position: relative;
@@ -1569,7 +1569,6 @@
             border-radius: 18px;
             background:
                 radial-gradient(circle at 20% 20%, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0) 34%),
-                repeating-linear-gradient(120deg, rgba(255,255,255,0.2) 0 10px, rgba(112,125,139,0.18) 10px 20px),
                 linear-gradient(135deg, #f9fcff 0%, #d4dbe3 37%, #8a96a3 52%, #e4ebf2 75%, #adb8c5 100%);
             color: #c30000;
             font-size: clamp(2.2rem, 3.8vw, 2.95rem);
