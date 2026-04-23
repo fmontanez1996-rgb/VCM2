@@ -1966,12 +1966,6 @@ const firebaseConfig = {
             // Lógica de navegación: si estamos dentro de una ciudad, "Volver" nos lleva a la lista de ciudades.
             const btnVolverAccion = idProvincia ? `abrirAlbum('${idPais}')` : `renderizarPantallaRecuerdos()`;
             const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
-            const botonNuevoEstilo = submodoActual === 'nuevo'
-                ? 'activo'
-                : '';
-            const botonVerEstilo = submodoActual === 'ver'
-                ? 'activo'
-                : '';
             const nombreCiudad = idProvincia ? objDestino.nombre : nombreTitulo;
             const nombrePais = idProvincia ? pais.nombre : '';
             const bloqueNuevo = submodoActual === 'nuevo' ? `
@@ -2039,20 +2033,6 @@ const firebaseConfig = {
                                         allowfullscreen>
                                     </iframe>
                                 </div>
-                                <div class="controles-musica-metal" style="display:flex; gap:8px; margin-top:10px;">
-                                    <button id="btn-play-${idPlayerMusica}" onclick="playMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
-                                        <i data-lucide="play" style="width:14px;"></i> Play
-                                    </button>
-                                    <button id="btn-pause-${idPlayerMusica}" onclick="pauseMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
-                                        <i data-lucide="pause" style="width:14px;"></i> Pausa
-                                    </button>
-                                    <button onclick="reiniciarMusica('${idPlayerMusica}')" class="btn-tab-memoria tab-ver" style="padding:8px 12px;">
-                                        <i data-lucide="rotate-ccw" style="width:14px;"></i> Reiniciar
-                                    </button>
-                                </div>
-                                <a href="${objDestino.musica}" target="_blank" rel="noopener noreferrer" class="link-youtube-fallback-metal">
-                                    Abrir en YouTube
-                                </a>
                             ` : `
                                 <div class="mensaje-musica-invalida-metal">
                                     <i data-lucide="alert-triangle"></i>
@@ -2073,15 +2053,6 @@ const firebaseConfig = {
                         <button onclick="guardarMusica('${idPais}', ${paramProv})" class="btn-guardar-musica-metal">Guardar</button>
                     </div>
                 </div>
-                <div class="tabs-memoria-metal">
-                    <button onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})" class="btn-tab-memoria tab-nuevo ${botonNuevoEstilo}">
-                        <i data-lucide="plus-circle" style="width:16px;"></i> AGREGAR MEMORIAS
-                    </button>
-                    <button onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})" class="btn-tab-memoria tab-ver ${botonVerEstilo}">
-                        <i data-lucide="images" style="width:16px;"></i> VER RECUERDOS
-                    </button>
-                </div>
-
                 ${bloqueNuevo}
 
                 <div id="lista-memorias-guardadas" style="display: ${submodoActual === 'nuevo' ? 'none' : 'grid'}; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
