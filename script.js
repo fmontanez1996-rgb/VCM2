@@ -2022,6 +2022,7 @@ const firebaseConfig = {
                                         <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')">Play</button>
                                         <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')">Pausa</button>
                                         <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')">Reiniciar</button>
+                                        <button type="button" class="btn-metal-edit" onclick="window.abrirEditorUrlMusica('${idPais}', ${paramProv})">Editar</button>
                                     </div>
                                     <iframe
                                         id="${idPlayerMusica}"
@@ -2048,6 +2049,18 @@ const firebaseConfig = {
                             <input type="text" id="url-musica" placeholder="Pega el link de la canción..." class="texto-musica-metal">
                         </div>
                         <button onclick="guardarMusica('${idPais}', ${paramProv})" class="btn-guardar-musica-metal">Guardar</button>
+                    </div>
+
+                    <div id="editor-url-musica" class="editor-url-musica-metal" style="display:none;">
+                        <h4 class="titulo-editor-musica-metal">Editar URL del video</h4>
+                        <div class="campo-musica-metal">
+                            <i data-lucide="music" class="icono-musica-metal"></i>
+                            <input type="text" id="url-musica-editar" placeholder="Pega el link de YouTube..." class="texto-musica-metal">
+                        </div>
+                        <div class="acciones-editor-musica-metal">
+                            <button type="button" onclick="window.guardarMusicaEditada('${idPais}', ${paramProv})" class="btn-guardar-musica-metal">Guardar</button>
+                            <button type="button" onclick="window.cerrarEditorUrlMusica()" class="btn-cancelar-musica-metal">Cancelar</button>
+                        </div>
                     </div>
                 </div>
                 ${bloqueNuevo}
@@ -2187,6 +2200,43 @@ const firebaseConfig = {
                 func: comando,
                 args: []
             }), '*');
+        };
+
+        window.abrirEditorUrlMusica = function(idPais, idProvincia = null) {
+            const editor = document.getElementById('editor-url-musica');
+            const input = document.getElementById('url-musica-editar');
+            if (!editor || !input) return;
+
+            const objDestino = idProvincia ? provinciasVisitadas?.[idPais]?.[idProvincia] : paisesVisitados?.[idPais];
+            input.value = (objDestino?.musica || '').trim();
+            editor.style.display = 'flex';
+            input.focus();
+            input.select();
+        };
+
+        window.cerrarEditorUrlMusica = function() {
+            const editor = document.getElementById('editor-url-musica');
+            if (!editor) return;
+            editor.style.display = 'none';
+        };
+
+        window.guardarMusicaEditada = function(idPais, idProvincia = null) {
+            const input = document.getElementById('url-musica-editar');
+            if (!input) return;
+            const nuevaUrl = input.value.trim();
+            if (!nuevaUrl) {
+                alert("Por favor, ingresa un enlace válido de YouTube.");
+                return;
+            }
+            if (!nuevaUrl.includes('youtube.com') && !nuevaUrl.includes('youtu.be')) {
+                alert("Por favor, ingresa un enlace válido de YouTube.");
+                return;
+            }
+
+            const objDestino = idProvincia ? provinciasVisitadas?.[idPais]?.[idProvincia] : paisesVisitados?.[idPais];
+            if (!objDestino) return;
+            objDestino.musica = nuevaUrl;
+            window.abrirAlbumDetalle(idPais, idProvincia);
         };
 
         window.guardarMusica = function(idPais, idProvincia = null) {

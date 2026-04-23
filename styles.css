@@ -1051,7 +1051,8 @@
         }
         .btn-metal-play,
         .btn-metal-pause,
-        .btn-metal-restart {
+        .btn-metal-restart,
+        .btn-metal-edit {
             border: none;
             color: #fff;
             font-weight: 700;
@@ -1064,9 +1065,11 @@
         .btn-metal-play { background: #16a34a; }
         .btn-metal-pause { background: #dc2626; }
         .btn-metal-restart { background: #2563eb; }
+        .btn-metal-edit { background: #7c3aed; }
         .btn-metal-play:hover,
         .btn-metal-pause:hover,
-        .btn-metal-restart:hover {
+        .btn-metal-restart:hover,
+        .btn-metal-edit:hover {
             filter: brightness(1.08);
         }
         .controles-musica-metal {
@@ -1142,6 +1145,36 @@
                 0 6px 0 #0846a1,
                 0 10px 18px rgba(2, 63, 161, 0.5),
                 0 0 18px rgba(92, 176, 255, 0.62);
+        }
+        .editor-url-musica-metal {
+            margin-top: 10px;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #9aa8bb;
+            background: linear-gradient(165deg, rgba(241, 245, 251, 0.95) 0%, rgba(220, 227, 238, 0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .titulo-editor-musica-metal {
+            margin: 0;
+            color: #3a4b66;
+            font-size: 0.92rem;
+            font-weight: 800;
+        }
+        .acciones-editor-musica-metal {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+        .btn-cancelar-musica-metal {
+            background: #e5e7eb;
+            border: 1px solid #cbd5e1;
+            color: #334155;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
         }
         .tarjeta-memoria-cuadrada {
             position: relative;
