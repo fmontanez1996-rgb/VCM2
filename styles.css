@@ -1018,12 +1018,10 @@
             justify-content: space-between;
             gap: 10px;
         }
-        .contenedor-iframe-musica-metal {
-            --alto-player-youtube: 220px;
-            --alto-controles-youtube: 66px;
+        .player-musica-oculto-metal {
             position: relative;
             width: 100%;
-            height: var(--alto-controles-youtube);
+            height: 66px;
             border-radius: 12px;
             overflow: hidden;
             border: 1px solid #95a4ba;
@@ -1032,13 +1030,47 @@
                 inset 0 2px 0 rgba(255, 255, 255, 0.22),
                 0 4px 12px rgba(10, 20, 36, 0.35);
         }
-        .contenedor-iframe-musica-metal iframe {
+        .barra-controles-metal {
             position: absolute;
-            top: calc(var(--alto-controles-youtube) - var(--alto-player-youtube));
+            inset: 0;
+            z-index: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 8px;
+            background: rgba(5, 11, 20, 0.78);
+            backdrop-filter: blur(1px);
+        }
+        .iframe-musica-audio {
+            position: absolute;
+            top: -154px;
             left: 0;
             width: 100%;
-            height: var(--alto-player-youtube);
+            height: 220px;
             border: 0;
+            z-index: 1;
+            pointer-events: none;
+        }
+        .btn-metal-play,
+        .btn-metal-pause,
+        .btn-metal-restart {
+            border: none;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.8rem;
+            border-radius: 999px;
+            padding: 8px 14px;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+        }
+        .btn-metal-play { background: #16a34a; }
+        .btn-metal-pause { background: #dc2626; }
+        .btn-metal-restart { background: #2563eb; }
+        .btn-metal-play:hover,
+        .btn-metal-pause:hover,
+        .btn-metal-restart:hover {
+            filter: brightness(1.08);
         }
         .link-youtube-fallback-metal {
             display: inline-flex;
