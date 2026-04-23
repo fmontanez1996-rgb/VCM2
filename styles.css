@@ -1131,7 +1131,40 @@
         .campo-form input, .campo-form select { 
             padding: 12px; border: 2px solid #CFD8DC; border-radius: 12px; font-family: 'Quicksand', sans-serif; font-weight: 600; color: #455A64; outline: none; transition: 0.2s; 
         }
+        .campo-form textarea {
+            padding: 12px;
+            border: 2px solid #CFD8DC;
+            border-radius: 12px;
+            font-family: 'Quicksand', sans-serif;
+            font-weight: 600;
+            color: #455A64;
+            outline: none;
+            transition: 0.2s;
+            resize: vertical;
+            min-height: 76px;
+        }
         .campo-form input:focus, .campo-form select:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2); }
+        .campo-form textarea:focus { border-color: var(--secondary); box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.2); }
+        .campo-ubicacion-desplegable {
+            margin-bottom: 15px;
+            border: 2px dashed #CFD8DC;
+            border-radius: 12px;
+            padding: 8px 12px;
+            background: #fff;
+        }
+        .campo-ubicacion-desplegable summary {
+            cursor: pointer;
+            font-weight: 800;
+            color: #1976D2;
+            list-style: none;
+        }
+        .campo-ubicacion-desplegable summary::-webkit-details-marker { display: none; }
+        .campo-ubicacion-desplegable summary::before {
+            content: '📍 ';
+        }
+        .campo-ubicacion-desplegable[open] summary {
+            margin-bottom: 10px;
+        }
         .btn-guardar-item { background: var(--secondary); color: white; border: none; padding: 12px 20px; border-radius: 15px; font-weight: bold; font-family: 'Quicksand'; font-size: 1.1rem; cursor: pointer; width: 100%; transition: 0.2s; }
         .btn-guardar-item:hover { background: #00ACC1; transform: translateY(-2px); box-shadow: 0 5px 15px var(--btn-glow-sec); }
         .btn-cancelar-item {

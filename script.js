@@ -546,11 +546,11 @@ const firebaseConfig = {
             }
 
             return [
-                `NOMBRE DE RESTAURANTE: ${item.plato || 'Restaurante'}`,
+                `NOMBRE DE RESTAURANTE: ${item.restaurante || item.plato || 'Restaurante'}`,
                 `HORARIO DE LLEGADA: ${horaSalida}`,
                 `HORARIO DE SALIDA: ${horaLlegada}`,
                 `COMIDA: ${item.plato || 'No especificada'}`,
-                `PRECIO: ${costoBase}`
+                `PRECIO: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
             ];
         }
 
@@ -2745,8 +2745,8 @@ const firebaseConfig = {
             if (item.tipo === 'restaurante') {
                 return {
                     icono: 'utensils',
-                    titulo: item.plato || 'Restaurante',
-                    detalle: `Gasto estimado: $${item.precio || '0'}`,
+                    titulo: item.restaurante || 'Restaurante',
+                    detalle: `${item.plato ? `Plato: ${item.plato} · ` : ''}Gasto estimado: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`,
                     horario
                 };
             }
@@ -3181,8 +3181,18 @@ const firebaseConfig = {
                 `;
             } else if (tipo === 'restaurante') {
                 formHTML += `
-                    <div class="campo-form"><label>Plato o Lugar</label><input type="text" id="input-rest-plato" placeholder="Ej. Feijoada" value="${itemExistente?.plato || ''}"></div>
-                    <div class="campo-form"><label>Precio estimado ($)</label><input type="number" id="input-rest-precio" placeholder="Ej. 25000" value="${itemExistente?.precio || ''}"></div>
+                    <div class="campo-form"><label>Restaurante</label><input type="text" id="input-rest-restaurante" placeholder="Ej. Fogo de Chão" value="${itemExistente?.restaurante || ''}"></div>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="campo-form" style="flex: 2;"><label>Plato</label><input type="text" id="input-rest-plato" placeholder="Ej. Feijoada" value="${itemExistente?.plato || ''}"></div>
+                        <div class="campo-form" style="flex: 1;"><label>Costo ($)</label><input type="number" id="input-rest-costo" placeholder="Ej. 25000" value="${itemExistente?.costo ?? itemExistente?.precio ?? ''}"></div>
+                    </div>
+                    <details class="campo-ubicacion-desplegable" ${itemExistente?.ubicacion ? 'open' : ''}>
+                        <summary>Ubicación</summary>
+                        <div class="campo-form">
+                            <label>Enlace o texto (queda oculto hasta abrir)</label>
+                            <textarea id="input-rest-ubicacion" rows="3" placeholder="Pega un link de mapas, dirección o referencia">${itemExistente?.ubicacion || ''}</textarea>
+                        </div>
+                    </details>
                     <div style="display: flex; gap: 10px;">
                         <div class="campo-form" style="flex: 1;"><label>Llegada</label><input type="time" id="input-rest-llegada" value="${itemExistente?.llegada || ''}"></div>
                         <div class="campo-form" style="flex: 1;"><label>Partida</label><input type="time" id="input-rest-partida" value="${itemExistente?.partida || ''}"></div>
@@ -3261,8 +3271,10 @@ const firebaseConfig = {
                 nuevoItem.llegada = document.getElementById('input-aventura-llegada').value;
                 nuevoItem.partida = document.getElementById('input-aventura-partida').value;
             } else if (tipo === 'restaurante') {
-                nuevoItem.plato = document.getElementById('input-rest-plato').value || 'Restaurante';
-                nuevoItem.precio = document.getElementById('input-rest-precio').value || '0';
+                nuevoItem.restaurante = document.getElementById('input-rest-restaurante').value || 'Restaurante';
+                nuevoItem.plato = document.getElementById('input-rest-plato').value || 'No especificado';
+                nuevoItem.costo = document.getElementById('input-rest-costo').value || '0';
+                nuevoItem.ubicacion = document.getElementById('input-rest-ubicacion')?.value?.trim() || '';
                 nuevoItem.llegada = document.getElementById('input-rest-llegada').value;
                 nuevoItem.partida = document.getElementById('input-rest-partida').value;
             }
@@ -3329,8 +3341,10 @@ const firebaseConfig = {
                 itemActualizado.llegada = document.getElementById('input-aventura-llegada').value;
                 itemActualizado.partida = document.getElementById('input-aventura-partida').value;
             } else if (tipo === 'restaurante') {
-                itemActualizado.plato = document.getElementById('input-rest-plato').value || 'Restaurante';
-                itemActualizado.precio = document.getElementById('input-rest-precio').value || '0';
+                itemActualizado.restaurante = document.getElementById('input-rest-restaurante').value || 'Restaurante';
+                itemActualizado.plato = document.getElementById('input-rest-plato').value || 'No especificado';
+                itemActualizado.costo = document.getElementById('input-rest-costo').value || '0';
+                itemActualizado.ubicacion = document.getElementById('input-rest-ubicacion')?.value?.trim() || '';
                 itemActualizado.llegada = document.getElementById('input-rest-llegada').value;
                 itemActualizado.partida = document.getElementById('input-rest-partida').value;
             }
@@ -3393,7 +3407,7 @@ const firebaseConfig = {
                 if (item.tipo === 'viaje') { icono = 'bus'; titulo = `${item.medio || 'Micro'}`.toUpperCase(); }
                 else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = (item.hotel || 'Hospedaje').toUpperCase(); }
                 else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = (item.lugar || 'Aventura').toUpperCase(); }
-                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.plato; }
+                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.restaurante || 'Restaurante'; }
                 const detalles = obtenerResumenTarjetaItinerario(destino, item)
                     .map(linea => `<p>${linea}</p>`)
                     .join('');
@@ -3437,7 +3451,7 @@ const firebaseConfig = {
                         return `
                             <div class="item-timeline ${item.tipo}" style="margin:8px 0;" data-itinerario-item-id="${item.id}">
                                 <div class="item-header">
-                                    <h4 class="item-titulo"><i data-lucide="${item.tipo === 'viaje' ? 'bus' : item.tipo === 'hospedaje' ? 'hotel' : item.tipo === 'aventura' ? 'mountain' : 'utensils'}"></i> ${item.tipo === 'viaje' ? `${item.medio || 'Micro'}`.toUpperCase() : (item.tipo === 'hospedaje' ? (item.hotel || 'Hospedaje').toUpperCase() : (item.tipo === 'aventura' ? (item.lugar || 'Aventura').toUpperCase() : (item.plato || 'Restaurante')))}</h4>
+                                    <h4 class="item-titulo"><i data-lucide="${item.tipo === 'viaje' ? 'bus' : item.tipo === 'hospedaje' ? 'hotel' : item.tipo === 'aventura' ? 'mountain' : 'utensils'}"></i> ${item.tipo === 'viaje' ? `${item.medio || 'Micro'}`.toUpperCase() : (item.tipo === 'hospedaje' ? (item.hotel || 'Hospedaje').toUpperCase() : (item.tipo === 'aventura' ? (item.lugar || 'Aventura').toUpperCase() : (item.restaurante || 'Restaurante')))}</h4>
                                     <div class="item-header-actions">
                                         ${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}
                                     </div>
