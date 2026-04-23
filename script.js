@@ -1926,8 +1926,9 @@ const firebaseConfig = {
                             ${musicaValida ? `
                                 <div class="contenedor-iframe-musica-metal">
                                     <iframe
-                                        src="https://www.youtube.com/embed/${videoIdMusica}?rel=0&modestbranding=1"
+                                        src="https://www.youtube.com/embed/${videoIdMusica}?rel=0&modestbranding=1&playsinline=1"
                                         title="Música para la memoria"
+                                        class="iframe-musica-audio"
                                         loading="lazy"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                                         allowfullscreen>
