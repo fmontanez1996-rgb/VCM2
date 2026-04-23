@@ -549,11 +549,10 @@ const firebaseConfig = {
             }
 
             return [
-                `NOMBRE DE RESTAURANTE: ${item.restaurante || item.plato || 'Restaurante'}`,
-                `HORARIO DE LLEGADA: ${horaSalida}`,
-                `HORARIO DE SALIDA: ${horaLlegada}`,
-                `COMIDA: ${item.plato || 'No especificada'}`,
-                `PRECIO: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
+                `Llegada: ${horaSalida}`,
+                `Salida: ${horaLlegada}`,
+                `${item.plato || 'Comida'}`,
+                `Precio: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
             ];
         }
         function guardarEstadoEnFirebase(forzar = false) {
@@ -2974,9 +2973,15 @@ const firebaseConfig = {
 
                     const tarjetas = itemsDia.map(item => {
                         const meta = obtenerMetaItinerario(item, destino);
-                        const resumen = obtenerResumenTarjetaItinerario(destino, item)
-                            .map(linea => `<p>${linea}</p>`)
-                            .join('');
+                        const resumen = item.tipo === 'restaurante'
+                            ? [
+                                `${normalizarHoraItinerario(item.llegada) || 'Sin horario'} - ${normalizarHoraItinerario(item.partida) || 'Sin horario'}`,
+                                `${item.plato || 'Comida'}`,
+                                `Costo: ${formatearMonedaItinerario(item.costo ?? item.precio ?? 0)}`
+                            ].map(linea => `<p>${linea}</p>`).join('')
+                            : obtenerResumenTarjetaItinerario(destino, item)
+                                .map(linea => `<p>${linea}</p>`)
+                                .join('');
                         return `
                             <article class="tarjeta-calendario-itinerario ${item.tipo || ''}" data-itinerario-item-id="${item.id}">
                                 <div class="tarjeta-calendario-header">
@@ -3501,7 +3506,7 @@ const firebaseConfig = {
                 if (item.tipo === 'viaje') { icono = 'bus'; titulo = `${item.medio || 'Micro'}`.toUpperCase(); }
                 else if (item.tipo === 'hospedaje') { icono = 'hotel'; titulo = (item.hotel || 'Hospedaje').toUpperCase(); }
                 else if (item.tipo === 'aventura') { icono = 'mountain'; titulo = (item.lugar || 'Aventura').toUpperCase(); }
-                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = item.restaurante || 'Restaurante'; }
+                else if (item.tipo === 'restaurante') { icono = 'utensils'; titulo = (item.restaurante || 'Restaurante').toUpperCase(); }
                 const detalles = obtenerResumenTarjetaItinerario(destino, item)
                     .map(linea => `<p>${linea}</p>`)
                     .join('');
@@ -3510,10 +3515,13 @@ const firebaseConfig = {
                     : '';
                 const deshabilitarSubir = index === 0;
                 const deshabilitarBajar = index === (items.length - 1);
+                const botonUbicacion = item.tipo === 'restaurante'
+                    ? `<button class="btn-editar-item btn-icono-metal ubicacion" onclick="mostrarNotaUbicacionRestaurante('${idPais}', ${item.id})" title="Ver ubicación">📍</button>`
+                    : '';
                 timeline.innerHTML += `
                     <div class="item-timeline ${item.tipo}" data-itinerario-item-id="${item.id}"><div class="punto-timeline"></div>
                         <div class="item-header"><h4 class="item-titulo"><i data-lucide="${icono}"></i> ${titulo}</h4>
-                        <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
+                        <div class="item-header-actions">${miniaturaAventura}${dibujarBotonesOrden(item, deshabilitarSubir, deshabilitarBajar)}${botonUbicacion}<button class="btn-editar-item btn-icono-metal editar" onclick="editarItemItinerario('${idPais}', ${item.id})"><i data-lucide="pencil"></i></button><button class="btn-eliminar-item btn-icono-metal eliminar" onclick="eliminarItemItinerario('${idPais}', ${item.id})"><i data-lucide="trash-2"></i></button></div></div>
                         <div class="item-detalles">${detalles}</div>
                     </div>`;
             });
@@ -3561,6 +3569,15 @@ const firebaseConfig = {
             if (estadoVistaItinerario?.modo === 'calendario') {
                 renderizarCalendarioItinerario(idPais);
             }
+        };
+
+        window.mostrarNotaUbicacionRestaurante = function(idPais, idItem) {
+            const destino = destinosSonados[idPais];
+            if (!destino || !Array.isArray(destino.itinerario)) return;
+            const item = destino.itinerario.find(i => Number(i.id) === Number(idItem));
+            if (!item || item.tipo !== 'restaurante') return;
+            const ubicacion = String(item.ubicacion || '').trim();
+            alert(ubicacion ? `Ubicación guardada:\n${ubicacion}` : 'Este restaurante no tiene una ubicación guardada.');
         };
 
         window.guardarPortadaItinerario = function(idPais) {
