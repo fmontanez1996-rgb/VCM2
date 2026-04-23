@@ -2162,6 +2162,81 @@ const firebaseConfig = {
             document.getElementById('menu-contextual-memoria')?.remove();
         }
 
+        function cerrarModalEditarMemoria() {
+            document.getElementById('modal-editar-memoria')?.remove();
+        }
+
+        function abrirModalEditarMemoriaDrive(album, onGuardar) {
+            cerrarModalEditarMemoria();
+
+            const modal = document.createElement('div');
+            modal.id = 'modal-editar-memoria';
+            modal.className = 'modal-editar-memoria-fondo';
+            modal.innerHTML = `
+                <div class="modal-editar-memoria-contenido" role="dialog" aria-modal="true" aria-label="Editar memoria">
+                    <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
+                    <h3 class="titulo-modal-memoria">Editar memoria</h3>
+                    <form id="form-editar-memoria">
+                        <label class="label-modal-memoria" for="editar-memoria-nombre">Nombre:</label>
+                        <input type="text" id="editar-memoria-nombre" class="input-modal-memoria" value="${(album?.nombre || '').replace(/"/g, '&quot;')}" required>
+
+                        <label class="label-modal-memoria" for="editar-memoria-url">URL:</label>
+                        <input type="url" id="editar-memoria-url" class="input-modal-memoria" placeholder="https://..." value="${(album?.portada || '').replace(/"/g, '&quot;')}">
+
+                        <label class="label-modal-memoria" for="editar-memoria-archivo">O Archivo:</label>
+                        <input type="file" id="editar-memoria-archivo" class="input-modal-memoria input-modal-archivo" accept="image/*">
+
+                        <div class="acciones-modal-memoria">
+                            <button type="button" class="btn-modal-memoria secundario">Cancelar</button>
+                            <button type="submit" class="btn-modal-memoria primario">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            const btnCerrar = modal.querySelector('.btn-cerrar-modal-memoria');
+            const btnCancelar = modal.querySelector('.btn-modal-memoria.secundario');
+            const form = modal.querySelector('#form-editar-memoria');
+            const inputNombre = modal.querySelector('#editar-memoria-nombre');
+            const inputUrl = modal.querySelector('#editar-memoria-url');
+            const inputArchivo = modal.querySelector('#editar-memoria-archivo');
+
+            btnCerrar.addEventListener('click', cerrarModalEditarMemoria);
+            btnCancelar.addEventListener('click', cerrarModalEditarMemoria);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModalEditarMemoria();
+            });
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const nombre = inputNombre.value.trim();
+                if (!nombre) {
+                    alert("El nombre no puede estar vacío.");
+                    inputNombre.focus();
+                    return;
+                }
+
+                let portadaFinal = album?.portada || "";
+
+                try {
+                    if (inputArchivo.files?.[0]) {
+                        portadaFinal = await leerArchivoComoDataUrl(inputArchivo.files[0]);
+                    } else {
+                        portadaFinal = normalizarPortadaUrl(inputUrl.value.trim());
+                    }
+                } catch (error) {
+                    alert("No se pudo leer el archivo seleccionado.");
+                    return;
+                }
+
+                onGuardar({ nombre, portada: portadaFinal });
+                cerrarModalEditarMemoria();
+            });
+        }
+
         window.abrirMenuMemoria = function(event, idPais, idProvincia = null, index, tipo) {
             event.preventDefault();
             event.stopPropagation();
@@ -2198,15 +2273,17 @@ const firebaseConfig = {
             if (tipo === 'drive') {
                 const album = objDestino.albumes[index];
                 if (!album) return;
-                const nuevoNombre = prompt('Editar nombre de la memoria:', album.nombre || '');
-                if (nuevoNombre === null) return;
-                const nuevoEnlace = prompt('Editar enlace de Drive:', resolverUrlDriveAlbum(album));
-                if (nuevoEnlace === null) return;
-                if (!nuevoEnlace.includes('drive.google.com')) { alert("Link no válido."); return; }
+                abrirModalEditarMemoriaDrive(album, ({ nombre, portada }) => {
+                    album.nombre = nombre || album.nombre || 'Sin nombre';
+                    album.portada = portada || "";
 
-                album.nombre = nuevoNombre.trim() || album.nombre || 'Sin nombre';
-                album.url = nuevoEnlace.trim();
-                album.driveUrl = nuevoEnlace.trim();
+                    if (estadoVistaRecuerdos.submodo === 'nuevo') {
+                        actualizarVistaAlbumes(idPais, idProvincia, estadoVistaRecuerdos.seccionNuevo || 'drive');
+                    } else {
+                        actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
+                    }
+                });
+                return;
             } else {
                 const historia = objDestino.historias[index];
                 if (!historia) return;
