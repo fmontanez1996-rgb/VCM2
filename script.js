@@ -1969,6 +1969,7 @@ const firebaseConfig = {
             const paramProv = idProvincia ? `'${idProvincia}'` : `null`;
             const nombreCiudad = idProvincia ? objDestino.nombre : nombreTitulo;
             const nombrePais = idProvincia ? pais.nombre : '';
+            const nombreLeyendaMusica = (idProvincia ? objDestino.nombre : pais.nombre || nombreTitulo).trim();
             const bloqueNuevo = submodoActual === 'nuevo' ? `
                 <div style="display: flex; gap: 10px; margin-bottom: 20px; background: #f1f5f9; padding: 5px; border-radius: 12px;">
                     <button id="tab-drive" onclick="cambiarSeccionRecuerdos('drive', '${idPais}', ${paramProv})" style="flex:1; padding:10px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; background: var(--secondary); color:white;">
@@ -2034,10 +2035,13 @@ const firebaseConfig = {
                             ${musicaValida ? `
                                 <div class="player-musica-oculto-metal">
                                     <div class="barra-controles-metal">
-                                        <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')">Play</button>
-                                        <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')">Pausa</button>
-                                        <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')">Reiniciar</button>
-                                        <button type="button" class="btn-metal-edit" onclick="window.abrirEditorUrlMusica('${idPais}', ${paramProv})">Editar</button>
+                                        <span class="leyenda-musica-metal">${nombreLeyendaMusica} se escuchaba así:</span>
+                                        <div class="acciones-musica-metal">
+                                            <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')" title="Play" aria-label="Play">▶️</button>
+                                            <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')" title="Pausa" aria-label="Pausa">⏸️</button>
+                                            <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')" title="Reiniciar" aria-label="Reiniciar">🔁</button>
+                                            <button type="button" class="btn-metal-edit" onclick="window.abrirEditorUrlMusica('${idPais}', ${paramProv})" title="Editar" aria-label="Editar">✏️</button>
+                                        </div>
                                     </div>
                                     <iframe
                                         id="${idPlayerMusica}"
