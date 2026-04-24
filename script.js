@@ -2696,8 +2696,14 @@ const firebaseConfig = {
             const urlDrive = resolverUrlDriveAlbum(album);
             const titulo = album?.nombre || "Carpeta compartida";
 
-            if (esMemoriaFoto(album, urlDrive)) {
+            const tipoMultimedia = resolverTipoMultimedia(album, urlDrive);
+            if (tipoMultimedia === 'imagen') {
                 mostrarModalVistaImagen(album?.portada, titulo, urlDrive);
+                return;
+            }
+
+            if (tipoMultimedia === 'video') {
+                mostrarModalVistaVideo(urlDrive, titulo);
                 return;
             }
 
@@ -2708,20 +2714,25 @@ const firebaseConfig = {
             mostrarModalVistaDrive(urlDrive, titulo);
         };
 
-        function esMemoriaFoto(album, urlDrive = "") {
+        function resolverTipoMultimedia(album, urlDrive = "") {
             const portada = String(album?.portada || "").trim();
-            if (!portada) return false;
-
             const enlace = String(urlDrive || "").trim();
-            if (!enlace) return true;
+            const extensionVideo = /\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/i;
+            const extensionImagen = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i;
+
+            if (extensionVideo.test(enlace) || extensionVideo.test(portada)) return 'video';
+            if (!portada) return null;
+            if (!enlace) return 'imagen';
 
             const enlaceEsCarpetaDrive = /drive\.google\.com\/.*\/folders\//i.test(enlace) || /embeddedfolderview/i.test(enlace);
-            if (enlaceEsCarpetaDrive) return false;
+            if (enlaceEsCarpetaDrive) return null;
 
-            const enlacePareceImagen = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i.test(enlace) || /^data:image\//i.test(enlace);
-            const portadaPareceImagen = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i.test(portada) || /^data:image\//i.test(portada);
+            const enlacePareceImagen = extensionImagen.test(enlace) || /^data:image\//i.test(enlace);
+            const portadaPareceImagen = extensionImagen.test(portada) || /^data:image\//i.test(portada);
 
-            return enlacePareceImagen || portadaPareceImagen || /drive\.google\.com\/file\/d\//i.test(enlace);
+            if (enlacePareceImagen || portadaPareceImagen) return 'imagen';
+            if (/drive\.google\.com\/file\/d\//i.test(enlace) && !/\/preview/i.test(enlace)) return 'imagen';
+            return null;
         }
 
         function cerrarModalVistaDrive() {
@@ -2829,6 +2840,43 @@ const firebaseConfig = {
             modal.querySelector('#btn-imagen-cerrar')?.addEventListener('click', cerrarModalVistaImagen);
             modal.querySelector('#btn-imagen-externo')?.addEventListener('click', () => window.open(enlaceOriginal, '_blank', 'noopener,noreferrer'));
 
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModalVistaImagen();
+            });
+        }
+
+        function mostrarModalVistaVideo(urlVideo, titulo = "Video") {
+            cerrarModalVistaImagen();
+
+            if (!urlVideo) {
+                alert("No se encontró un video para mostrar.");
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'modal-vista-imagen';
+            modal.className = 'modal-vista-imagen-fondo';
+            modal.innerHTML = `
+                <div class="modal-vista-imagen-contenido" role="dialog" aria-modal="true" aria-label="Reproducción de video">
+                    <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
+                    <video class="video-vista-completa" controls autoplay playsinline>
+                        <source src="${urlVideo}">
+                        Tu navegador no puede reproducir este video.
+                    </video>
+                    <div class="modal-vista-imagen-acciones">
+                        <button type="button" class="btn-modal-memoria primario" id="btn-video-cerrar">Cerrar</button>
+                        <button type="button" class="btn-modal-memoria secundario" id="btn-video-externo">Abrir original</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            document.body.classList.add('sin-scroll');
+            document.addEventListener('keydown', manejarEscapeModalImagen);
+
+            modal.querySelector('.btn-cerrar-modal-memoria')?.addEventListener('click', cerrarModalVistaImagen);
+            modal.querySelector('#btn-video-cerrar')?.addEventListener('click', cerrarModalVistaImagen);
+            modal.querySelector('#btn-video-externo')?.addEventListener('click', () => window.open(urlVideo, '_blank', 'noopener,noreferrer'));
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) cerrarModalVistaImagen();
             });
