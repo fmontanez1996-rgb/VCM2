@@ -2690,31 +2690,122 @@ const firebaseConfig = {
             document.body.appendChild(modal);
         };
 
-        window.abrirMemoriaDrive = function(idPais, idProvincia = null, index) {
-            const destino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
-            const album = destino?.albumes?.[index];
-            const urlDrive = resolverUrlDriveAlbum(album);
-            if (!urlDrive) {
-                alert("No se encontró un enlace válido para esta memoria.");
+        let estadoReproductorMemorias = null;
+        let temporizadorReproduccionMemorias = null;
+
+        function limpiarTemporizadorReproductor() {
+            if (temporizadorReproduccionMemorias) {
+                clearTimeout(temporizadorReproduccionMemorias);
+                temporizadorReproduccionMemorias = null;
+            }
+        }
+
+        function inferirTipoMedia(url = "") {
+            const limpia = String(url || "").toLowerCase();
+            if (!limpia) return "imagen";
+            if (/\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/.test(limpia)) return "video";
+            if (/\.(jpg|jpeg|png|webp|gif|bmp|svg)(\?|#|$)/.test(limpia)) return "imagen";
+            return "imagen";
+        }
+
+        function obtenerFuenteReproductor(album = {}) {
+            const portada = typeof album.portada === "string" ? album.portada.trim() : "";
+            const driveUrl = resolverUrlDriveAlbum(album);
+            if (portada) return { src: portada, tipo: inferirTipoMedia(portada) };
+            if (driveUrl) return { src: driveUrl, tipo: inferirTipoMedia(driveUrl) };
+            return { src: "", tipo: "imagen" };
+        }
+
+        function actualizarSlideReproductor() {
+            const modal = document.getElementById("modal-vista-drive");
+            if (!modal || !estadoReproductorMemorias) return;
+            const media = estadoReproductorMemorias.items[estadoReproductorMemorias.index];
+            if (!media) return;
+
+            limpiarTemporizadorReproductor();
+
+            const visor = modal.querySelector("#reproductor-memoria-visor");
+            const titulo = modal.querySelector("#reproductor-memoria-titulo");
+            const contador = modal.querySelector("#reproductor-memoria-contador");
+            const btnRecordar = modal.querySelector("#btn-reproductor-recordar");
+            if (!visor || !titulo || !contador || !btnRecordar) return;
+
+            titulo.textContent = media.nombre || "Recuerdo";
+            contador.textContent = `${estadoReproductorMemorias.index + 1} / ${estadoReproductorMemorias.items.length}`;
+            btnRecordar.textContent = estadoReproductorMemorias.auto ? "DETENER" : "RECORDAR";
+            btnRecordar.classList.toggle("activo", !!estadoReproductorMemorias.auto);
+
+            if (!media.src) {
+                visor.innerHTML = `<div class="mensaje-vista-drive">No hay una imagen o video disponible para este recuerdo.</div>`;
                 return;
             }
-            mostrarModalVistaDrive(urlDrive, album?.nombre || "Carpeta compartida");
+
+            if (media.tipo === "video") {
+                visor.innerHTML = `<video id="reproductor-video" class="media-vista-drive" src="${media.src}" controls autoplay playsinline></video>`;
+                const video = visor.querySelector("#reproductor-video");
+                if (video && estadoReproductorMemorias.auto) {
+                    video.addEventListener("ended", () => avanzarReproductor(1, true), { once: true });
+                }
+            } else {
+                visor.innerHTML = `<img class="media-vista-drive" src="${media.src}" alt="${media.nombre || "Recuerdo"}" loading="eager">`;
+                if (estadoReproductorMemorias.auto) {
+                    temporizadorReproduccionMemorias = setTimeout(() => avanzarReproductor(1, true), 5000);
+                }
+            }
+        }
+
+        function avanzarReproductor(paso = 1, cerrarAlFinal = false) {
+            if (!estadoReproductorMemorias) return;
+            const total = estadoReproductorMemorias.items.length;
+            if (!total) return;
+
+            const siguiente = estadoReproductorMemorias.index + paso;
+            if (cerrarAlFinal && (siguiente < 0 || siguiente >= total)) {
+                cerrarModalVistaDrive();
+                return;
+            }
+            estadoReproductorMemorias.index = (siguiente + total) % total;
+            actualizarSlideReproductor();
+        }
+
+        window.abrirMemoriaDrive = function(idPais, idProvincia = null, index) {
+            const destino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
+            const albumes = Array.isArray(destino?.albumes) ? destino.albumes : [];
+            if (!albumes.length) return;
+
+            const items = albumes.map((album) => {
+                const fuente = obtenerFuenteReproductor(album);
+                return {
+                    nombre: album?.nombre || "Sin nombre",
+                    src: fuente.src,
+                    tipo: fuente.tipo
+                };
+            });
+
+            estadoReproductorMemorias = {
+                items,
+                index: Math.max(0, Math.min(index, items.length - 1)),
+                auto: false
+            };
+            mostrarModalVistaDrive("Recuerdos");
         };
 
         function cerrarModalVistaDrive() {
             document.getElementById('modal-vista-drive')?.remove();
             document.body.classList.remove('sin-scroll');
             document.removeEventListener('keydown', manejarEscapeModalDrive);
+            limpiarTemporizadorReproductor();
+            estadoReproductorMemorias = null;
         }
 
         function manejarEscapeModalDrive(event) {
             if (event.key === 'Escape') cerrarModalVistaDrive();
+            if (event.key === 'ArrowRight') avanzarReproductor(1);
+            if (event.key === 'ArrowLeft') avanzarReproductor(-1);
         }
 
-        function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
+        function mostrarModalVistaDrive(titulo = "Recuerdos") {
             cerrarModalVistaDrive();
-
-            const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
             const modal = document.createElement('div');
             modal.id = 'modal-vista-drive';
             modal.className = 'modal-vista-drive-fondo';
@@ -2723,27 +2814,17 @@ const firebaseConfig = {
                 <div class="modal-vista-drive-contenido" role="dialog" aria-modal="true" aria-label="Vista previa de Drive">
                     <div class="modal-vista-drive-header">
                         <h3 class="modal-vista-drive-titulo">${titulo}</h3>
+                        <span id="reproductor-memoria-contador" class="contador-vista-drive"></span>
                         <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
                     </div>
                     <div class="modal-vista-drive-cuerpo">
-                        ${urlEmbebida ? `
-                            <iframe
-                                class="iframe-vista-drive"
-                                src="${urlEmbebida}"
-                                title="Contenido compartido de Google Drive"
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"
-                                allow="clipboard-write">
-                            </iframe>
-                        ` : `
-                            <div class="mensaje-vista-drive">
-                                <i data-lucide="alert-circle"></i>
-                                <p>No pudimos previsualizar este enlace dentro de la app.</p>
-                            </div>
-                        `}
+                        <div id="reproductor-memoria-visor" class="reproductor-memoria-visor"></div>
+                        <button type="button" class="btn-nav-media izquierda" id="btn-reproductor-anterior" aria-label="Anterior">◀</button>
+                        <button type="button" class="btn-nav-media derecha" id="btn-reproductor-siguiente" aria-label="Siguiente">▶</button>
                     </div>
                     <div class="modal-vista-drive-acciones">
-                        <button type="button" class="btn-modal-memoria secundario" id="btn-drive-externo">Abrir en pestaña</button>
+                        <span class="titulo-slide-drive" id="reproductor-memoria-titulo"></span>
+                        <button type="button" class="btn-modal-memoria secundario" id="btn-reproductor-recordar">RECORDAR</button>
                         <button type="button" class="btn-modal-memoria primario" id="btn-drive-cerrar">Cerrar</button>
                     </div>
                 </div>
@@ -2756,14 +2837,23 @@ const firebaseConfig = {
 
             const btnCerrarSuperior = modal.querySelector('.btn-cerrar-modal-memoria');
             const btnCerrar = modal.querySelector('#btn-drive-cerrar');
-            const btnExterno = modal.querySelector('#btn-drive-externo');
+            const btnAnterior = modal.querySelector('#btn-reproductor-anterior');
+            const btnSiguiente = modal.querySelector('#btn-reproductor-siguiente');
+            const btnRecordar = modal.querySelector('#btn-reproductor-recordar');
 
             btnCerrarSuperior?.addEventListener('click', cerrarModalVistaDrive);
             btnCerrar?.addEventListener('click', cerrarModalVistaDrive);
-            btnExterno?.addEventListener('click', () => window.open(urlDrive, '_blank', 'noopener,noreferrer'));
+            btnAnterior?.addEventListener('click', () => avanzarReproductor(-1));
+            btnSiguiente?.addEventListener('click', () => avanzarReproductor(1));
+            btnRecordar?.addEventListener('click', () => {
+                if (!estadoReproductorMemorias) return;
+                estadoReproductorMemorias.auto = !estadoReproductorMemorias.auto;
+                actualizarSlideReproductor();
+            });
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) cerrarModalVistaDrive();
             });
+            actualizarSlideReproductor();
         }
 
         function cerrarMenuMemoria() {
