@@ -1047,13 +1047,16 @@
         }
 
         .leyenda-musica-metal {
-            color: #eef5ff;
-            font-family: 'Baloo 2', sans-serif;
-            font-size: 0.92rem;
-            font-weight: 800;
-            letter-spacing: 0.02em;
+            color: #1a2433;
+            font-family: 'Fredoka', 'Baloo 2', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.035em;
             text-transform: uppercase;
-            text-shadow: 0 1px 2px rgba(5, 10, 19, 0.85);
+            -webkit-text-stroke: 0.45px rgba(255, 255, 255, 0.75);
+            text-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.86),
+                0 2px 3px rgba(5, 15, 28, 0.4);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1085,8 +1088,9 @@
             --btn-mid: #94a3b8;
             --btn-base: #334155;
             --btn-glow: rgba(148, 163, 184, 0.45);
+            --glyph-color: #e7edf5;
             border: 1px solid rgba(255, 255, 255, 0.32);
-            color: #f8fbff;
+            color: var(--glyph-color);
             font-weight: 800;
             font-size: 1rem;
             line-height: 1;
@@ -1111,30 +1115,46 @@
                 0 5px 11px var(--btn-glow);
             transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
         }
+        .metal-glyph {
+            font-family: 'Trebuchet MS', 'Segoe UI Symbol', sans-serif;
+            font-size: 1.12rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.03em;
+            color: var(--glyph-color);
+            text-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.5),
+                0 -1px 1px rgba(7, 15, 26, 0.6),
+                0 0 1px rgba(255, 255, 255, 0.36);
+            filter: saturate(0.65);
+        }
         .btn-metal-play {
             --btn-top: #8df4b8;
             --btn-mid: #26c76a;
             --btn-base: #117336;
             --btn-glow: rgba(44, 199, 106, 0.45);
+            --glyph-color: #c6f4d6;
         }
         .btn-metal-pause {
             --btn-top: #ffc2be;
             --btn-mid: #f04943;
             --btn-base: #8c1915;
             --btn-glow: rgba(240, 73, 67, 0.45);
+            --glyph-color: #ffd2ce;
         }
         .btn-metal-restart {
             --btn-top: #badaff;
             --btn-mid: #3f86ff;
             --btn-base: #173f97;
             --btn-glow: rgba(63, 134, 255, 0.45);
+            --glyph-color: #d0e5ff;
         }
         .btn-metal-edit {
             --btn-top: #fff7bf;
             --btn-mid: #ffd74c;
             --btn-base: #a06b00;
             --btn-glow: rgba(255, 215, 76, 0.48);
-            color: #fff8dc;
+            --glyph-color: #fff2c5;
         }
         .btn-metal-play:hover,
         .btn-metal-pause:hover,
