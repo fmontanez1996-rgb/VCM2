@@ -329,7 +329,10 @@ const firebaseConfig = {
         }
 
         function aplicarEstadoRemoto(estado) {
+            paisesVisitados = estado?.paisesVisitados || {};
+            provinciasVisitadas = estado?.provinciasVisitadas || {};
             destinosSonados = estado?.destinosSonados || {};
+            normalizarColeccionMemorias();
             normalizarDestinosSonados();
             cargarMapa();
 
