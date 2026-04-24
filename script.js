@@ -2360,7 +2360,25 @@ const firebaseConfig = {
                 }
             }
             lucide.createIcons();
+            ajustarTitulosMemoria();
         };
+
+        function ajustarTitulosMemoria() {
+            const titulos = document.querySelectorAll('#lista-memorias-guardadas .titulo-memoria');
+            titulos.forEach((titulo) => {
+                titulo.style.fontSize = '';
+                let tamano = parseFloat(window.getComputedStyle(titulo).fontSize);
+                const minTamano = 12;
+                while (titulo.scrollHeight > titulo.clientHeight + 1 && tamano > minTamano) {
+                    tamano -= 0.5;
+                    titulo.style.fontSize = `${tamano}px`;
+                }
+            });
+        }
+
+        window.addEventListener('resize', () => {
+            ajustarTitulosMemoria();
+        });
 
         function construirTarjetaMemoria(tipo, item, contexto) {
             const { idPais, idProvincia, index } = contexto;
