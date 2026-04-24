@@ -2580,6 +2580,42 @@ const firebaseConfig = {
             return leerArchivoComoDataUrl(archivo);
         };
 
+        function mostrarToastExito(mensaje) {
+            const toastAnterior = document.getElementById('toast-exito-recuerdos');
+            if (toastAnterior) toastAnterior.remove();
+
+            const toast = document.createElement('div');
+            toast.id = 'toast-exito-recuerdos';
+            toast.textContent = mensaje;
+            toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: #1f7a4d;
+                color: #fff;
+                padding: 10px 14px;
+                border-radius: 10px;
+                box-shadow: 0 8px 22px rgba(0,0,0,0.2);
+                z-index: 1200;
+                font-weight: 600;
+                opacity: 0;
+                transform: translateY(8px);
+                transition: opacity 0.18s ease, transform 0.18s ease;
+            `;
+
+            document.body.appendChild(toast);
+            requestAnimationFrame(() => {
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+            });
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(8px)';
+                setTimeout(() => toast.remove(), 200);
+            }, 1800);
+        }
+
         window.agregarHistoria = async function(idPais, idProvincia = null) {
             const titulo = document.getElementById('titulo-historia').value.trim();
             const texto = document.getElementById('texto-historia').value.trim();
@@ -2596,7 +2632,9 @@ const firebaseConfig = {
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             objDestino.historias.push({ titulo, img, texto, fecha: new Date().toLocaleDateString() });
             registrarCambioLocal(true);
-            cambiarSeccionRecuerdos('historias', idPais, idProvincia);
+            estadoVistaRecuerdos.submodo = 'ver';
+            mostrarToastExito('Historia guardada con éxito.');
+            window.abrirAlbumDetalle(idPais, idProvincia, 'ver');
         };
 
         window.leerHistoria = function(idPais, idProvincia = null, index) {
@@ -2925,7 +2963,9 @@ const firebaseConfig = {
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             objDestino.albumes.push({ nombre, url, driveUrl: url, portada });
             registrarCambioLocal(true);
-            actualizarVistaAlbumes(idPais, idProvincia, 'drive');
+            estadoVistaRecuerdos.submodo = 'ver';
+            mostrarToastExito('Memoria de Drive guardada con éxito.');
+            window.abrirAlbumDetalle(idPais, idProvincia, 'ver');
         };
 
         // Redirigimos la función huérfana para evitar errores con código viejo que tenías debajo
