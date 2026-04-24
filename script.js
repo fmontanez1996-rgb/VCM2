@@ -733,10 +733,10 @@ const firebaseConfig = {
             ];
         }
         function guardarEstadoEnFirebase(forzar = false) {
-            if (!firebaseDb || !rutaEstadoFirebase) return;
+            if (!firebaseDb || !rutaEstadoFirebase) return Promise.resolve(false);
             if (!estadoInicialSincronizado) {
                 hayCambiosPendientesDeSincronizar = true;
-                return;
+                return Promise.resolve(false);
             }
 
             normalizarColeccionMemorias();
@@ -744,20 +744,22 @@ const firebaseConfig = {
             const bytesEstado = estimarBytesEstado(estado);
             if (bytesEstado > LIMITE_ESTADO_FIREBASE_BYTES) {
                 console.error(`Estado demasiado grande para Firebase (${bytesEstado} bytes). Reduce imágenes o historias.`);
-                return;
+                return Promise.resolve(false);
             }
             const huellaActual = calcularHuellaEstado(estado);
-            if (!forzar && huellaActual === ultimaHuellaSincronizada) return;
+            if (!forzar && huellaActual === ultimaHuellaSincronizada) return Promise.resolve(true);
             sincronizacionLocalEnCurso = true;
             hayCambiosPendientesDeSincronizar = false;
 
-            firebaseDb.ref(rutaEstadoFirebase).set(estado)
+            return firebaseDb.ref(rutaEstadoFirebase).set(estado)
                 .then(() => {
                     ultimaHuellaSincronizada = huellaActual;
+                    return true;
                 })
                 .catch((error) => {
                     console.error("No se pudo guardar en Firebase:", error);
                     hayCambiosPendientesDeSincronizar = true;
+                    return false;
                 });
         }
 
@@ -2831,6 +2833,7 @@ const firebaseConfig = {
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             objDestino.albumes.push({ nombre, url, driveUrl: url, portada });
             registrarCambioLocal(true);
+            await guardarEstadoEnFirebase(true);
             actualizarVistaAlbumes(idPais, idProvincia, 'drive');
         };
 
