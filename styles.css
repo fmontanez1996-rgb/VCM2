@@ -43,25 +43,15 @@
 
         .logo-titulo { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--primary); margin-bottom: 30px; }
         .logo-titulo h1 {
-            font-size: 2rem;
+            font-size: 1.7rem;
             margin: 0;
             font-weight: 800;
             text-align: center;
             font-family: 'Baloo 2', cursive;
-            color: transparent;
-            background:
-                linear-gradient(140deg, #ffffff 8%, #fef5c2 22%, #f8d47a 38%, #fff6d9 52%, #e4edf4 70%, #9fb1c0 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-stroke: 1.8px rgba(255, 143, 199, 0.95);
-            text-shadow:
-                0 1px 0 rgba(255, 255, 255, 0.85),
-                0 3px 0 rgba(227, 117, 185, 0.72),
-                0 6px 0 rgba(117, 35, 88, 0.52),
-                0 10px 20px rgba(5, 18, 34, 0.65),
-                0 0 18px rgba(255, 216, 146, 0.55);
-            letter-spacing: 0.045em;
-            filter: drop-shadow(0 0 8px rgba(255, 226, 168, 0.4));
+            color: var(--titulo-relleno);
+            -webkit-text-stroke: 2px var(--titulo-borde);
+            text-shadow: 3px 3px 0 rgba(255, 105, 180, 0.28);
+            letter-spacing: 0.03em;
         }
         .icono-magia { color: #FFCA28; fill: #FFE082; }
 
@@ -1616,7 +1606,6 @@
             flex: 1;
             min-height: 280px;
             padding: 12px 14px 10px;
-            position: relative;
         }
         .iframe-vista-drive {
             width: 100%;
@@ -1625,45 +1614,6 @@
             border-radius: 12px;
             background: #fff;
             box-shadow: inset 0 0 0 1px rgba(66, 143, 191, 0.3);
-        }
-        .reproductor-memoria-visor {
-            height: 100%;
-            border-radius: 14px;
-            overflow: hidden;
-            background: #0b1320;
-            box-shadow: inset 0 0 0 1px rgba(127, 184, 220, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .media-vista-drive {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #0b1320;
-        }
-        .btn-nav-media {
-            position: absolute;
-            bottom: 14px;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 2px solid rgba(179, 218, 242, 0.95);
-            background: rgba(12, 41, 71, 0.82);
-            color: #e7f6ff;
-            font-size: 1.05rem;
-            font-weight: 800;
-            cursor: pointer;
-            z-index: 1;
-        }
-        .btn-nav-media.izquierda { left: 22px; }
-        .btn-nav-media.derecha { right: 22px; }
-        .contador-vista-drive {
-            margin-left: auto;
-            margin-right: 40px;
-            color: #3c6784;
-            font-weight: 800;
-            font-size: 0.92rem;
         }
         .mensaje-vista-drive {
             height: 100%;
@@ -1682,24 +1632,9 @@
         }
         .modal-vista-drive-acciones {
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
+            justify-content: flex-end;
             gap: 10px;
             padding: 0 16px 14px;
-        }
-        .titulo-slide-drive {
-            color: #184968;
-            font-weight: 800;
-            font-size: 1rem;
-            max-width: 56%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        #btn-reproductor-recordar.activo {
-            background: linear-gradient(180deg, #ffc8de 0%, #ff7eb4 100%);
-            color: #7a093e;
         }
         .icono-mapa-destino {
             color: #ffeaa0;
