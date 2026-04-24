@@ -2694,12 +2694,35 @@ const firebaseConfig = {
             const destino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             const album = destino?.albumes?.[index];
             const urlDrive = resolverUrlDriveAlbum(album);
+            const titulo = album?.nombre || "Carpeta compartida";
+
+            if (esMemoriaFoto(album, urlDrive)) {
+                mostrarModalVistaImagen(album?.portada, titulo, urlDrive);
+                return;
+            }
+
             if (!urlDrive) {
                 alert("No se encontró un enlace válido para esta memoria.");
                 return;
             }
-            mostrarModalVistaDrive(urlDrive, album?.nombre || "Carpeta compartida");
+            mostrarModalVistaDrive(urlDrive, titulo);
         };
+
+        function esMemoriaFoto(album, urlDrive = "") {
+            const portada = String(album?.portada || "").trim();
+            if (!portada) return false;
+
+            const enlace = String(urlDrive || "").trim();
+            if (!enlace) return true;
+
+            const enlaceEsCarpetaDrive = /drive\.google\.com\/.*\/folders\//i.test(enlace) || /embeddedfolderview/i.test(enlace);
+            if (enlaceEsCarpetaDrive) return false;
+
+            const enlacePareceImagen = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i.test(enlace) || /^data:image\//i.test(enlace);
+            const portadaPareceImagen = /\.(avif|gif|jpe?g|png|svg|webp)(\?|#|$)/i.test(portada) || /^data:image\//i.test(portada);
+
+            return enlacePareceImagen || portadaPareceImagen || /drive\.google\.com\/file\/d\//i.test(enlace);
+        }
 
         function cerrarModalVistaDrive() {
             document.getElementById('modal-vista-drive')?.remove();
@@ -2763,6 +2786,51 @@ const firebaseConfig = {
             btnExterno?.addEventListener('click', () => window.open(urlDrive, '_blank', 'noopener,noreferrer'));
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) cerrarModalVistaDrive();
+            });
+        }
+
+        function cerrarModalVistaImagen() {
+            document.getElementById('modal-vista-imagen')?.remove();
+            document.body.classList.remove('sin-scroll');
+            document.removeEventListener('keydown', manejarEscapeModalImagen);
+        }
+
+        function manejarEscapeModalImagen(event) {
+            if (event.key === 'Escape') cerrarModalVistaImagen();
+        }
+
+        function mostrarModalVistaImagen(urlImagen, titulo = "Foto", enlaceOriginal = "") {
+            cerrarModalVistaImagen();
+
+            if (!urlImagen) {
+                alert("No se encontró una imagen para mostrar.");
+                return;
+            }
+
+            const modal = document.createElement('div');
+            modal.id = 'modal-vista-imagen';
+            modal.className = 'modal-vista-imagen-fondo';
+            modal.innerHTML = `
+                <div class="modal-vista-imagen-contenido" role="dialog" aria-modal="true" aria-label="Vista completa de imagen">
+                    <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
+                    <img class="imagen-vista-completa" src="${urlImagen}" alt="${titulo}">
+                    <div class="modal-vista-imagen-acciones">
+                        <button type="button" class="btn-modal-memoria primario" id="btn-imagen-cerrar">Cerrar</button>
+                        ${enlaceOriginal ? `<button type="button" class="btn-modal-memoria secundario" id="btn-imagen-externo">Abrir original</button>` : ""}
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            document.body.classList.add('sin-scroll');
+            document.addEventListener('keydown', manejarEscapeModalImagen);
+
+            modal.querySelector('.btn-cerrar-modal-memoria')?.addEventListener('click', cerrarModalVistaImagen);
+            modal.querySelector('#btn-imagen-cerrar')?.addEventListener('click', cerrarModalVistaImagen);
+            modal.querySelector('#btn-imagen-externo')?.addEventListener('click', () => window.open(enlaceOriginal, '_blank', 'noopener,noreferrer'));
+
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModalVistaImagen();
             });
         }
 
