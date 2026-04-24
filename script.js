@@ -135,42 +135,13 @@ const firebaseConfig = {
         }
         const ESTADOS_PROVINCIAS_URL = "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson";
         function obtenerEstadoActual() {
+            normalizarColeccionMemorias();
             return {
-                paisesVisitados: obtenerPaisesVisitadosSinRecuerdos(),
-                provinciasVisitadas: obtenerProvinciasVisitadasSinRecuerdos(),
+                paisesVisitados,
+                provinciasVisitadas,
                 destinosSonados,
                 actualizadoEn: new Date().toISOString()
             };
-        }
-
-        function limpiarCamposRecuerdosDestino(destino = {}) {
-            if (!destino || typeof destino !== "object") return {};
-            const copia = { ...destino };
-            delete copia.albumes;
-            delete copia.historias;
-            delete copia.drives;
-            delete copia.notas;
-            delete copia.musica;
-            delete copia.portadaUrl;
-            return copia;
-        }
-
-        function obtenerPaisesVisitadosSinRecuerdos() {
-            return Object.entries(paisesVisitados || {}).reduce((acumulado, [idPais, destino]) => {
-                acumulado[idPais] = limpiarCamposRecuerdosDestino(destino);
-                return acumulado;
-            }, {});
-        }
-
-        function obtenerProvinciasVisitadasSinRecuerdos() {
-            return Object.entries(provinciasVisitadas || {}).reduce((acumulado, [idPais, provincias]) => {
-                if (!provincias || typeof provincias !== "object") return acumulado;
-                acumulado[idPais] = Object.entries(provincias).reduce((acumuladoProvincias, [idProvincia, destino]) => {
-                    acumuladoProvincias[idProvincia] = limpiarCamposRecuerdosDestino(destino);
-                    return acumuladoProvincias;
-                }, {});
-                return acumulado;
-            }, {});
         }
 
         function contarMemoriasDestino(destino) {
