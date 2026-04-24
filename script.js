@@ -21,6 +21,7 @@ const firebaseConfig = {
         let estadoInicialSincronizado = false;
         let ultimaHuellaSincronizada = "";
         let sincronizacionLocalEnCurso = false;
+        let hayCambiosPendientesDeSincronizar = false;
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
         let estadoEdicionPortadaItinerario = {};
@@ -705,7 +706,11 @@ const firebaseConfig = {
             ];
         }
         function guardarEstadoEnFirebase(forzar = false) {
-            if (!firebaseDb || !estadoInicialSincronizado || !rutaEstadoFirebase) return;
+            if (!firebaseDb || !rutaEstadoFirebase) return;
+            if (!estadoInicialSincronizado) {
+                hayCambiosPendientesDeSincronizar = true;
+                return;
+            }
 
             const estado = obtenerEstadoActual();
             const bytesEstado = estimarBytesEstado(estado);
@@ -716,6 +721,7 @@ const firebaseConfig = {
             const huellaActual = calcularHuellaEstado(estado);
             if (!forzar && huellaActual === ultimaHuellaSincronizada) return;
             sincronizacionLocalEnCurso = true;
+            hayCambiosPendientesDeSincronizar = false;
 
             firebaseDb.ref(rutaEstadoFirebase).set(estado)
                 .then(() => {
@@ -723,12 +729,21 @@ const firebaseConfig = {
                 })
                 .catch((error) => {
                     console.error("No se pudo guardar en Firebase:", error);
+                    hayCambiosPendientesDeSincronizar = true;
                 });
         }
 
         function registrarCambioLocal(forzarGuardado = false) {
             sincronizacionLocalEnCurso = true;
+            hayCambiosPendientesDeSincronizar = true;
             if (forzarGuardado) {
+                guardarEstadoEnFirebase(true);
+            }
+        }
+
+        function marcarEstadoInicialSincronizado() {
+            estadoInicialSincronizado = true;
+            if (hayCambiosPendientesDeSincronizar) {
                 guardarEstadoEnFirebase(true);
             }
         }
@@ -778,14 +793,14 @@ const firebaseConfig = {
                             cargarMapa();
                             renderizarPantallaRecuerdos();
                             renderizarPantallaSonados();
-                            estadoInicialSincronizado = true;
+                            marcarEstadoInicialSincronizado();
                             guardarEstadoEnFirebase(true);
                         }
 
-                        estadoInicialSincronizado = true;
+                        marcarEstadoInicialSincronizado();
                     }, (error) => {
                         console.error("Error al leer estado desde Firebase:", error);
-                        estadoInicialSincronizado = true;
+                        marcarEstadoInicialSincronizado();
                         cargarMapa();
                     });
 
@@ -796,14 +811,14 @@ const firebaseConfig = {
                 });
             } catch (error) {
                 console.error("No se pudo inicializar Firebase:", error);
-                estadoInicialSincronizado = true;
+                marcarEstadoInicialSincronizado();
                 cargarMapa();
             }
         }
 
         function sincronizarEstadoConRutaPublica() {
             if (!firebaseDb) {
-                estadoInicialSincronizado = true;
+                marcarEstadoInicialSincronizado();
                 cargarMapa();
                 renderizarPantallaRecuerdos();
                 renderizarPantallaSonados();
@@ -838,10 +853,10 @@ const firebaseConfig = {
                     renderizarPantallaRecuerdos();
                     renderizarPantallaSonados();
                 }
-                estadoInicialSincronizado = true;
+                marcarEstadoInicialSincronizado();
             }, (error) => {
                 console.error("Error al leer estado público desde Firebase:", error);
-                estadoInicialSincronizado = true;
+                marcarEstadoInicialSincronizado();
                 cargarMapa();
             });
 
