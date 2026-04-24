@@ -2698,12 +2698,14 @@ const firebaseConfig = {
 
             const tipoMultimedia = resolverTipoMultimedia(album, urlDrive);
             if (tipoMultimedia === 'imagen') {
-                mostrarModalVistaImagen(album?.portada, titulo, urlDrive);
+                const urlImagen = obtenerUrlMultimediaDirecta(album?.portada || urlDrive, 'imagen');
+                mostrarModalVistaImagen(urlImagen, titulo);
                 return;
             }
 
             if (tipoMultimedia === 'video') {
-                mostrarModalVistaVideo(urlDrive, titulo);
+                const urlVideo = obtenerUrlMultimediaDirecta(urlDrive || album?.portada, 'video');
+                mostrarModalVistaVideo(urlVideo, titulo);
                 return;
             }
 
@@ -2733,6 +2735,23 @@ const firebaseConfig = {
             if (enlacePareceImagen || portadaPareceImagen) return 'imagen';
             if (/drive\.google\.com\/file\/d\//i.test(enlace) && !/\/preview/i.test(enlace)) return 'imagen';
             return null;
+        }
+
+        function convertirUrlDriveDirecta(url = "", tipo = "imagen") {
+            const valor = String(url || "").trim();
+            if (!valor || !valor.includes("drive.google.com")) return valor;
+
+            const idDrive = extraerIdDriveDesdeUrl(valor);
+            if (!idDrive) return valor;
+
+            const exportacion = tipo === "video" ? "download" : "view";
+            return `https://drive.google.com/uc?export=${exportacion}&id=${idDrive}`;
+        }
+
+        function obtenerUrlMultimediaDirecta(url = "", tipo = "imagen") {
+            const valor = String(url || "").trim();
+            if (!valor) return "";
+            return convertirUrlDriveDirecta(valor, tipo);
         }
 
         function cerrarModalVistaDrive() {
@@ -2800,8 +2819,35 @@ const firebaseConfig = {
             });
         }
 
+        function obtenerElementosLightbox() {
+            return {
+                contenedor: document.getElementById('media-lightbox'),
+                btnCerrar: document.getElementById('media-lightbox-close'),
+                imagen: document.getElementById('media-lightbox-image'),
+                video: document.getElementById('media-lightbox-video')
+            };
+        }
+
         function cerrarModalVistaImagen() {
-            document.getElementById('modal-vista-imagen')?.remove();
+            const { contenedor, imagen, video } = obtenerElementosLightbox();
+            if (!contenedor) return;
+
+            contenedor.classList.remove('activo');
+            contenedor.setAttribute('aria-hidden', 'true');
+
+            if (imagen) {
+                imagen.src = '';
+                imagen.alt = '';
+                imagen.hidden = true;
+            }
+
+            if (video) {
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+                video.hidden = true;
+            }
+
             document.body.classList.remove('sin-scroll');
             document.removeEventListener('keydown', manejarEscapeModalImagen);
         }
@@ -2810,7 +2856,18 @@ const firebaseConfig = {
             if (event.key === 'Escape') cerrarModalVistaImagen();
         }
 
-        function mostrarModalVistaImagen(urlImagen, titulo = "Foto", enlaceOriginal = "") {
+        function inicializarEventosLightbox() {
+            const { contenedor, btnCerrar } = obtenerElementosLightbox();
+            if (!contenedor || contenedor.dataset.eventsReady === 'true') return;
+
+            contenedor.addEventListener('click', (event) => {
+                if (event.target === contenedor) cerrarModalVistaImagen();
+            });
+            btnCerrar?.addEventListener('click', cerrarModalVistaImagen);
+            contenedor.dataset.eventsReady = 'true';
+        }
+
+        function mostrarModalVistaImagen(urlImagen, titulo = "Foto") {
             cerrarModalVistaImagen();
 
             if (!urlImagen) {
@@ -2818,31 +2875,23 @@ const firebaseConfig = {
                 return;
             }
 
-            const modal = document.createElement('div');
-            modal.id = 'modal-vista-imagen';
-            modal.className = 'modal-vista-imagen-fondo';
-            modal.innerHTML = `
-                <div class="modal-vista-imagen-contenido" role="dialog" aria-modal="true" aria-label="Vista completa de imagen">
-                    <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
-                    <img class="imagen-vista-completa" src="${urlImagen}" alt="${titulo}">
-                    <div class="modal-vista-imagen-acciones">
-                        <button type="button" class="btn-modal-memoria primario" id="btn-imagen-cerrar">Cerrar</button>
-                        ${enlaceOriginal ? `<button type="button" class="btn-modal-memoria secundario" id="btn-imagen-externo">Abrir original</button>` : ""}
-                    </div>
-                </div>
-            `;
+            inicializarEventosLightbox();
+            const { contenedor, imagen, video } = obtenerElementosLightbox();
+            if (!contenedor || !imagen || !video) return;
 
-            document.body.appendChild(modal);
+            video.hidden = true;
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+
+            imagen.src = urlImagen;
+            imagen.alt = titulo;
+            imagen.hidden = false;
+
+            contenedor.classList.add('activo');
+            contenedor.setAttribute('aria-hidden', 'false');
             document.body.classList.add('sin-scroll');
             document.addEventListener('keydown', manejarEscapeModalImagen);
-
-            modal.querySelector('.btn-cerrar-modal-memoria')?.addEventListener('click', cerrarModalVistaImagen);
-            modal.querySelector('#btn-imagen-cerrar')?.addEventListener('click', cerrarModalVistaImagen);
-            modal.querySelector('#btn-imagen-externo')?.addEventListener('click', () => window.open(enlaceOriginal, '_blank', 'noopener,noreferrer'));
-
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) cerrarModalVistaImagen();
-            });
         }
 
         function mostrarModalVistaVideo(urlVideo, titulo = "Video") {
@@ -2853,33 +2902,22 @@ const firebaseConfig = {
                 return;
             }
 
-            const modal = document.createElement('div');
-            modal.id = 'modal-vista-imagen';
-            modal.className = 'modal-vista-imagen-fondo';
-            modal.innerHTML = `
-                <div class="modal-vista-imagen-contenido" role="dialog" aria-modal="true" aria-label="Reproducción de video">
-                    <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
-                    <video class="video-vista-completa" controls autoplay playsinline>
-                        <source src="${urlVideo}">
-                        Tu navegador no puede reproducir este video.
-                    </video>
-                    <div class="modal-vista-imagen-acciones">
-                        <button type="button" class="btn-modal-memoria primario" id="btn-video-cerrar">Cerrar</button>
-                        <button type="button" class="btn-modal-memoria secundario" id="btn-video-externo">Abrir original</button>
-                    </div>
-                </div>
-            `;
+            inicializarEventosLightbox();
+            const { contenedor, imagen, video } = obtenerElementosLightbox();
+            if (!contenedor || !imagen || !video) return;
 
-            document.body.appendChild(modal);
+            imagen.hidden = true;
+            imagen.src = '';
+            imagen.alt = '';
+
+            video.src = urlVideo;
+            video.hidden = false;
+            video.play().catch(() => {});
+
+            contenedor.classList.add('activo');
+            contenedor.setAttribute('aria-hidden', 'false');
             document.body.classList.add('sin-scroll');
             document.addEventListener('keydown', manejarEscapeModalImagen);
-
-            modal.querySelector('.btn-cerrar-modal-memoria')?.addEventListener('click', cerrarModalVistaImagen);
-            modal.querySelector('#btn-video-cerrar')?.addEventListener('click', cerrarModalVistaImagen);
-            modal.querySelector('#btn-video-externo')?.addEventListener('click', () => window.open(urlVideo, '_blank', 'noopener,noreferrer'));
-            modal.addEventListener('click', (event) => {
-                if (event.target === modal) cerrarModalVistaImagen();
-            });
         }
 
         function cerrarMenuMemoria() {

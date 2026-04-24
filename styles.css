@@ -1678,6 +1678,50 @@
             justify-content: center;
             gap: 10px;
         }
+        .media-lightbox {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.88);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 4500;
+            padding: 20px;
+        }
+        .media-lightbox.activo { display: flex; }
+        .media-lightbox__dialog {
+            position: relative;
+            width: min(96vw, 1200px);
+            max-height: 92vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .media-lightbox__close {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.94);
+            color: #102028;
+            font-size: 1.8rem;
+            line-height: 1;
+            font-weight: 700;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+        }
+        .media-lightbox__image,
+        .media-lightbox__video {
+            width: auto;
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            background: #000;
+        }
         .icono-mapa-destino {
             color: #ffeaa0;
             fill: rgba(255, 242, 176, 0.55);
