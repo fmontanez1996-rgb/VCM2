@@ -2452,7 +2452,7 @@ const firebaseConfig = {
             modal.innerHTML = `
                 <div style="background:white; width:100%; max-width:600px; max-height:90vh; border-radius:20px; overflow-y:auto; position:relative; padding-bottom:30px;">
                     <button onclick="this.parentElement.parentElement.remove()" style="position:absolute; top:15px; right:15px; background:rgba(0,0,0,0.5); color:white; border:none; border-radius:50%; width:30px; height:30px; cursor:pointer; font-weight:bold; z-index:10;">X</button>
-                    <div style="width:100%; height:250px; background:url('${h.img}') center/cover no-repeat;"></div>
+                    <div style="width:100%; height:250px; background:url('${h.img}') center/contain no-repeat; background-color:#f3f6fa;"></div>
                     <div style="padding:30px;">
                         <span style="color:var(--primary); font-weight:bold; font-size:0.8rem;">${h.fecha}</span>
                         <h2 style="margin-top:5px; color: #263238;">${h.titulo}</h2>
