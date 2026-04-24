@@ -184,6 +184,32 @@ const firebaseConfig = {
             return candidatos.find((valor) => !portada || valor !== portada) || candidatos[0];
         }
 
+        function normalizarMemoriasDestino(destino) {
+            if (!destino || typeof destino !== "object") return { albumes: [], historias: [] };
+
+            const albumesActuales = Array.isArray(destino.albumes) ? destino.albumes : [];
+            const historiasActuales = Array.isArray(destino.historias) ? destino.historias : [];
+            const drivesLegacy = Array.isArray(destino.drives) ? destino.drives : [];
+            const notasLegacy = Array.isArray(destino.notas) ? destino.notas : [];
+
+            const albumes = [...albumesActuales, ...drivesLegacy].filter((item) => item && typeof item === "object");
+            const historias = [...historiasActuales, ...notasLegacy].filter((item) => item && typeof item === "object");
+
+            destino.albumes = albumes;
+            destino.historias = historias;
+            delete destino.drives;
+            delete destino.notas;
+            return destino;
+        }
+
+        function normalizarColeccionMemorias() {
+            Object.values(paisesVisitados || {}).forEach((destinoPais) => normalizarMemoriasDestino(destinoPais));
+            Object.values(provinciasVisitadas || {}).forEach((provinciasPais) => {
+                if (!provinciasPais || typeof provinciasPais !== "object") return;
+                Object.values(provinciasPais).forEach((destinoProvincia) => normalizarMemoriasDestino(destinoProvincia));
+            });
+        }
+
 
         function posicionarMenuContextual(menu, x, y, contenedorMapa) {
             const menuWidth = menu.node().offsetWidth;
@@ -276,6 +302,7 @@ const firebaseConfig = {
             paisesVisitados = estado?.paisesVisitados || {};
             provinciasVisitadas = estado?.provinciasVisitadas || {};
             destinosSonados = estado?.destinosSonados || {};
+            normalizarColeccionMemorias();
             normalizarDestinosSonados();
             cargarMapa();
 
@@ -712,6 +739,7 @@ const firebaseConfig = {
                 return;
             }
 
+            normalizarColeccionMemorias();
             const estado = obtenerEstadoActual();
             const bytesEstado = estimarBytesEstado(estado);
             if (bytesEstado > LIMITE_ESTADO_FIREBASE_BYTES) {
@@ -1819,6 +1847,7 @@ const firebaseConfig = {
                     d3.select(`#${CSS.escape(idProv)}`).classed('visitada', true);
                 } catch(e) {}
 
+                registrarCambioLocal(true);
                 renderizarPantallaRecuerdos();
                 window.ocultarSelectorNuevoRecuerdo();
                 alert("Ubicación marcada como visitada.");
@@ -1969,6 +1998,7 @@ const firebaseConfig = {
                     try {
                         d3.select(`#${CSS.escape(idPathProvincia)}`).classed('visitada', true).style("fill", "#FF0000");
                     } catch(e) { console.log("No se pudo pintar la ciudad aún"); }
+                    registrarCambioLocal(true);
                     cerrarModalNuevaCiudad();
                     window.abrirAlbum(idPais);
                 } else {
