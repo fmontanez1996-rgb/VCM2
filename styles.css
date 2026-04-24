@@ -1024,8 +1024,8 @@
             height: 66px;
             border-radius: 12px;
             overflow: hidden;
-            opacity: 0;
-            pointer-events: none;
+            opacity: 1;
+            pointer-events: auto;
         }
         .barra-controles-metal {
             position: absolute;
@@ -1054,6 +1054,7 @@
             border: 0;
             z-index: 1;
             pointer-events: none;
+            opacity: 0;
         }
         .btn-metal-play,
         .btn-metal-pause,
