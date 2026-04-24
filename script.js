@@ -691,6 +691,7 @@ const firebaseConfig = {
             const estado = obtenerEstadoActual();
             const huellaActual = calcularHuellaEstado(estado);
             if (!forzar && huellaActual === ultimaHuellaSincronizada) return;
+            sincronizacionLocalEnCurso = true;
 
             firebaseDb.ref(rutaEstadoFirebase).set(estado)
                 .then(() => {
@@ -699,6 +700,13 @@ const firebaseConfig = {
                 .catch((error) => {
                     console.error("No se pudo guardar en Firebase:", error);
                 });
+        }
+
+        function registrarCambioLocal(forzarGuardado = false) {
+            sincronizacionLocalEnCurso = true;
+            if (forzarGuardado) {
+                guardarEstadoEnFirebase(true);
+            }
         }
 
         function iniciarSincronizacionFirebase() {
@@ -733,6 +741,9 @@ const firebaseConfig = {
                             if (sincronizacionLocalEnCurso && huellaRemota === huellaLocal) {
                                 sincronizacionLocalEnCurso = false;
                                 ultimaHuellaSincronizada = huellaRemota;
+                                return;
+                            }
+                            if (sincronizacionLocalEnCurso) {
                                 return;
                             }
                             if (huellaRemota !== ultimaHuellaSincronizada) {
@@ -789,6 +800,9 @@ const firebaseConfig = {
                     if (sincronizacionLocalEnCurso && huellaRemota === huellaLocal) {
                         sincronizacionLocalEnCurso = false;
                         ultimaHuellaSincronizada = huellaRemota;
+                        return;
+                    }
+                    if (sincronizacionLocalEnCurso) {
                         return;
                     }
                     if (huellaRemota !== ultimaHuellaSincronizada) {
@@ -2441,6 +2455,7 @@ const firebaseConfig = {
 
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             objDestino.historias.push({ titulo, img, texto, fecha: new Date().toLocaleDateString() });
+            registrarCambioLocal(true);
             cambiarSeccionRecuerdos('historias', idPais, idProvincia);
         };
 
@@ -2592,6 +2607,7 @@ const firebaseConfig = {
                 abrirModalEditarMemoriaDrive(album, ({ nombre, portada }) => {
                     album.nombre = nombre || album.nombre || 'Sin nombre';
                     album.portada = portada || "";
+                    registrarCambioLocal(true);
 
                     if (estadoVistaRecuerdos.submodo === 'nuevo') {
                         actualizarVistaAlbumes(idPais, idProvincia, estadoVistaRecuerdos.seccionNuevo || 'drive');
@@ -2606,6 +2622,7 @@ const firebaseConfig = {
                 const nuevoTitulo = prompt('Editar título de la historia:', historia.titulo || '');
                 if (nuevoTitulo === null) return;
                 historia.titulo = nuevoTitulo.trim() || historia.titulo || 'Sin título';
+                registrarCambioLocal(true);
             }
 
             if (estadoVistaRecuerdos.submodo === 'nuevo') {
@@ -2640,6 +2657,7 @@ const firebaseConfig = {
                 } else {
                     objDestino.historias.splice(index, 1);
                 }
+                registrarCambioLocal(true);
 
                 if (estadoVistaRecuerdos.submodo === 'nuevo') {
                     const vistaActiva = estadoVistaRecuerdos.seccionNuevo || 'drive';
@@ -2675,6 +2693,7 @@ const firebaseConfig = {
 
             let objDestino = idProvincia ? provinciasVisitadas[idPais][idProvincia] : paisesVisitados[idPais];
             objDestino.albumes.push({ nombre, url, driveUrl: url, portada });
+            registrarCambioLocal(true);
             actualizarVistaAlbumes(idPais, idProvincia, 'drive');
         };
 
@@ -2689,6 +2708,7 @@ const firebaseConfig = {
             if (confirmacion) {
                 // Eliminar del objeto de estado
                 delete paisesVisitados[idPais];
+                registrarCambioLocal(true);
 
                 // Actualizar el mapa visualmente (quitar clase CSS)
                 d3.select(`.pais[id="${idPais}"]`).classed('visitado', false);
