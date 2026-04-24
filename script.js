@@ -28,6 +28,8 @@ const firebaseConfig = {
         window.playersMusica = playersMusica;
         let youtubeApiPromise = null;
         let youtubeApiReadyResolver = null;
+        const LIMITE_ESTADO_FIREBASE_BYTES = 8 * 1024 * 1024;
+        const LIMITE_IMAGEN_FIREBASE_BYTES = 350 * 1024;
 
         const RUTA_ESTADO_COMPARTIDO = "nuestraHistoria/estadoCompartido";
 
@@ -99,6 +101,9 @@ const firebaseConfig = {
                 }
 
                 playersMusica[idPlayer] = new window.YT.Player(idPlayer, {
+                    playerVars: {
+                        origin: window.location.origin
+                    },
                     events: {
                         onReady: () => actualizarEstadoBotonesMusica(idPlayer, null),
                         onStateChange: (event) => actualizarEstadoBotonesMusica(idPlayer, event.data)
@@ -250,6 +255,20 @@ const firebaseConfig = {
                 provinciasVisitadas: estado.provinciasVisitadas || {},
                 destinosSonados: estado.destinosSonados || {}
             }));
+        }
+
+        function estimarBytesDataUrl(dataUrl = "") {
+            if (typeof dataUrl !== "string") return 0;
+            const base64 = dataUrl.includes(",") ? dataUrl.split(",")[1] : dataUrl;
+            return Math.ceil((base64.length * 3) / 4);
+        }
+
+        function estimarBytesEstado(estado) {
+            try {
+                return new TextEncoder().encode(JSON.stringify(estado)).length;
+            } catch (error) {
+                return Number.POSITIVE_INFINITY;
+            }
         }
 
         function aplicarEstadoRemoto(estado) {
@@ -689,6 +708,11 @@ const firebaseConfig = {
             if (!firebaseDb || !estadoInicialSincronizado || !rutaEstadoFirebase) return;
 
             const estado = obtenerEstadoActual();
+            const bytesEstado = estimarBytesEstado(estado);
+            if (bytesEstado > LIMITE_ESTADO_FIREBASE_BYTES) {
+                console.error(`Estado demasiado grande para Firebase (${bytesEstado} bytes). Reduce imágenes o historias.`);
+                return;
+            }
             const huellaActual = calcularHuellaEstado(estado);
             if (!forzar && huellaActual === ultimaHuellaSincronizada) return;
             sincronizacionLocalEnCurso = true;
@@ -2177,6 +2201,9 @@ const firebaseConfig = {
                 }
 
                 const player = new window.YT.Player(iframeId, {
+                    playerVars: {
+                        origin: window.location.origin
+                    },
                     events: {
                         onStateChange: (event) => actualizarEstadoControlesMusica(event.data, barra),
                         onReady: () => actualizarEstadoControlesMusica(window.YT.PlayerState.UNSTARTED, barra)
@@ -2423,9 +2450,74 @@ const firebaseConfig = {
                     return;
                 }
 
+                if (!archivo.type.startsWith('image/')) {
+                    reject(new Error("El archivo debe ser una imagen."));
+                    return;
+                }
+
+                if (archivo.size <= LIMITE_IMAGEN_FIREBASE_BYTES) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result);
+                    reader.onerror = () => reject(new Error("No se pudo leer el archivo de portada."));
+                    reader.onabort = () => reject(new Error("La lectura del archivo fue cancelada."));
+                    reader.readAsDataURL(archivo);
+                    return;
+                }
+
+                comprimirImagenParaFirebase(archivo, LIMITE_IMAGEN_FIREBASE_BYTES)
+                    .then(resolve)
+                    .catch(() => reject(new Error("La imagen es demasiado grande. Usa una imagen más liviana.")));
+            });
+        }
+
+        function comprimirImagenParaFirebase(archivo, maxBytes = LIMITE_IMAGEN_FIREBASE_BYTES) {
+            return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error("No se pudo leer el archivo de portada."));
+                reader.onload = (evento) => {
+                    const imagen = new Image();
+                    imagen.onload = () => {
+                        let ancho = imagen.naturalWidth || imagen.width;
+                        let alto = imagen.naturalHeight || imagen.height;
+                        const maxDimension = 1280;
+
+                        if (ancho > maxDimension || alto > maxDimension) {
+                            const escala = Math.min(maxDimension / ancho, maxDimension / alto);
+                            ancho = Math.max(1, Math.round(ancho * escala));
+                            alto = Math.max(1, Math.round(alto * escala));
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = ancho;
+                        canvas.height = alto;
+                        const contexto = canvas.getContext('2d');
+                        if (!contexto) {
+                            reject(new Error("No se pudo procesar la imagen."));
+                            return;
+                        }
+
+                        contexto.drawImage(imagen, 0, 0, ancho, alto);
+                        const calidades = [0.82, 0.72, 0.62, 0.52, 0.42];
+
+                        const intentarCalidad = (indice) => {
+                            if (indice >= calidades.length) {
+                                reject(new Error("No se pudo comprimir la imagen lo suficiente."));
+                                return;
+                            }
+
+                            const dataUrl = canvas.toDataURL('image/jpeg', calidades[indice]);
+                            if (estimarBytesDataUrl(dataUrl) <= maxBytes) {
+                                resolve(dataUrl);
+                                return;
+                            }
+                            intentarCalidad(indice + 1);
+                        };
+
+                        intentarCalidad(0);
+                    };
+                    imagen.onerror = () => reject(new Error("No se pudo cargar la imagen seleccionada."));
+                    imagen.src = evento.target.result;
+                };
+                reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
                 reader.onabort = () => reject(new Error("La lectura del archivo fue cancelada."));
                 reader.readAsDataURL(archivo);
             });
