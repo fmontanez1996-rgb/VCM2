@@ -2014,21 +2014,6 @@ const firebaseConfig = {
                     <button class="btn-volver" onclick="${btnVolverAccion}" title="Volver"><i data-lucide="arrow-left"></i></button>
                     <h2 class="titulo-memorias-ciudad">Memorias de ${nombreCiudad}${idProvincia ? ` <span class="pais-parentesis">(${nombrePais})</span>` : ''}</h2>
                 </div>
-                <div class="tabs-memoria-metal">
-                    <button
-                        type="button"
-                        class="btn-tab-memoria tab-ver ${submodoActual === 'ver' ? 'activo' : ''}"
-                        onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})">
-                        <i data-lucide="images"></i> Ver Recuerdos
-                    </button>
-                    <button
-                        type="button"
-                        class="btn-tab-memoria tab-nuevo ${submodoActual === 'nuevo' ? 'activo' : ''}"
-                        onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})">
-                        <i data-lucide="plus-circle"></i> Agregar Memoria
-                    </button>
-                </div>
-
                 <div id="seccion-musica" class="seccion-musica-metal">
                     <div id="vista-musica-guardada" class="vista-musica-metal" style="display: ${tieneMusica ? 'flex' : 'none'};">
                         <div style="flex: 1;">
@@ -2037,10 +2022,10 @@ const firebaseConfig = {
                                     <div class="barra-controles-metal">
                                         <span class="leyenda-musica-metal">${nombreLeyendaMusica} se escuchaba así:</span>
                                         <div class="acciones-musica-metal">
-                                            <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')" title="Play" aria-label="Play">▶️</button>
-                                            <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')" title="Pausa" aria-label="Pausa">⏸️</button>
-                                            <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')" title="Reiniciar" aria-label="Reiniciar">🔁</button>
-                                            <button type="button" class="btn-metal-edit" onclick="window.abrirEditorUrlMusica('${idPais}', ${paramProv})" title="Editar" aria-label="Editar">✏️</button>
+                                            <button type="button" class="btn-metal-play" onclick="window.controlMusicaMetal('play')" title="Play" aria-label="Play"><span class="metal-glyph" aria-hidden="true">▶</span></button>
+                                            <button type="button" class="btn-metal-pause" onclick="window.controlMusicaMetal('pause')" title="Pausa" aria-label="Pausa"><span class="metal-glyph" aria-hidden="true">❚❚</span></button>
+                                            <button type="button" class="btn-metal-restart" onclick="window.controlMusicaMetal('restart')" title="Reiniciar" aria-label="Reiniciar"><span class="metal-glyph" aria-hidden="true">↺</span></button>
+                                            <button type="button" class="btn-metal-edit" onclick="window.abrirEditorUrlMusica('${idPais}', ${paramProv})" title="Editar" aria-label="Editar"><span class="metal-glyph" aria-hidden="true">✎</span></button>
                                         </div>
                                     </div>
                                     <iframe
@@ -2081,6 +2066,20 @@ const firebaseConfig = {
                             <button type="button" onclick="window.cerrarEditorUrlMusica()" class="btn-cancelar-musica-metal">Cancelar</button>
                         </div>
                     </div>
+                </div>
+                <div class="tabs-memoria-metal">
+                    <button
+                        type="button"
+                        class="btn-tab-memoria tab-ver ${submodoActual === 'ver' ? 'activo' : ''}"
+                        onclick="cambiarSubmodoRecuerdos('ver', '${idPais}', ${paramProv})">
+                        <i data-lucide="images"></i> Ver Recuerdos
+                    </button>
+                    <button
+                        type="button"
+                        class="btn-tab-memoria tab-nuevo ${submodoActual === 'nuevo' ? 'activo' : ''}"
+                        onclick="cambiarSubmodoRecuerdos('nuevo', '${idPais}', ${paramProv})">
+                        <i data-lucide="plus-circle"></i> Agregar Memoria
+                    </button>
                 </div>
                 ${bloqueNuevo}
 
