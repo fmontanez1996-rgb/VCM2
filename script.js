@@ -2713,6 +2713,82 @@ const firebaseConfig = {
             });
         }
 
+        function abrirModalEditarMemoriaHistoria(historia, onGuardar) {
+            cerrarModalEditarMemoria();
+
+            const modal = document.createElement('div');
+            modal.id = 'modal-editar-memoria';
+            modal.className = 'modal-editar-memoria-fondo';
+            modal.innerHTML = `
+                <div class="modal-editar-memoria-contenido" role="dialog" aria-modal="true" aria-label="Editar historia">
+                    <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
+                    <h3 class="titulo-modal-memoria">Editar historia</h3>
+                    <form id="form-editar-historia-memoria">
+                        <label class="label-modal-memoria" for="editar-historia-titulo">Título:</label>
+                        <input type="text" id="editar-historia-titulo" class="input-modal-memoria" required>
+
+                        <label class="label-modal-memoria" for="editar-historia-texto">Texto:</label>
+                        <textarea id="editar-historia-texto" class="input-modal-memoria" rows="8" required></textarea>
+
+                        <label class="label-modal-memoria" for="editar-historia-img-url">Imagen (URL):</label>
+                        <input type="url" id="editar-historia-img-url" class="input-modal-memoria" placeholder="https://...">
+
+                        <label class="label-modal-memoria" for="editar-historia-img-file">O Archivo:</label>
+                        <input type="file" id="editar-historia-img-file" class="input-modal-memoria input-modal-archivo" accept="image/*">
+
+                        <div class="acciones-modal-memoria">
+                            <button type="button" class="btn-modal-memoria secundario">Cancelar</button>
+                            <button type="submit" class="btn-modal-memoria primario">Guardar</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            const btnCerrar = modal.querySelector('.btn-cerrar-modal-memoria');
+            const btnCancelar = modal.querySelector('.btn-modal-memoria.secundario');
+            const form = modal.querySelector('#form-editar-historia-memoria');
+            const inputTitulo = modal.querySelector('#editar-historia-titulo');
+            const inputTexto = modal.querySelector('#editar-historia-texto');
+            const inputImgUrl = modal.querySelector('#editar-historia-img-url');
+            const inputImgFile = modal.querySelector('#editar-historia-img-file');
+
+            inputTitulo.value = historia?.titulo || "";
+            inputTexto.value = historia?.texto || "";
+            inputImgUrl.value = historia?.img || "";
+
+            btnCerrar.addEventListener('click', cerrarModalEditarMemoria);
+            btnCancelar.addEventListener('click', cerrarModalEditarMemoria);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModalEditarMemoria();
+            });
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const titulo = inputTitulo.value.trim();
+                const texto = inputTexto.value.trim();
+                if (!titulo || !texto) {
+                    alert("La historia necesita título y texto.");
+                    if (!titulo) inputTitulo.focus();
+                    else inputTexto.focus();
+                    return;
+                }
+
+                let img = "";
+                try {
+                    img = await obtenerImagenPortada('editar-historia-img-url', 'editar-historia-img-file');
+                } catch (error) {
+                    alert(error.message || "No se pudo leer la imagen seleccionada.");
+                    return;
+                }
+
+                onGuardar({ titulo, texto, img });
+                cerrarModalEditarMemoria();
+            });
+        }
+
         window.abrirMenuMemoria = function(event, idPais, idProvincia = null, index, tipo) {
             event.preventDefault();
             event.stopPropagation();
@@ -2768,16 +2844,22 @@ const firebaseConfig = {
             } else {
                 const historia = objDestino.historias[index];
                 if (!historia) return;
-                const nuevoTitulo = prompt('Editar título de la historia:', historia.titulo || '');
-                if (nuevoTitulo === null) return;
-                historia.titulo = nuevoTitulo.trim() || historia.titulo || 'Sin título';
-                registrarCambioLocal(true);
-            }
+                abrirModalEditarMemoriaHistoria(historia, ({ titulo, texto, img }) => {
+                    objDestino.historias[index] = {
+                        ...historia,
+                        titulo: titulo || historia.titulo || 'Sin título',
+                        texto: texto || historia.texto || '',
+                        img: img || ""
+                    };
+                    registrarCambioLocal(true);
 
-            if (estadoVistaRecuerdos.submodo === 'nuevo') {
-                actualizarVistaAlbumes(idPais, idProvincia, estadoVistaRecuerdos.seccionNuevo || 'drive');
-            } else {
-                actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
+                    if (estadoVistaRecuerdos.submodo === 'nuevo') {
+                        actualizarVistaAlbumes(idPais, idProvincia, estadoVistaRecuerdos.seccionNuevo || 'drive');
+                    } else {
+                        actualizarVistaRecuerdosSoloLectura(idPais, idProvincia);
+                    }
+                });
+                return;
             }
         };
 
