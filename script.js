@@ -2380,19 +2380,28 @@ const firebaseConfig = {
                 </article>`;
         }
 
+        function leerArchivoComoDataUrl(archivo) {
+            return new Promise((resolve, reject) => {
+                if (!(archivo instanceof File)) {
+                    reject(new Error("Archivo inválido."));
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error("No se pudo leer el archivo de portada."));
+                reader.onabort = () => reject(new Error("La lectura del archivo fue cancelada."));
+                reader.readAsDataURL(archivo);
+            });
+        }
+
         window.obtenerImagenPortada = function(idInputUrl, idInputArchivo) {
             const url = document.getElementById(idInputUrl)?.value?.trim() || '';
             const inputArchivo = document.getElementById(idInputArchivo);
             const archivo = inputArchivo && inputArchivo.files ? inputArchivo.files[0] : null;
 
             if (!archivo) return Promise.resolve(url);
-
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error("No se pudo leer el archivo de portada."));
-                reader.readAsDataURL(archivo);
-            });
+            return leerArchivoComoDataUrl(archivo);
         };
 
         window.agregarHistoria = async function(idPais, idProvincia = null) {
