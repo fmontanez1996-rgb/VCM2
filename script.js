@@ -651,7 +651,7 @@ const firebaseConfig = {
                 const horaPartida = normalizarHoraItinerario(item.partida) || horaFin || 'Sin horario';
                 return [
                     `DÍA ${numeroDia}`,
-                    `${fechaAventura} ${horaLlegada} (de entrada) - ${horaPartida} (de salida)`,
+                    `${fechaAventura} ${horaLlegada} - ${horaPartida}`,
                     `Precio por persona: ${costoBase}`
                 ];
             }
@@ -678,6 +678,7 @@ const firebaseConfig = {
                 ? 'HAMBURGUESAS'
                 : platoRestaurante;
             return [
+                `Día: ${numeroDia}`,
                 `Horario de llegada: ${horaInicio}`,
                 `Horario de Salida: ${horaSalida}`,
                 `Comida: ${platoFormateado}`,
