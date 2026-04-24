@@ -2677,10 +2677,13 @@ const firebaseConfig = {
                         <label class="label-modal-memoria" for="editar-memoria-nombre">Nombre:</label>
                         <input type="text" id="editar-memoria-nombre" class="input-modal-memoria" value="${(album?.nombre || '').replace(/"/g, '&quot;')}" required>
 
-                        <label class="label-modal-memoria" for="editar-memoria-url">URL:</label>
-                        <input type="url" id="editar-memoria-url" class="input-modal-memoria" placeholder="https://..." value="${(album?.portada || '').replace(/"/g, '&quot;')}">
+                        <label class="label-modal-memoria" for="editar-memoria-drive-url">Enlace (Drive/canción):</label>
+                        <input type="url" id="editar-memoria-drive-url" class="input-modal-memoria" placeholder="https://..." value="${(album?.driveUrl || album?.url || '').replace(/"/g, '&quot;')}">
 
-                        <label class="label-modal-memoria" for="editar-memoria-archivo">O Archivo:</label>
+                        <label class="label-modal-memoria" for="editar-memoria-portada-url">URL de portada:</label>
+                        <input type="url" id="editar-memoria-portada-url" class="input-modal-memoria" placeholder="https://..." value="${(album?.portada || '').replace(/"/g, '&quot;')}">
+
+                        <label class="label-modal-memoria" for="editar-memoria-archivo">O Archivo de portada:</label>
                         <input type="file" id="editar-memoria-archivo" class="input-modal-memoria input-modal-archivo" accept="image/*">
 
                         <div class="acciones-modal-memoria">
@@ -2697,7 +2700,8 @@ const firebaseConfig = {
             const btnCancelar = modal.querySelector('.btn-modal-memoria.secundario');
             const form = modal.querySelector('#form-editar-memoria');
             const inputNombre = modal.querySelector('#editar-memoria-nombre');
-            const inputUrl = modal.querySelector('#editar-memoria-url');
+            const inputDriveUrl = modal.querySelector('#editar-memoria-drive-url');
+            const inputPortadaUrl = modal.querySelector('#editar-memoria-portada-url');
             const inputArchivo = modal.querySelector('#editar-memoria-archivo');
 
             btnCerrar.addEventListener('click', cerrarModalEditarMemoria);
@@ -2717,19 +2721,20 @@ const firebaseConfig = {
                 }
 
                 let portadaFinal = album?.portada || "";
+                const driveUrlFinal = (inputDriveUrl.value || "").trim();
 
                 try {
                     if (inputArchivo.files?.[0]) {
                         portadaFinal = await leerArchivoComoDataUrl(inputArchivo.files[0]);
                     } else {
-                        portadaFinal = normalizarPortadaUrl(inputUrl.value.trim());
+                        portadaFinal = normalizarPortadaUrl(inputPortadaUrl.value.trim());
                     }
                 } catch (error) {
                     alert("No se pudo leer el archivo seleccionado.");
                     return;
                 }
 
-                onGuardar({ nombre, portada: portadaFinal });
+                onGuardar({ nombre, driveUrl: driveUrlFinal, portada: portadaFinal });
                 cerrarModalEditarMemoria();
             });
         }
@@ -2770,9 +2775,13 @@ const firebaseConfig = {
             if (tipo === 'drive') {
                 const album = objDestino.albumes[index];
                 if (!album) return;
-                abrirModalEditarMemoriaDrive(album, ({ nombre, portada }) => {
-                    album.nombre = nombre || album.nombre || 'Sin nombre';
-                    album.portada = portada || "";
+                abrirModalEditarMemoriaDrive(album, ({ nombre, driveUrl, portada }) => {
+                    const albumActual = objDestino.albumes[index];
+                    if (!albumActual) return;
+                    albumActual.nombre = nombre || albumActual.nombre || 'Sin nombre';
+                    albumActual.driveUrl = driveUrl || "";
+                    albumActual.url = driveUrl || "";
+                    albumActual.portada = portada || "";
                     registrarCambioLocal(true);
 
                     if (estadoVistaRecuerdos.submodo === 'nuevo') {
