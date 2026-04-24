@@ -185,6 +185,40 @@ const firebaseConfig = {
             return candidatos.find((valor) => !portada || valor !== portada) || candidatos[0];
         }
 
+        function extraerIdDriveDesdeUrl(url = "") {
+            const valor = String(url || "").trim();
+            if (!valor) return null;
+
+            const patrones = [
+                /\/folders\/([a-zA-Z0-9_-]+)/i,
+                /[?&]id=([a-zA-Z0-9_-]+)/i,
+                /\/file\/d\/([a-zA-Z0-9_-]+)/i,
+                /\/document\/d\/([a-zA-Z0-9_-]+)/i,
+                /\/spreadsheets\/d\/([a-zA-Z0-9_-]+)/i,
+                /\/presentation\/d\/([a-zA-Z0-9_-]+)/i
+            ];
+
+            for (const patron of patrones) {
+                const match = valor.match(patron);
+                if (match?.[1]) return match[1];
+            }
+            return null;
+        }
+
+        function construirUrlDriveEmbebida(urlDrive = "") {
+            const url = String(urlDrive || "").trim();
+            if (!url || !url.includes("drive.google.com")) return "";
+
+            const idDrive = extraerIdDriveDesdeUrl(url);
+            if (!idDrive) return "";
+
+            const esCarpeta = /\/folders\//i.test(url) || /embeddedfolderview/i.test(url);
+            if (esCarpeta) {
+                return `https://drive.google.com/embeddedfolderview?id=${idDrive}#grid`;
+            }
+            return `https://drive.google.com/file/d/${idDrive}/preview`;
+        }
+
         function normalizarMemoriasDestino(destino) {
             if (!destino || typeof destino !== "object") return { albumes: [], historias: [] };
 
@@ -2664,8 +2698,73 @@ const firebaseConfig = {
                 alert("No se encontró un enlace válido para esta memoria.");
                 return;
             }
-            window.open(urlDrive, '_blank', 'noopener,noreferrer');
+            mostrarModalVistaDrive(urlDrive, album?.nombre || "Carpeta compartida");
         };
+
+        function cerrarModalVistaDrive() {
+            document.getElementById('modal-vista-drive')?.remove();
+            document.body.classList.remove('sin-scroll');
+            document.removeEventListener('keydown', manejarEscapeModalDrive);
+        }
+
+        function manejarEscapeModalDrive(event) {
+            if (event.key === 'Escape') cerrarModalVistaDrive();
+        }
+
+        function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
+            cerrarModalVistaDrive();
+
+            const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
+            const modal = document.createElement('div');
+            modal.id = 'modal-vista-drive';
+            modal.className = 'modal-vista-drive-fondo';
+
+            modal.innerHTML = `
+                <div class="modal-vista-drive-contenido" role="dialog" aria-modal="true" aria-label="Vista previa de Drive">
+                    <div class="modal-vista-drive-header">
+                        <h3 class="modal-vista-drive-titulo">${titulo}</h3>
+                        <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
+                    </div>
+                    <div class="modal-vista-drive-cuerpo">
+                        ${urlEmbebida ? `
+                            <iframe
+                                class="iframe-vista-drive"
+                                src="${urlEmbebida}"
+                                title="Contenido compartido de Google Drive"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                allow="clipboard-write">
+                            </iframe>
+                        ` : `
+                            <div class="mensaje-vista-drive">
+                                <i data-lucide="alert-circle"></i>
+                                <p>No pudimos previsualizar este enlace dentro de la app.</p>
+                            </div>
+                        `}
+                    </div>
+                    <div class="modal-vista-drive-acciones">
+                        <button type="button" class="btn-modal-memoria secundario" id="btn-drive-externo">Abrir en pestaña</button>
+                        <button type="button" class="btn-modal-memoria primario" id="btn-drive-cerrar">Cerrar</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+            document.body.classList.add('sin-scroll');
+            document.addEventListener('keydown', manejarEscapeModalDrive);
+            lucide.createIcons();
+
+            const btnCerrarSuperior = modal.querySelector('.btn-cerrar-modal-memoria');
+            const btnCerrar = modal.querySelector('#btn-drive-cerrar');
+            const btnExterno = modal.querySelector('#btn-drive-externo');
+
+            btnCerrarSuperior?.addEventListener('click', cerrarModalVistaDrive);
+            btnCerrar?.addEventListener('click', cerrarModalVistaDrive);
+            btnExterno?.addEventListener('click', () => window.open(urlDrive, '_blank', 'noopener,noreferrer'));
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) cerrarModalVistaDrive();
+            });
+        }
 
         function cerrarMenuMemoria() {
             document.getElementById('menu-contextual-memoria')?.remove();
