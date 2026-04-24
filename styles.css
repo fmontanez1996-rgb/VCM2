@@ -559,7 +559,9 @@
         .portada-tarjeta {
             width: 100%;
             aspect-ratio: 1 / 1;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
+            background: #f4f7fb;
             border-radius: 16px;
             border: 2px solid #d9e5ef;
             box-shadow: 0 8px 16px rgba(46, 86, 119, 0.2);
@@ -753,8 +755,9 @@
             height: 130px;
             border-radius: 10px;
             border: 2px solid #d5d5d5;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center;
+            background: #f6f8fb;
             margin-bottom: 4px;
         }
         .tarjeta-sonado .acciones-itinerario-card {
@@ -766,7 +769,8 @@
             width: 92px;
             height: 62px;
             border-radius: 12px;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
             border: 2px solid #FFE082;
             background: #FFFDE7;
             box-shadow: 0 4px 10px rgba(255, 179, 0, 0.22);
@@ -842,7 +846,8 @@
             width: 112px;
             height: 76px;
             border-radius: 10px;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
             border: 2px solid #ffd96b;
             background: #fff7dc;
             box-shadow: 0 4px 10px rgba(191, 109, 0, 0.2);
@@ -1047,16 +1052,17 @@
         }
 
         .leyenda-musica-metal {
-            color: #1a2433;
+            color: #b30000;
             font-family: 'Fredoka', 'Baloo 2', sans-serif;
             font-size: 1rem;
             font-weight: 700;
             letter-spacing: 0.035em;
             text-transform: uppercase;
-            -webkit-text-stroke: 0.45px rgba(255, 255, 255, 0.75);
+            -webkit-text-stroke: 0.55px #4a0000;
             text-shadow:
-                0 1px 0 rgba(255, 255, 255, 0.86),
-                0 2px 3px rgba(5, 15, 28, 0.4);
+                0 1px 0 rgba(122, 0, 0, 0.78),
+                0 2px 3px rgba(63, 0, 0, 0.55),
+                0 0 8px rgba(255, 79, 79, 0.35);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -1352,7 +1358,7 @@
             flex: 1;
             background-color: #000;
             background-position: center;
-            background-size: cover;
+            background-size: contain;
             background-repeat: no-repeat;
             min-height: 0;
         }
@@ -2082,15 +2088,18 @@
             height: 68px;
             border-radius: 10px;
             border: 2px solid #B3E5FC;
-            object-fit: cover;
+            object-fit: contain;
+            object-position: center;
             box-shadow: 0 5px 12px rgba(0, 188, 212, 0.18);
             background: #ECEFF1;
             flex-shrink: 0;
         }
         .cabecera-itinerario-portada {
             margin-bottom: 16px;
-            background-size: cover;
+            background-size: contain;
+            background-repeat: no-repeat;
             background-position: center;
+            background-color: #eaf3fb;
             border-radius: 22px;
             overflow: hidden;
             position: relative;
