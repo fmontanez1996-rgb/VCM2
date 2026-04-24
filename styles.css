@@ -1036,8 +1036,14 @@
             justify-content: center;
             gap: 10px;
             padding: 8px;
-            background: rgba(5, 11, 20, 0.78);
-            backdrop-filter: blur(1px);
+            background:
+                linear-gradient(180deg, rgba(245, 250, 255, 0.22) 0%, rgba(119, 132, 150, 0.25) 22%, rgba(27, 36, 49, 0.84) 56%, rgba(11, 17, 26, 0.95) 100%);
+            border: 1px solid rgba(225, 232, 243, 0.35);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.55),
+                inset 0 -2px 4px rgba(12, 17, 24, 0.65),
+                0 8px 16px rgba(2, 8, 18, 0.5);
+            backdrop-filter: blur(1.2px);
         }
         .iframe-musica-audio {
             position: absolute;
@@ -1053,24 +1059,78 @@
         .btn-metal-pause,
         .btn-metal-restart,
         .btn-metal-edit {
-            border: none;
-            color: #fff;
-            font-weight: 700;
+            --btn-top: #f8fafc;
+            --btn-mid: #94a3b8;
+            --btn-base: #334155;
+            --btn-glow: rgba(148, 163, 184, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.32);
+            color: #f8fbff;
+            font-weight: 800;
             font-size: 0.8rem;
+            letter-spacing: 0.01em;
             border-radius: 999px;
-            padding: 8px 14px;
+            padding: 9px 15px;
             cursor: pointer;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.45) 0%, transparent 34%),
+                linear-gradient(160deg, var(--btn-top) 0%, var(--btn-mid) 44%, var(--btn-base) 100%);
+            text-shadow:
+                0 1px 0 rgba(255, 255, 255, 0.28),
+                0 -1px 1px rgba(13, 18, 27, 0.55);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.62),
+                inset 0 -3px 7px rgba(16, 24, 36, 0.58),
+                0 2px 0 rgba(13, 18, 27, 0.74),
+                0 5px 11px var(--btn-glow);
+            transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.2s ease;
         }
-        .btn-metal-play { background: #16a34a; }
-        .btn-metal-pause { background: #dc2626; }
-        .btn-metal-restart { background: #2563eb; }
-        .btn-metal-edit { background: #7c3aed; }
+        .btn-metal-play {
+            --btn-top: #8df4b8;
+            --btn-mid: #26c76a;
+            --btn-base: #117336;
+            --btn-glow: rgba(44, 199, 106, 0.45);
+        }
+        .btn-metal-pause {
+            --btn-top: #ffc2be;
+            --btn-mid: #f04943;
+            --btn-base: #8c1915;
+            --btn-glow: rgba(240, 73, 67, 0.45);
+        }
+        .btn-metal-restart {
+            --btn-top: #badaff;
+            --btn-mid: #3f86ff;
+            --btn-base: #173f97;
+            --btn-glow: rgba(63, 134, 255, 0.45);
+        }
+        .btn-metal-edit {
+            --btn-top: #fff7bf;
+            --btn-mid: #ffd74c;
+            --btn-base: #a06b00;
+            --btn-glow: rgba(255, 215, 76, 0.48);
+            color: #fff8dc;
+        }
         .btn-metal-play:hover,
         .btn-metal-pause:hover,
         .btn-metal-restart:hover,
         .btn-metal-edit:hover {
-            filter: brightness(1.08);
+            filter: brightness(1.08) saturate(1.08);
+            transform: translateY(-1px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                inset 0 -3px 7px rgba(16, 24, 36, 0.52),
+                0 3px 0 rgba(13, 18, 27, 0.72),
+                0 8px 14px var(--btn-glow);
+        }
+        .btn-metal-play:active,
+        .btn-metal-pause:active,
+        .btn-metal-restart:active,
+        .btn-metal-edit:active {
+            transform: translateY(1px);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                inset 0 -2px 4px rgba(16, 24, 36, 0.65),
+                0 1px 0 rgba(13, 18, 27, 0.78),
+                0 3px 8px var(--btn-glow);
         }
         .controles-musica-metal {
             position: relative;
