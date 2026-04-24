@@ -1664,6 +1664,14 @@
             background: #040f1b;
             box-shadow: 0 20px 46px rgba(0, 0, 0, 0.62);
         }
+        .video-vista-completa {
+            width: 100%;
+            height: calc(100% - 56px);
+            border-radius: 14px;
+            background: #040f1b;
+            box-shadow: 0 20px 46px rgba(0, 0, 0, 0.62);
+            object-fit: contain;
+        }
         .modal-vista-imagen-acciones {
             width: 100%;
             display: flex;
