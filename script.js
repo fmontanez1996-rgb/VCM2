@@ -2762,7 +2762,8 @@ const firebaseConfig = {
             try {
                 const respuesta = await fetch(`/api/drive-folder-images?id=${encodeURIComponent(idCarpeta)}`, {
                     method: 'GET',
-                    headers: { 'Accept': 'application/json' }
+                    headers: { 'Accept': 'application/json' },
+                    signal
                 });
                 if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
@@ -2809,7 +2810,7 @@ const firebaseConfig = {
             if (event.key === 'Escape') cerrarModalVistaDrive();
         }
 
-        function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
+        async function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
             cerrarModalVistaDrive();
 
             const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
@@ -2899,10 +2900,10 @@ const firebaseConfig = {
 
             (async () => {
                 try {
-                    const idsArchivos = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive, { signal: controlador.signal });
+                    const resultado = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive, { signal: controlador.signal });
                     if (!modal.isConnected || controlador.signal.aborted) return;
 
-                    const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
+                    const galeriaFotos = construirGaleriaDriveHtml(resultado?.ids || []);
                     if (galeriaFotos) {
                         renderizarContenidoModal(galeriaFotos);
                         return;
