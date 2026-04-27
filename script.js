@@ -2817,6 +2817,7 @@ const firebaseConfig = {
             const idsArchivos = resultadoImagenes?.ids || [];
             const errorConsultaImagenes = Boolean(resultadoImagenes?.error);
             const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
+            const permitirAbrirEnPestana = Boolean(CONFIG_VISTA_DRIVE?.permitirAbrirEnPestana);
             const modal = document.createElement('div');
             modal.id = 'modal-vista-drive';
             modal.className = 'modal-vista-drive-fondo';
@@ -2836,23 +2837,26 @@ const firebaseConfig = {
                                 <p>No pudimos cargar la vista previa en este momento. Puedes abrir la carpeta en una pestaña nueva.</p>
                             </div>
                         ` : urlEmbebida ? `
-                            <iframe
-                                class="iframe-vista-drive"
-                                src="${urlEmbebida}"
-                                title="Contenido compartido de Google Drive"
-                                loading="lazy"
-                                referrerpolicy="no-referrer-when-downgrade"
-                                allow="clipboard-write">
-                            </iframe>
+                            <div class="contenedor-embed-drive">
+                                <iframe
+                                    class="iframe-vista-drive"
+                                    src="${urlEmbebida}"
+                                    title="Contenido compartido de Google Drive"
+                                    loading="lazy"
+                                    referrerpolicy="no-referrer-when-downgrade"
+                                    allow="clipboard-write">
+                                </iframe>
+                                <p class="mensaje-permisos-drive">No se puede previsualizar aquí por permisos del proveedor.</p>
+                            </div>
                         ` : `
                             <div class="mensaje-vista-drive">
                                 <i data-lucide="alert-circle"></i>
-                                <p>No pudimos previsualizar este enlace dentro de la app.</p>
+                                <p>No se puede previsualizar aquí por permisos del proveedor.</p>
                             </div>
                         `}
                     </div>
                     <div class="modal-vista-drive-acciones">
-                        <button type="button" class="btn-modal-memoria secundario" id="btn-drive-externo">Abrir en pestaña</button>
+                        ${permitirAbrirEnPestana ? `<button type="button" class="btn-modal-memoria link" id="btn-drive-externo">Abrir en pestaña</button>` : ``}
                         <button type="button" class="btn-modal-memoria primario" id="btn-drive-cerrar">Cerrar</button>
                     </div>
                 </div>
