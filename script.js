@@ -29,6 +29,7 @@ const firebaseConfig = {
         window.playersMusica = playersMusica;
         let youtubeApiPromise = null;
         let youtubeApiReadyResolver = null;
+        let controladorCargaVistaDrive = null;
         const LIMITE_ESTADO_FIREBASE_BYTES = 8 * 1024 * 1024;
         const LIMITE_IMAGEN_FIREBASE_BYTES = 350 * 1024;
 
@@ -2754,50 +2755,28 @@ const firebaseConfig = {
             return convertirUrlDriveDirecta(valor, tipo);
         }
 
-        async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "") {
+        async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "", { signal } = {}) {
             const idCarpeta = extraerIdDriveDesdeUrl(urlDrive);
-            if (!idCarpeta) return [];
+            if (!idCarpeta) return { ids: [], error: null };
 
-            const urlCarpeta = `https://drive.google.com/drive/folders/${idCarpeta}`;
-            const endpoints = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(urlCarpeta)}`,
-                `https://r.jina.ai/http://drive.google.com/drive/folders/${idCarpeta}`
-            ];
+            try {
+                const respuesta = await fetch(`/api/drive-folder-images?id=${encodeURIComponent(idCarpeta)}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
-            for (const endpoint of endpoints) {
-                try {
-                    const respuesta = await fetch(endpoint);
-                    if (!respuesta.ok) continue;
-                    const html = await respuesta.text();
-                    const ids = extraerIdsArchivoDriveDesdeTexto(html);
-                    if (ids.length) return ids;
-                } catch (_) {
-                    // Probar siguiente endpoint
-                }
+                const payload = await respuesta.json();
+                const ids = Array.isArray(payload?.ids) ? payload.ids : [];
+                const idsValidos = ids
+                    .map((id) => String(id || '').trim())
+                    .filter((id) => /^[a-zA-Z0-9_-]{10,}$/.test(id));
+
+                return { ids: Array.from(new Set(idsValidos)), error: null };
+            } catch (error) {
+                console.warn('[Drive] No se pudieron cargar imágenes de la carpeta mediante la API propia.', error);
+                return { ids: [], error };
             }
-
-            return [];
-        }
-
-        function extraerIdsArchivoDriveDesdeTexto(texto = "") {
-            if (!texto) return [];
-
-            const ids = new Set();
-            const patrones = [
-                /\/file\/d\/([a-zA-Z0-9_-]{10,})/g,
-                /"id":"([a-zA-Z0-9_-]{10,})"/g,
-                /%2Ffile%2Fd%2F([a-zA-Z0-9_-]{10,})/g
-            ];
-
-            patrones.forEach((patron) => {
-                let match = patron.exec(texto);
-                while (match?.[1]) {
-                    ids.add(match[1]);
-                    match = patron.exec(texto);
-                }
-            });
-
-            return Array.from(ids);
         }
 
         function construirGaleriaDriveHtml(idsArchivos = []) {
@@ -2817,6 +2796,10 @@ const firebaseConfig = {
         }
 
         function cerrarModalVistaDrive() {
+            if (controladorCargaVistaDrive) {
+                controladorCargaVistaDrive.abort();
+                controladorCargaVistaDrive = null;
+            }
             document.getElementById('modal-vista-drive')?.remove();
             document.body.classList.remove('sin-scroll');
             document.removeEventListener('keydown', manejarEscapeModalDrive);
@@ -2826,15 +2809,13 @@ const firebaseConfig = {
             if (event.key === 'Escape') cerrarModalVistaDrive();
         }
 
-        const CONFIG_VISTA_DRIVE = {
-            permitirAbrirEnPestana: false
-        };
-
-        async function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
+        function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
             cerrarModalVistaDrive();
 
             const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
-            const idsArchivos = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive);
+            const resultadoImagenes = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive);
+            const idsArchivos = resultadoImagenes?.ids || [];
+            const errorConsultaImagenes = Boolean(resultadoImagenes?.error);
             const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
             const permitirAbrirEnPestana = Boolean(CONFIG_VISTA_DRIVE?.permitirAbrirEnPestana);
             const modal = document.createElement('div');
@@ -2850,6 +2831,11 @@ const firebaseConfig = {
                     <div class="modal-vista-drive-cuerpo">
                         ${galeriaFotos ? `
                             ${galeriaFotos}
+                        ` : errorConsultaImagenes ? `
+                            <div class="mensaje-vista-drive">
+                                <i data-lucide="alert-circle"></i>
+                                <p>No pudimos cargar la vista previa en este momento. Puedes abrir la carpeta en una pestaña nueva.</p>
+                            </div>
                         ` : urlEmbebida ? `
                             <div class="contenedor-embed-drive">
                                 <iframe
@@ -2884,21 +2870,79 @@ const firebaseConfig = {
             const btnCerrarSuperior = modal.querySelector('.btn-cerrar-modal-memoria');
             const btnCerrar = modal.querySelector('#btn-drive-cerrar');
             const btnExterno = modal.querySelector('#btn-drive-externo');
-            const tarjetasFoto = modal.querySelectorAll('.tarjeta-foto-drive');
+            const contenedorCuerpo = modal.querySelector('.modal-vista-drive-cuerpo');
 
             btnCerrarSuperior?.addEventListener('click', cerrarModalVistaDrive);
             btnCerrar?.addEventListener('click', cerrarModalVistaDrive);
             btnExterno?.addEventListener('click', () => window.open(urlDrive, '_blank', 'noopener,noreferrer'));
-            tarjetasFoto.forEach((tarjeta) => {
-                tarjeta.addEventListener('click', () => {
+            modal.addEventListener('click', (event) => {
+                const tarjeta = event.target.closest('.tarjeta-foto-drive');
+                if (tarjeta) {
                     const urlFoto = tarjeta.dataset.fotoUrl || '';
                     const tituloFoto = tarjeta.dataset.fotoTitulo || titulo;
                     mostrarModalVistaImagen(urlFoto, tituloFoto);
-                });
-            });
-            modal.addEventListener('click', (event) => {
+                    return;
+                }
                 if (event.target === modal) cerrarModalVistaDrive();
             });
+
+            const renderizarContenidoModal = (html) => {
+                if (!contenedorCuerpo || !modal.isConnected) return;
+                contenedorCuerpo.innerHTML = html;
+                lucide.createIcons();
+            };
+
+            const timeoutMs = 5000;
+            const controlador = new AbortController();
+            controladorCargaVistaDrive = controlador;
+            const timeoutId = setTimeout(() => controlador.abort(), timeoutMs);
+
+            (async () => {
+                try {
+                    const idsArchivos = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive, { signal: controlador.signal });
+                    if (!modal.isConnected || controlador.signal.aborted) return;
+
+                    const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
+                    if (galeriaFotos) {
+                        renderizarContenidoModal(galeriaFotos);
+                        return;
+                    }
+
+                    if (urlEmbebida) {
+                        renderizarContenidoModal(`
+                            <iframe
+                                class="iframe-vista-drive"
+                                src="${urlEmbebida}"
+                                title="Contenido compartido de Google Drive"
+                                loading="lazy"
+                                referrerpolicy="no-referrer-when-downgrade"
+                                allow="clipboard-write">
+                            </iframe>
+                        `);
+                        return;
+                    }
+
+                    renderizarContenidoModal(`
+                        <div class="mensaje-vista-drive">
+                            <i data-lucide="alert-circle"></i>
+                            <p>No pudimos previsualizar este enlace dentro de la app.</p>
+                        </div>
+                    `);
+                } catch (_) {
+                    if (!modal.isConnected) return;
+                    renderizarContenidoModal(`
+                        <div class="mensaje-vista-drive">
+                            <i data-lucide="info"></i>
+                            <p>No logramos cargar el contenido ahora. Puedes intentar de nuevo o abrirlo en una pestaña.</p>
+                        </div>
+                    `);
+                } finally {
+                    clearTimeout(timeoutId);
+                    if (controladorCargaVistaDrive === controlador) {
+                        controladorCargaVistaDrive = null;
+                    }
+                }
+            })();
         }
 
         function obtenerElementosLightbox() {
