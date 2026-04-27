@@ -2754,6 +2754,68 @@ const firebaseConfig = {
             return convertirUrlDriveDirecta(valor, tipo);
         }
 
+        async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "") {
+            const idCarpeta = extraerIdDriveDesdeUrl(urlDrive);
+            if (!idCarpeta) return [];
+
+            const urlCarpeta = `https://drive.google.com/drive/folders/${idCarpeta}`;
+            const endpoints = [
+                `https://api.allorigins.win/raw?url=${encodeURIComponent(urlCarpeta)}`,
+                `https://r.jina.ai/http://drive.google.com/drive/folders/${idCarpeta}`
+            ];
+
+            for (const endpoint of endpoints) {
+                try {
+                    const respuesta = await fetch(endpoint);
+                    if (!respuesta.ok) continue;
+                    const html = await respuesta.text();
+                    const ids = extraerIdsArchivoDriveDesdeTexto(html);
+                    if (ids.length) return ids;
+                } catch (_) {
+                    // Probar siguiente endpoint
+                }
+            }
+
+            return [];
+        }
+
+        function extraerIdsArchivoDriveDesdeTexto(texto = "") {
+            if (!texto) return [];
+
+            const ids = new Set();
+            const patrones = [
+                /\/file\/d\/([a-zA-Z0-9_-]{10,})/g,
+                /"id":"([a-zA-Z0-9_-]{10,})"/g,
+                /%2Ffile%2Fd%2F([a-zA-Z0-9_-]{10,})/g
+            ];
+
+            patrones.forEach((patron) => {
+                let match = patron.exec(texto);
+                while (match?.[1]) {
+                    ids.add(match[1]);
+                    match = patron.exec(texto);
+                }
+            });
+
+            return Array.from(ids);
+        }
+
+        function construirGaleriaDriveHtml(idsArchivos = []) {
+            if (!Array.isArray(idsArchivos) || !idsArchivos.length) return '';
+
+            const tarjetas = idsArchivos.map((idArchivo, index) => {
+                const urlImagen = `https://drive.google.com/uc?export=view&id=${idArchivo}`;
+                const etiqueta = `Foto ${index + 1}`;
+                return `
+                    <button type="button" class="tarjeta-foto-drive" data-foto-url="${urlImagen}" data-foto-titulo="${etiqueta}" aria-label="Ver ${etiqueta} en pantalla completa">
+                        <img src="${urlImagen}" alt="${etiqueta}" loading="lazy" referrerpolicy="no-referrer">
+                    </button>
+                `;
+            }).join('');
+
+            return `<div class="galeria-fotos-drive">${tarjetas}</div>`;
+        }
+
         function cerrarModalVistaDrive() {
             document.getElementById('modal-vista-drive')?.remove();
             document.body.classList.remove('sin-scroll');
@@ -2764,10 +2826,12 @@ const firebaseConfig = {
             if (event.key === 'Escape') cerrarModalVistaDrive();
         }
 
-        function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
+        async function mostrarModalVistaDrive(urlDrive, titulo = "Carpeta compartida") {
             cerrarModalVistaDrive();
 
             const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
+            const idsArchivos = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive);
+            const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
             const modal = document.createElement('div');
             modal.id = 'modal-vista-drive';
             modal.className = 'modal-vista-drive-fondo';
@@ -2779,7 +2843,9 @@ const firebaseConfig = {
                         <button type="button" class="btn-cerrar-modal-memoria" aria-label="Cerrar">×</button>
                     </div>
                     <div class="modal-vista-drive-cuerpo">
-                        ${urlEmbebida ? `
+                        ${galeriaFotos ? `
+                            ${galeriaFotos}
+                        ` : urlEmbebida ? `
                             <iframe
                                 class="iframe-vista-drive"
                                 src="${urlEmbebida}"
@@ -2810,10 +2876,18 @@ const firebaseConfig = {
             const btnCerrarSuperior = modal.querySelector('.btn-cerrar-modal-memoria');
             const btnCerrar = modal.querySelector('#btn-drive-cerrar');
             const btnExterno = modal.querySelector('#btn-drive-externo');
+            const tarjetasFoto = modal.querySelectorAll('.tarjeta-foto-drive');
 
             btnCerrarSuperior?.addEventListener('click', cerrarModalVistaDrive);
             btnCerrar?.addEventListener('click', cerrarModalVistaDrive);
             btnExterno?.addEventListener('click', () => window.open(urlDrive, '_blank', 'noopener,noreferrer'));
+            tarjetasFoto.forEach((tarjeta) => {
+                tarjeta.addEventListener('click', () => {
+                    const urlFoto = tarjeta.dataset.fotoUrl || '';
+                    const tituloFoto = tarjeta.dataset.fotoTitulo || titulo;
+                    mostrarModalVistaImagen(urlFoto, tituloFoto);
+                });
+            });
             modal.addEventListener('click', (event) => {
                 if (event.target === modal) cerrarModalVistaDrive();
             });
