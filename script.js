@@ -2756,48 +2756,26 @@ const firebaseConfig = {
 
         async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "") {
             const idCarpeta = extraerIdDriveDesdeUrl(urlDrive);
-            if (!idCarpeta) return [];
+            if (!idCarpeta) return { ids: [], error: null };
 
-            const urlCarpeta = `https://drive.google.com/drive/folders/${idCarpeta}`;
-            const endpoints = [
-                `https://api.allorigins.win/raw?url=${encodeURIComponent(urlCarpeta)}`,
-                `https://r.jina.ai/http://drive.google.com/drive/folders/${idCarpeta}`
-            ];
+            try {
+                const respuesta = await fetch(`/api/drive-folder-images?id=${encodeURIComponent(idCarpeta)}`, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' }
+                });
+                if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
-            for (const endpoint of endpoints) {
-                try {
-                    const respuesta = await fetch(endpoint);
-                    if (!respuesta.ok) continue;
-                    const html = await respuesta.text();
-                    const ids = extraerIdsArchivoDriveDesdeTexto(html);
-                    if (ids.length) return ids;
-                } catch (_) {
-                    // Probar siguiente endpoint
-                }
+                const payload = await respuesta.json();
+                const ids = Array.isArray(payload?.ids) ? payload.ids : [];
+                const idsValidos = ids
+                    .map((id) => String(id || '').trim())
+                    .filter((id) => /^[a-zA-Z0-9_-]{10,}$/.test(id));
+
+                return { ids: Array.from(new Set(idsValidos)), error: null };
+            } catch (error) {
+                console.warn('[Drive] No se pudieron cargar imágenes de la carpeta mediante la API propia.', error);
+                return { ids: [], error };
             }
-
-            return [];
-        }
-
-        function extraerIdsArchivoDriveDesdeTexto(texto = "") {
-            if (!texto) return [];
-
-            const ids = new Set();
-            const patrones = [
-                /\/file\/d\/([a-zA-Z0-9_-]{10,})/g,
-                /"id":"([a-zA-Z0-9_-]{10,})"/g,
-                /%2Ffile%2Fd%2F([a-zA-Z0-9_-]{10,})/g
-            ];
-
-            patrones.forEach((patron) => {
-                let match = patron.exec(texto);
-                while (match?.[1]) {
-                    ids.add(match[1]);
-                    match = patron.exec(texto);
-                }
-            });
-
-            return Array.from(ids);
         }
 
         function construirGaleriaDriveHtml(idsArchivos = []) {
@@ -2830,7 +2808,9 @@ const firebaseConfig = {
             cerrarModalVistaDrive();
 
             const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
-            const idsArchivos = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive);
+            const resultadoImagenes = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive);
+            const idsArchivos = resultadoImagenes?.ids || [];
+            const errorConsultaImagenes = Boolean(resultadoImagenes?.error);
             const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
             const modal = document.createElement('div');
             modal.id = 'modal-vista-drive';
@@ -2845,6 +2825,11 @@ const firebaseConfig = {
                     <div class="modal-vista-drive-cuerpo">
                         ${galeriaFotos ? `
                             ${galeriaFotos}
+                        ` : errorConsultaImagenes ? `
+                            <div class="mensaje-vista-drive">
+                                <i data-lucide="alert-circle"></i>
+                                <p>No pudimos cargar la vista previa en este momento. Puedes abrir la carpeta en una pestaña nueva.</p>
+                            </div>
                         ` : urlEmbebida ? `
                             <iframe
                                 class="iframe-vista-drive"
