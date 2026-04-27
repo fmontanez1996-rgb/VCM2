@@ -2157,7 +2157,7 @@ const firebaseConfig = {
                                     </div>
                                     <iframe
                                         id="${idPlayerMusica}"
-                                        src="https://www.youtube.com/embed/${videoIdMusica}?enablejsapi=1&rel=0&modestbranding=1&playsinline=1"
+                                        src="https://www.youtube.com/embed/${videoIdMusica}?enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&rel=0&modestbranding=1&playsinline=1"
                                         title="Música para la memoria"
                                         id="iframe-musica-${idPais}-${idProvincia || 'pais'}" class="iframe-musica-audio"
                                         loading="lazy"
@@ -2324,21 +2324,38 @@ const firebaseConfig = {
             return (match && match[7].length === 11) ? match[7] : null;
         };
 
+        function resolverTargetOriginMusicaMetal(iframe) {
+            if (!iframe) return '*';
+
+            try {
+                const src = iframe.getAttribute('src') || '';
+                const url = new URL(src, window.location.href);
+                const esYoutubeEmbed = url.protocol === 'https:'
+                    && url.hostname === 'www.youtube.com'
+                    && url.pathname.startsWith('/embed/');
+                return esYoutubeEmbed ? 'https://www.youtube.com' : '*';
+            } catch {
+                return '*';
+            }
+        }
+
         window.controlMusicaMetal = function(accion) {
             const iframe = document.querySelector('#seccion-musica .iframe-musica-audio');
             if (!iframe || !iframe.contentWindow) return;
+
+            const targetOrigin = resolverTargetOriginMusicaMetal(iframe);
 
             if (accion === 'restart') {
                 iframe.contentWindow.postMessage(JSON.stringify({
                     event: 'command',
                     func: 'seekTo',
                     args: [0, true]
-                }), '*');
+                }), targetOrigin);
                 iframe.contentWindow.postMessage(JSON.stringify({
                     event: 'command',
                     func: 'playVideo',
                     args: []
-                }), '*');
+                }), targetOrigin);
                 return;
             }
 
@@ -2347,7 +2364,7 @@ const firebaseConfig = {
                 event: 'command',
                 func: comando,
                 args: []
-            }), '*');
+            }), targetOrigin);
         };
 
         window.abrirEditorUrlMusica = function(idPais, idProvincia = null) {
