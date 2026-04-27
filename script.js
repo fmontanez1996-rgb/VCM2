@@ -32,6 +32,12 @@ const firebaseConfig = {
         let controladorCargaVistaDrive = null;
         const LIMITE_ESTADO_FIREBASE_BYTES = 8 * 1024 * 1024;
         const LIMITE_IMAGEN_FIREBASE_BYTES = 350 * 1024;
+        const CONFIG_VISTA_DRIVE = Object.freeze({
+            permitirAbrirEnPestana: true,
+            apiFolderImagesEndpoint: typeof window !== 'undefined' && window.__DRIVE_FOLDER_IMAGES_API__
+                ? String(window.__DRIVE_FOLDER_IMAGES_API__).trim()
+                : '/api/drive-folder-images'
+        });
 
         const RUTA_ESTADO_COMPARTIDO = "nuestraHistoria/estadoCompartido";
 
@@ -2755,12 +2761,27 @@ const firebaseConfig = {
             return convertirUrlDriveDirecta(valor, tipo);
         }
 
+        function construirUrlApiCarpetaDrive(idCarpeta = "") {
+            const id = String(idCarpeta || "").trim();
+            const endpointBase = String(CONFIG_VISTA_DRIVE?.apiFolderImagesEndpoint || "").trim();
+            if (!id || !endpointBase) return "";
+
+            if (window?.location?.hostname?.endsWith('github.io') && endpointBase.startsWith('/api/')) {
+                return "";
+            }
+
+            const separador = endpointBase.includes('?') ? '&' : '?';
+            return `${endpointBase}${separador}id=${encodeURIComponent(id)}`;
+        }
+
         async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "", { signal } = {}) {
             const idCarpeta = extraerIdDriveDesdeUrl(urlDrive);
             if (!idCarpeta) return { ids: [], error: null };
+            const urlApi = construirUrlApiCarpetaDrive(idCarpeta);
+            if (!urlApi) return { ids: [], error: null };
 
             try {
-                const respuesta = await fetch(`/api/drive-folder-images?id=${encodeURIComponent(idCarpeta)}`, {
+                const respuesta = await fetch(urlApi, {
                     method: 'GET',
                     headers: { 'Accept': 'application/json' },
                     signal
