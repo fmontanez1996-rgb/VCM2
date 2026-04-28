@@ -2849,21 +2849,14 @@ const firebaseConfig = {
                     const mimeType = String(archivo.mimeType || '').trim().toLowerCase();
                     const esVideo = mimeType.startsWith('video/');
                     const urlImagen = `https://drive.google.com/uc?export=view&id=${idArchivo}`;
-                    const previewVideoUrl = `https://drive.google.com/file/d/${idArchivo}/preview`;
                     const etiquetaBase = String(archivo.name || '').trim() || (esVideo ? `Video ${index + 1}` : `Foto ${index + 1}`);
                     const etiqueta = escaparHtmlPlano(etiquetaBase);
-                    const ariaLabel = esVideo ? `Reproducir ${etiquetaBase}` : `Ver ${etiquetaBase} en pantalla completa`;
                     return `
-                        <button
-                            type="button"
+                        <div
                             class="tarjeta-foto-drive ${esVideo ? 'tarjeta-foto-drive-video' : ''}"
-                            data-media-type="${esVideo ? 'video' : 'image'}"
-                            data-foto-url="${escAttr(urlImagen)}"
-                            data-foto-titulo="${escAttr(etiquetaBase)}"
-                            ${esVideo ? `data-preview-url="${escAttr(previewVideoUrl)}"` : ''}
-                            aria-label="${escAttr(ariaLabel)}">
+                            aria-label="${escAttr(etiquetaBase)}">
                             <img src="${escAttr(urlImagen)}" alt="${etiqueta}" loading="lazy" referrerpolicy="no-referrer">
-                        </button>
+                        </div>
                     `;
                 }).join('');
 
