@@ -2778,11 +2778,11 @@ const firebaseConfig = {
             return `${endpointBase}${separador}id=${encodeURIComponent(id)}`;
         }
 
-        async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "", { signal } = {}) {
+        async function obtenerArchivosPublicosDeCarpetaDrive(urlDrive = "", { signal } = {}) {
             const idCarpeta = extraerIdDriveDesdeUrl(urlDrive);
-            if (!idCarpeta) return { ids: [], error: null };
+            if (!idCarpeta) return { archivos: [], error: null };
             const urlApi = construirUrlApiCarpetaDrive(idCarpeta);
-            if (!urlApi) return { ids: [], error: null };
+            if (!urlApi) return { archivos: [], error: null };
 
             try {
                 const respuesta = await fetch(urlApi, {
@@ -2793,16 +2793,52 @@ const firebaseConfig = {
                 if (!respuesta.ok) throw new Error(`HTTP ${respuesta.status}`);
 
                 const payload = await respuesta.json();
-                const ids = Array.isArray(payload?.ids) ? payload.ids : [];
-                const idsValidos = ids
+                const archivosPayload = Array.isArray(payload?.files) ? payload.files : [];
+                const idsPayload = Array.isArray(payload?.ids) ? payload.ids : [];
+
+                const archivos = archivosPayload
+                    .map((archivo) => {
+                        const id = String(archivo?.id || '').trim();
+                        if (!/^[a-zA-Z0-9_-]{10,}$/.test(id)) return null;
+                        return {
+                            id,
+                            name: String(archivo?.name || '').trim(),
+                            mimeType: String(archivo?.mimeType || '').trim()
+                        };
+                    })
+                    .filter(Boolean);
+
+                if (archivos.length) {
+                    const unicos = [];
+                    const vistos = new Set();
+                    archivos.forEach((archivo) => {
+                        if (vistos.has(archivo.id)) return;
+                        vistos.add(archivo.id);
+                        unicos.push(archivo);
+                    });
+                    return { archivos: unicos, error: null };
+                }
+
+                const idsValidos = idsPayload
                     .map((id) => String(id || '').trim())
                     .filter((id) => /^[a-zA-Z0-9_-]{10,}$/.test(id));
 
-                return { ids: Array.from(new Set(idsValidos)), error: null };
+                return {
+                    archivos: Array.from(new Set(idsValidos)).map((id) => ({ id, name: '', mimeType: '' })),
+                    error: null
+                };
             } catch (error) {
-                console.warn('[Drive] No se pudieron cargar imágenes de la carpeta mediante la API propia.', error);
-                return { ids: [], error };
+                console.warn('[Drive] No se pudieron cargar archivos de la carpeta mediante la API propia.', error);
+                return { archivos: [], error };
             }
+        }
+
+        async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "", opciones = {}) {
+            const resultado = await obtenerArchivosPublicosDeCarpetaDrive(urlDrive, opciones);
+            return {
+                ids: (resultado?.archivos || []).map((archivo) => archivo.id),
+                error: resultado?.error || null
+            };
         }
 
         function construirGaleriaDriveHtml(idsArchivos = []) {
@@ -4912,7 +4948,8 @@ const firebaseConfig = {
             if (!img || !video || !titulo || !meta) return;
 
             titulo.textContent = media.nombre;
-            meta.textContent = `${media.tipo === 'video' ? 'Video' : 'Imagen'} · ${(media.size / 1024 / 1024).toFixed(2)} MB`;
+            const textoTamano = media.size ? ` · ${(media.size / 1024 / 1024).toFixed(2)} MB` : '';
+            meta.textContent = `${media.tipo === 'video' ? 'Video' : 'Imagen'}${textoTamano}`;
 
             if (media.tipo === 'video') {
                 img.hidden = true;
@@ -4938,7 +4975,7 @@ const firebaseConfig = {
             if (!lista) return;
 
             if (!bibliotecaRevivir.length) {
-                lista.innerHTML = `<p class="revivir-vacio">Subí imágenes o videos para empezar a revivir momentos ✨</p>`;
+                lista.innerHTML = `<p class="revivir-vacio">Cargá una carpeta de memorias para empezar a revivir momentos ✨</p>`;
                 return;
             }
 
@@ -4950,6 +4987,87 @@ const firebaseConfig = {
             `).join('');
             lucide.createIcons();
         }
+
+        function inferirTipoArchivoDriveRevivir(archivo = {}) {
+            const mime = String(archivo?.mimeType || '').toLowerCase();
+            const nombre = String(archivo?.name || '').toLowerCase();
+            if (mime.startsWith('video/') || /\.(mp4|webm|ogg|mov|m4v)$/.test(nombre)) return 'video';
+            if (mime.startsWith('image/') || /\.(avif|gif|jpe?g|png|svg|webp)$/.test(nombre)) return 'imagen';
+            return 'imagen';
+        }
+
+        function obtenerCarpetasMemoriaDisponiblesRevivir() {
+            const carpetas = [];
+
+            Object.entries(provinciasVisitadas || {}).forEach(([idPais, provincias]) => {
+                const nombrePais = paisesVisitados?.[idPais]?.nombre || idPais;
+                Object.values(provincias || {}).forEach((provincia) => {
+                    const nombreCiudad = provincia?.nombre || 'Ciudad';
+                    (provincia?.albumes || []).forEach((album) => {
+                        const url = resolverUrlDriveAlbum(album);
+                        if (!url || !/drive\.google\.com/i.test(url)) return;
+                        if (!/\/folders\//i.test(url) && !/embeddedfolderview/i.test(url)) return;
+                        const nombreCarpeta = album?.nombre || 'Carpeta compartida';
+                        carpetas.push({
+                            etiqueta: `${nombrePais} · ${nombreCiudad} · ${nombreCarpeta}`,
+                            nombre: nombreCarpeta,
+                            url
+                        });
+                    });
+                });
+            });
+
+            return carpetas;
+        }
+
+        window.cargarCarpetaMemoriaRevivir = async function() {
+            const carpetas = obtenerCarpetasMemoriaDisponiblesRevivir();
+            if (!carpetas.length) {
+                alert('No encontramos carpetas de memorias de ciudad para cargar.');
+                return;
+            }
+
+            const listado = carpetas
+                .slice(0, 25)
+                .map((carpeta, idx) => `${idx + 1}. ${carpeta.etiqueta}`)
+                .join('\n');
+            const seleccion = window.prompt(`Elegí una carpeta para revivir:\n\n${listado}\n\nEscribí el número de opción:`);
+            if (!seleccion) return;
+
+            const indice = Number.parseInt(seleccion, 10) - 1;
+            if (!Number.isInteger(indice) || indice < 0 || indice >= carpetas.length) {
+                alert('La opción ingresada no es válida.');
+                return;
+            }
+
+            const carpeta = carpetas[indice];
+            const resultado = await obtenerArchivosPublicosDeCarpetaDrive(carpeta.url);
+            const archivos = resultado?.archivos || [];
+
+            const nuevos = archivos.map((archivo, index) => {
+                const tipo = inferirTipoArchivoDriveRevivir(archivo);
+                const exportacion = tipo === 'video' ? 'download' : 'view';
+                return {
+                    tipo,
+                    nombre: archivo?.name || `${tipo === 'video' ? 'Video' : 'Foto'} ${index + 1}`,
+                    size: 0,
+                    url: `https://drive.google.com/uc?export=${exportacion}&id=${archivo.id}`
+                };
+            });
+
+            if (!nuevos.length) {
+                alert('No se encontraron fotos o videos en esa carpeta.');
+                return;
+            }
+
+            bibliotecaRevivir.forEach((item) => {
+                if (String(item.url || '').startsWith('blob:')) URL.revokeObjectURL(item.url);
+            });
+            bibliotecaRevivir = nuevos;
+            indiceMediaRevivirActual = 0;
+            renderizarListaRevivir();
+            seleccionarMediaRevivir(0);
+        };
 
         window.seleccionarMediaRevivir = seleccionarMediaRevivir;
 
@@ -4995,7 +5113,7 @@ const firebaseConfig = {
                 video.hidden = true;
             }
             if (titulo) titulo.textContent = 'Tu momento especial';
-            if (meta) meta.textContent = 'Seleccioná una imagen o video para verlo acá.';
+            if (meta) meta.textContent = 'Seleccioná una foto o video para verlo acá.';
             renderizarListaRevivir();
         };
 
@@ -5007,10 +5125,9 @@ const firebaseConfig = {
                 <div class="encabezado-seccion encabezado-revivir" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
                     <h2 class="titulo-revivir"><i data-lucide="clapperboard"></i> Revivir</h2>
                     <div class="revivir-acciones">
-                        <label class="btn-nueva-aventura revivir-upload-btn" for="revivir-input-media">
-                            <i data-lucide="upload"></i> Cargar imagen/video
+                        <label class="btn-nueva-aventura revivir-upload-btn" onclick="cargarCarpetaMemoriaRevivir()">
+                            <i data-lucide="folder-open"></i> Cargar carpeta
                         </label>
-                        <input id="revivir-input-media" type="file" accept="image/*,video/*" multiple onchange="cargarMediaRevivir(event)">
                         <button type="button" class="btn-nueva-aventura revivir-limpiar-btn" onclick="limpiarMediaRevivir()">
                             <i data-lucide="trash-2"></i> Limpiar
                         </button>
@@ -5022,7 +5139,7 @@ const firebaseConfig = {
                     <section class="revivir-player">
                         <div class="revivir-player-head">
                             <h3 id="revivir-player-titulo">Tu momento especial</h3>
-                            <p id="revivir-player-meta">Seleccioná una imagen o video para verlo acá.</p>
+                            <p id="revivir-player-meta">Seleccioná una foto o video para verlo acá.</p>
                         </div>
                         <div class="revivir-player-media">
                             <img id="revivir-player-image" hidden alt="Vista previa en Revivir">
