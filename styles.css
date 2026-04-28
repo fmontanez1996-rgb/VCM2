@@ -1622,15 +1622,10 @@
             border-radius: 12px;
             overflow: hidden;
             padding: 0;
-            cursor: pointer;
+            cursor: default;
             background: #dff1ff;
             box-shadow: 0 8px 18px rgba(6, 65, 102, 0.18);
             min-height: 160px;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        .tarjeta-foto-drive:hover {
-            transform: translateY(-2px) scale(1.01);
-            box-shadow: 0 10px 22px rgba(6, 65, 102, 0.28);
         }
         .tarjeta-foto-drive img {
             width: 100%;
