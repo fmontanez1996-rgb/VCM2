@@ -2563,3 +2563,132 @@
         }
 
     
+
+/* === REVIVIR (VISOR DE IMÁGENES Y REPRODUCTOR DE VIDEOS) === */
+.encabezado-seccion.encabezado-revivir {
+    background: linear-gradient(160deg, #e4f3ff 0%, #c8e2ff 38%, #b4d3ff 100%);
+}
+.titulo-revivir {
+    margin: 0;
+    color: #1f3b65;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.revivir-acciones {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+#revivir-input-media {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+.revivir-upload-btn,
+.revivir-limpiar-btn {
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+}
+.revivir-layout {
+    display: grid;
+    grid-template-columns: minmax(220px, 300px) 1fr;
+    gap: 16px;
+    padding: 16px;
+    height: calc(100% - 96px);
+    box-sizing: border-box;
+}
+.revivir-lista {
+    background: rgba(255, 255, 255, 0.7);
+    border: 2px solid rgba(104, 143, 191, 0.35);
+    border-radius: 18px;
+    padding: 12px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.revivir-vacio {
+    color: #5e7186;
+    font-weight: 700;
+    margin: 0;
+    padding: 6px;
+}
+.revivir-item {
+    width: 100%;
+    border: 2px solid #adc7e7;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f7fbff 0%, #e8f2ff 100%);
+    color: #26466f;
+    font-family: inherit;
+    font-weight: 700;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px;
+    cursor: pointer;
+}
+.revivir-item:hover,
+.revivir-item.activo {
+    border-color: #4e87c9;
+    box-shadow: 0 6px 12px rgba(34, 93, 160, 0.2);
+}
+.revivir-item-texto {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.revivir-player {
+    background: rgba(7, 18, 32, 0.5);
+    border: 2px solid rgba(138, 181, 238, 0.4);
+    border-radius: 20px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+.revivir-player-head h3 {
+    margin: 0;
+    color: #f7fbff;
+}
+.revivir-player-head p {
+    margin: 6px 0 0;
+    color: #c6d8ec;
+}
+.revivir-player-media {
+    margin-top: 12px;
+    flex: 1;
+    min-height: 0;
+    border-radius: 14px;
+    background: rgba(1, 6, 14, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+#revivir-player-image,
+#revivir-player-video {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+@media (max-width: 980px) {
+    .revivir-layout {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .revivir-lista {
+        max-height: 220px;
+    }
+    .revivir-player {
+        min-height: 320px;
+    }
+}

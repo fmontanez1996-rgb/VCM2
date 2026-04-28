@@ -25,6 +25,8 @@ const firebaseConfig = {
         let intervaloAutosave = null;
         let rutaEstadoFirebase = null;
         let estadoEdicionPortadaItinerario = {};
+        let bibliotecaRevivir = [];
+        let indiceMediaRevivirActual = -1;
         let playersMusica = {};
         window.playersMusica = playersMusica;
         let youtubeApiPromise = null;
@@ -971,6 +973,8 @@ const firebaseConfig = {
 
             if (targetId === 'vista-vividas') renderizarPantallaRecuerdos();
             if (targetId === 'vista-por-vivir') renderizarPantallaSonados();
+            if (targetId === 'vista-revivir') renderizarPantallaRevivir();
+            if (targetId !== 'vista-revivir') detenerReproductorRevivir();
         };
 
         function cargarMapa() {
@@ -4874,6 +4878,167 @@ const firebaseConfig = {
             document.getElementById('contenedor-formularios').innerHTML = '';
             document.querySelectorAll('.btn-tipo-item').forEach(b => b.classList.remove('seleccionado'));
         };
+
+        function detenerReproductorRevivir() {
+            const video = document.getElementById('revivir-player-video');
+            if (video) {
+                video.pause();
+                video.removeAttribute('src');
+                video.load();
+            }
+        }
+
+        function obtenerTipoMediaRevivir(file = {}) {
+            if (String(file.type || '').startsWith('video/')) return 'video';
+            if (String(file.type || '').startsWith('image/')) return 'imagen';
+            return null;
+        }
+
+        function obtenerIconoMediaRevivir(tipo) {
+            if (tipo === 'video') return 'film';
+            return 'image';
+        }
+
+        function seleccionarMediaRevivir(index) {
+            const media = bibliotecaRevivir[index];
+            if (!media) return;
+
+            indiceMediaRevivirActual = index;
+            const img = document.getElementById('revivir-player-image');
+            const video = document.getElementById('revivir-player-video');
+            const titulo = document.getElementById('revivir-player-titulo');
+            const meta = document.getElementById('revivir-player-meta');
+
+            if (!img || !video || !titulo || !meta) return;
+
+            titulo.textContent = media.nombre;
+            meta.textContent = `${media.tipo === 'video' ? 'Video' : 'Imagen'} · ${(media.size / 1024 / 1024).toFixed(2)} MB`;
+
+            if (media.tipo === 'video') {
+                img.hidden = true;
+                img.removeAttribute('src');
+                video.hidden = false;
+                video.src = media.url;
+                video.load();
+            } else {
+                detenerReproductorRevivir();
+                video.hidden = true;
+                img.hidden = false;
+                img.src = media.url;
+                img.alt = media.nombre;
+            }
+
+            document.querySelectorAll('.revivir-item').forEach((item, idx) => {
+                item.classList.toggle('activo', idx === index);
+            });
+        }
+
+        function renderizarListaRevivir() {
+            const lista = document.getElementById('revivir-lista');
+            if (!lista) return;
+
+            if (!bibliotecaRevivir.length) {
+                lista.innerHTML = `<p class="revivir-vacio">Subí imágenes o videos para empezar a revivir momentos ✨</p>`;
+                return;
+            }
+
+            lista.innerHTML = bibliotecaRevivir.map((item, index) => `
+                <button type="button" class="revivir-item ${index === indiceMediaRevivirActual ? 'activo' : ''}" onclick="seleccionarMediaRevivir(${index})">
+                    <i data-lucide="${obtenerIconoMediaRevivir(item.tipo)}"></i>
+                    <span class="revivir-item-texto">${item.nombre}</span>
+                </button>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        window.seleccionarMediaRevivir = seleccionarMediaRevivir;
+
+        window.cargarMediaRevivir = function(event) {
+            const archivos = Array.from(event?.target?.files || []);
+            if (!archivos.length) return;
+
+            const nuevos = archivos
+                .map((file) => ({
+                    tipo: obtenerTipoMediaRevivir(file),
+                    nombre: file.name,
+                    size: file.size,
+                    url: URL.createObjectURL(file)
+                }))
+                .filter((item) => item.tipo);
+
+            if (!nuevos.length) return;
+
+            bibliotecaRevivir.push(...nuevos);
+            if (indiceMediaRevivirActual === -1) {
+                indiceMediaRevivirActual = 0;
+            }
+            renderizarListaRevivir();
+            seleccionarMediaRevivir(indiceMediaRevivirActual);
+            event.target.value = '';
+        };
+
+        window.limpiarMediaRevivir = function() {
+            bibliotecaRevivir.forEach((item) => URL.revokeObjectURL(item.url));
+            bibliotecaRevivir = [];
+            indiceMediaRevivirActual = -1;
+            detenerReproductorRevivir();
+
+            const img = document.getElementById('revivir-player-image');
+            const video = document.getElementById('revivir-player-video');
+            const titulo = document.getElementById('revivir-player-titulo');
+            const meta = document.getElementById('revivir-player-meta');
+            if (img) {
+                img.hidden = true;
+                img.removeAttribute('src');
+            }
+            if (video) {
+                video.hidden = true;
+            }
+            if (titulo) titulo.textContent = 'Tu momento especial';
+            if (meta) meta.textContent = 'Seleccioná una imagen o video para verlo acá.';
+            renderizarListaRevivir();
+        };
+
+        function renderizarPantallaRevivir() {
+            const contenedor = document.getElementById('vista-revivir');
+            if (!contenedor) return;
+
+            contenedor.innerHTML = `
+                <div class="encabezado-seccion encabezado-revivir" style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <h2 class="titulo-revivir"><i data-lucide="clapperboard"></i> Revivir</h2>
+                    <div class="revivir-acciones">
+                        <label class="btn-nueva-aventura revivir-upload-btn" for="revivir-input-media">
+                            <i data-lucide="upload"></i> Cargar imagen/video
+                        </label>
+                        <input id="revivir-input-media" type="file" accept="image/*,video/*" multiple onchange="cargarMediaRevivir(event)">
+                        <button type="button" class="btn-nueva-aventura revivir-limpiar-btn" onclick="limpiarMediaRevivir()">
+                            <i data-lucide="trash-2"></i> Limpiar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="revivir-layout">
+                    <aside id="revivir-lista" class="revivir-lista"></aside>
+                    <section class="revivir-player">
+                        <div class="revivir-player-head">
+                            <h3 id="revivir-player-titulo">Tu momento especial</h3>
+                            <p id="revivir-player-meta">Seleccioná una imagen o video para verlo acá.</p>
+                        </div>
+                        <div class="revivir-player-media">
+                            <img id="revivir-player-image" hidden alt="Vista previa en Revivir">
+                            <video id="revivir-player-video" hidden controls playsinline></video>
+                        </div>
+                    </section>
+                </div>
+            `;
+
+            renderizarListaRevivir();
+            if (indiceMediaRevivirActual >= 0) {
+                seleccionarMediaRevivir(indiceMediaRevivirActual);
+            }
+            lucide.createIcons();
+        }
+
         document.addEventListener("DOMContentLoaded", async () => {
             iniciarSincronizacionFirebase();
         });
