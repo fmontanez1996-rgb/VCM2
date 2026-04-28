@@ -4993,11 +4993,26 @@ const firebaseConfig = {
             const nombre = String(archivo?.name || '').toLowerCase();
             if (mime.startsWith('video/') || /\.(mp4|webm|ogg|mov|m4v)$/.test(nombre)) return 'video';
             if (mime.startsWith('image/') || /\.(avif|gif|jpe?g|png|svg|webp)$/.test(nombre)) return 'imagen';
-            return 'imagen';
+            return null;
         }
 
         function obtenerCarpetasMemoriaDisponiblesRevivir() {
             const carpetas = [];
+
+            Object.entries(paisesVisitados || {}).forEach(([idPais, pais]) => {
+                const nombrePais = pais?.nombre || idPais;
+                (pais?.albumes || []).forEach((album) => {
+                    const url = resolverUrlDriveAlbum(album);
+                    if (!url || !/drive\.google\.com/i.test(url)) return;
+                    if (!/\/folders\//i.test(url) && !/embeddedfolderview/i.test(url)) return;
+                    const nombreCarpeta = album?.nombre || 'Carpeta compartida';
+                    carpetas.push({
+                        etiqueta: `${nombrePais} · ${nombreCarpeta}`,
+                        nombre: nombreCarpeta,
+                        url
+                    });
+                });
+            });
 
             Object.entries(provinciasVisitadas || {}).forEach(([idPais, provincias]) => {
                 const nombrePais = paisesVisitados?.[idPais]?.nombre || idPais;
@@ -5044,16 +5059,19 @@ const firebaseConfig = {
             const resultado = await obtenerArchivosPublicosDeCarpetaDrive(carpeta.url);
             const archivos = resultado?.archivos || [];
 
-            const nuevos = archivos.map((archivo, index) => {
-                const tipo = inferirTipoArchivoDriveRevivir(archivo);
-                const exportacion = tipo === 'video' ? 'download' : 'view';
-                return {
-                    tipo,
-                    nombre: archivo?.name || `${tipo === 'video' ? 'Video' : 'Foto'} ${index + 1}`,
-                    size: 0,
-                    url: `https://drive.google.com/uc?export=${exportacion}&id=${archivo.id}`
-                };
-            });
+            const nuevos = archivos
+                .map((archivo, index) => {
+                    const tipo = inferirTipoArchivoDriveRevivir(archivo);
+                    if (!tipo) return null;
+                    const exportacion = tipo === 'video' ? 'download' : 'view';
+                    return {
+                        tipo,
+                        nombre: archivo?.name || `${tipo === 'video' ? 'Video' : 'Foto'} ${index + 1}`,
+                        size: 0,
+                        url: `https://drive.google.com/uc?export=${exportacion}&id=${archivo.id}`
+                    };
+                })
+                .filter(Boolean);
 
             if (!nuevos.length) {
                 alert('No se encontraron fotos o videos en esa carpeta.');
