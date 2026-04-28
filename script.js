@@ -2833,26 +2833,40 @@ const firebaseConfig = {
             }
         }
 
-        async function obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive = "", opciones = {}) {
-            const resultado = await obtenerArchivosPublicosDeCarpetaDrive(urlDrive, opciones);
-            return {
-                ids: (resultado?.archivos || []).map((archivo) => archivo.id),
-                error: resultado?.error || null
-            };
-        }
+        function construirGaleriaDriveHtml(archivos = []) {
+            if (!Array.isArray(archivos) || !archivos.length) return '';
 
-        function construirGaleriaDriveHtml(idsArchivos = []) {
-            if (!Array.isArray(idsArchivos) || !idsArchivos.length) return '';
+            const escAttr = (valor = "") => String(valor)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
 
-            const tarjetas = idsArchivos.map((idArchivo, index) => {
-                const urlImagen = `https://drive.google.com/uc?export=view&id=${idArchivo}`;
-                const etiqueta = `Foto ${index + 1}`;
-                return `
-                    <button type="button" class="tarjeta-foto-drive" data-foto-url="${urlImagen}" data-foto-titulo="${etiqueta}" aria-label="Ver ${etiqueta} en pantalla completa">
-                        <img src="${urlImagen}" alt="${etiqueta}" loading="lazy" referrerpolicy="no-referrer">
-                    </button>
-                `;
-            }).join('');
+            const tarjetas = archivos
+                .filter((archivo) => archivo && typeof archivo === 'object' && String(archivo.id || '').trim())
+                .map((archivo, index) => {
+                    const idArchivo = String(archivo.id || '').trim();
+                    const mimeType = String(archivo.mimeType || '').trim().toLowerCase();
+                    const esVideo = mimeType.startsWith('video/');
+                    const urlImagen = `https://drive.google.com/uc?export=view&id=${idArchivo}`;
+                    const previewVideoUrl = `https://drive.google.com/file/d/${idArchivo}/preview`;
+                    const etiquetaBase = String(archivo.name || '').trim() || (esVideo ? `Video ${index + 1}` : `Foto ${index + 1}`);
+                    const etiqueta = escaparHtmlPlano(etiquetaBase);
+                    const ariaLabel = esVideo ? `Reproducir ${etiquetaBase}` : `Ver ${etiquetaBase} en pantalla completa`;
+
+                    return `
+                        <button
+                            type="button"
+                            class="tarjeta-foto-drive ${esVideo ? 'tarjeta-foto-drive-video' : ''}"
+                            data-media-type="${esVideo ? 'video' : 'image'}"
+                            data-foto-url="${escAttr(urlImagen)}"
+                            data-foto-titulo="${escAttr(etiquetaBase)}"
+                            ${esVideo ? `data-preview-url="${escAttr(previewVideoUrl)}"` : ''}
+                            aria-label="${escAttr(ariaLabel)}">
+                            <img src="${escAttr(urlImagen)}" alt="${etiqueta}" loading="lazy" referrerpolicy="no-referrer">
+                        </button>
+                    `;
+                }).join('');
 
             return `<div class="galeria-fotos-drive">${tarjetas}</div>`;
         }
@@ -2875,10 +2889,10 @@ const firebaseConfig = {
             cerrarModalVistaDrive();
 
             const urlEmbebida = construirUrlDriveEmbebida(urlDrive);
-            const resultadoImagenes = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive);
-            const idsArchivos = resultadoImagenes?.ids || [];
+            const resultadoImagenes = await obtenerArchivosPublicosDeCarpetaDrive(urlDrive);
+            const archivos = resultadoImagenes?.archivos || [];
             const errorConsultaImagenes = Boolean(resultadoImagenes?.error);
-            const galeriaFotos = construirGaleriaDriveHtml(idsArchivos);
+            const galeriaFotos = construirGaleriaDriveHtml(archivos);
             const permitirAbrirEnPestana = Boolean(CONFIG_VISTA_DRIVE?.permitirAbrirEnPestana);
             const modal = document.createElement('div');
             modal.id = 'modal-vista-drive';
@@ -2940,8 +2954,14 @@ const firebaseConfig = {
             modal.addEventListener('click', (event) => {
                 const tarjeta = event.target.closest('.tarjeta-foto-drive');
                 if (tarjeta) {
-                    const urlFoto = tarjeta.dataset.fotoUrl || '';
+                    const tipoMedia = tarjeta.dataset.mediaType || 'image';
                     const tituloFoto = tarjeta.dataset.fotoTitulo || titulo;
+                    if (tipoMedia === 'video') {
+                        const urlPreviewVideo = tarjeta.dataset.previewUrl || '';
+                        mostrarModalVistaVideo(urlPreviewVideo, tituloFoto);
+                        return;
+                    }
+                    const urlFoto = tarjeta.dataset.fotoUrl || '';
                     mostrarModalVistaImagen(urlFoto, tituloFoto);
                     return;
                 }
@@ -2961,10 +2981,10 @@ const firebaseConfig = {
 
             (async () => {
                 try {
-                    const resultado = await obtenerIdsArchivosPublicosDeCarpetaDrive(urlDrive, { signal: controlador.signal });
+                    const resultado = await obtenerArchivosPublicosDeCarpetaDrive(urlDrive, { signal: controlador.signal });
                     if (!modal.isConnected || controlador.signal.aborted) return;
 
-                    const galeriaFotos = construirGaleriaDriveHtml(resultado?.ids || []);
+                    const galeriaFotos = construirGaleriaDriveHtml(resultado?.archivos || []);
                     if (galeriaFotos) {
                         renderizarContenidoModal(galeriaFotos);
                         return;
@@ -3010,14 +3030,16 @@ const firebaseConfig = {
         function obtenerElementosLightbox() {
             return {
                 contenedor: document.getElementById('media-lightbox'),
+                dialogo: document.querySelector('#media-lightbox .media-lightbox__dialog'),
                 btnCerrar: document.getElementById('media-lightbox-close'),
                 imagen: document.getElementById('media-lightbox-image'),
-                video: document.getElementById('media-lightbox-video')
+                video: document.getElementById('media-lightbox-video'),
+                frameVideo: document.getElementById('media-lightbox-video-frame')
             };
         }
 
         function cerrarModalVistaImagen() {
-            const { contenedor, imagen, video } = obtenerElementosLightbox();
+            const { contenedor, imagen, video, frameVideo } = obtenerElementosLightbox();
             if (!contenedor) return;
 
             contenedor.classList.remove('activo');
@@ -3034,6 +3056,11 @@ const firebaseConfig = {
                 video.removeAttribute('src');
                 video.load();
                 video.hidden = true;
+            }
+
+            if (frameVideo) {
+                frameVideo.removeAttribute('src');
+                frameVideo.hidden = true;
             }
 
             document.body.classList.remove('sin-scroll');
@@ -3064,13 +3091,17 @@ const firebaseConfig = {
             }
 
             inicializarEventosLightbox();
-            const { contenedor, imagen, video } = obtenerElementosLightbox();
+            const { contenedor, imagen, video, frameVideo } = obtenerElementosLightbox();
             if (!contenedor || !imagen || !video) return;
 
             video.hidden = true;
             video.pause();
             video.removeAttribute('src');
             video.load();
+            if (frameVideo) {
+                frameVideo.hidden = true;
+                frameVideo.removeAttribute('src');
+            }
 
             imagen.src = urlImagen;
             imagen.alt = titulo;
@@ -3091,16 +3122,34 @@ const firebaseConfig = {
             }
 
             inicializarEventosLightbox();
-            const { contenedor, imagen, video } = obtenerElementosLightbox();
-            if (!contenedor || !imagen || !video) return;
+            const { contenedor, dialogo, imagen, video, frameVideo } = obtenerElementosLightbox();
+            if (!contenedor || !dialogo || !imagen || !video) return;
+
+            let iframeVideo = frameVideo;
+            if (!iframeVideo) {
+                iframeVideo = document.createElement('iframe');
+                iframeVideo.id = 'media-lightbox-video-frame';
+                iframeVideo.className = 'media-lightbox__video media-lightbox__video-frame';
+                iframeVideo.setAttribute('title', titulo);
+                iframeVideo.setAttribute('loading', 'lazy');
+                iframeVideo.setAttribute('allow', 'autoplay; fullscreen; picture-in-picture');
+                iframeVideo.setAttribute('referrerpolicy', 'no-referrer');
+                iframeVideo.hidden = true;
+                dialogo.appendChild(iframeVideo);
+            }
 
             imagen.hidden = true;
             imagen.src = '';
             imagen.alt = '';
 
-            video.src = urlVideo;
-            video.hidden = false;
-            video.play().catch(() => {});
+            video.hidden = true;
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+
+            iframeVideo.setAttribute('title', titulo);
+            iframeVideo.src = urlVideo;
+            iframeVideo.hidden = false;
 
             contenedor.classList.add('activo');
             contenedor.setAttribute('aria-hidden', 'false');

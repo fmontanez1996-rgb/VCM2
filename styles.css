@@ -1617,6 +1617,7 @@
             padding-right: 4px;
         }
         .tarjeta-foto-drive {
+            position: relative;
             border: 0;
             border-radius: 12px;
             overflow: hidden;
@@ -1637,6 +1638,19 @@
             display: block;
             object-fit: cover;
             background: #f0f9ff;
+        }
+        .tarjeta-foto-drive-video::after {
+            content: 'VIDEO';
+            position: absolute;
+            right: 8px;
+            bottom: 8px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(6, 20, 32, 0.74);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
         }
         .iframe-vista-drive {
             width: 100%;
@@ -1779,6 +1793,12 @@
             border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
             background: #000;
+        }
+        .media-lightbox__video-frame {
+            border: 0;
+            width: min(96vw, 1100px);
+            aspect-ratio: 16 / 9;
+            height: auto;
         }
         .icono-mapa-destino {
             color: #ffeaa0;
