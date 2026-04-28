@@ -2853,7 +2853,6 @@ const firebaseConfig = {
                     const etiquetaBase = String(archivo.name || '').trim() || (esVideo ? `Video ${index + 1}` : `Foto ${index + 1}`);
                     const etiqueta = escaparHtmlPlano(etiquetaBase);
                     const ariaLabel = esVideo ? `Reproducir ${etiquetaBase}` : `Ver ${etiquetaBase} en pantalla completa`;
-
                     return `
                         <button
                             type="button"
@@ -2952,19 +2951,6 @@ const firebaseConfig = {
             btnCerrar?.addEventListener('click', cerrarModalVistaDrive);
             btnExterno?.addEventListener('click', () => window.open(urlDrive, '_blank', 'noopener,noreferrer'));
             modal.addEventListener('click', (event) => {
-                const tarjeta = event.target.closest('.tarjeta-foto-drive');
-                if (tarjeta) {
-                    const tipoMedia = tarjeta.dataset.mediaType || 'image';
-                    const tituloFoto = tarjeta.dataset.fotoTitulo || titulo;
-                    if (tipoMedia === 'video') {
-                        const urlPreviewVideo = tarjeta.dataset.previewUrl || '';
-                        mostrarModalVistaVideo(urlPreviewVideo, tituloFoto);
-                        return;
-                    }
-                    const urlFoto = tarjeta.dataset.fotoUrl || '';
-                    mostrarModalVistaImagen(urlFoto, tituloFoto);
-                    return;
-                }
                 if (event.target === modal) cerrarModalVistaDrive();
             });
 
