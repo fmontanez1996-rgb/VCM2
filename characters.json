@@ -1,0 +1,94 @@
+{
+  "characters": [
+    {
+      "id": "ariana-grande",
+      "name": "Ariana Grande",
+      "birthDate": "1993-06-26",
+      "country": "Estados Unidos",
+      "city": "Florida",
+      "height": "1,53 m",
+      "photo": "https://akns-images.eonline.com/eol_images/Entire_Site/2018611/rs_600x600-180711055211-600.ariana-grande.71118.jpg?fit=around|1200:1200&output-quality=90&crop=1200:1200;center,top",
+      "group": "cantantes"
+    },
+    {
+      "id": "nicki-nicole",
+      "name": "Nicki Nicole",
+      "birthDate": "2000-08-25",
+      "country": "Argentina",
+      "city": "Santa Fe",
+      "height": "1,47 m",
+      "photo": "https://i.pinimg.com/originals/01/69/73/016973b37d02a8ced45c93ff52a21de9.jpg",
+      "group": "cantantes"
+    },
+    {
+      "id": "emilia-mernes",
+      "name": "Emilia Mernes",
+      "birthDate": "1996-10-29",
+      "country": "Argentina",
+      "city": "Corrientes",
+      "height": "1,64 m",
+      "photo": "https://i.pinimg.com/736x/95/cc/02/95cc0279065ef2de7a668187b896b34b.jpg",
+      "group": "cantantes"
+    },
+    {
+      "id": "sabrina-carpenter",
+      "name": "Sabrina Carpenter",
+      "birthDate": "1999-05-11",
+      "country": "Estados Unidos",
+      "city": "Pensilvania",
+      "height": "1,52 m",
+      "photo": "https://media.glamour.mx/photos/64d1a09a16414a75ea5877b4/1:1/w_1999,h_1999,c_limit/sabrina.jpg",
+      "group": "cantantes"
+    },
+    {
+      "id": "ana-de-armas",
+      "name": "Ana de Armas",
+      "birthDate": "1988-04-30",
+      "country": "Cuba",
+      "city": "La Habana",
+      "height": "1,65 m",
+      "photo": "https://www.elle.vn/wp-content/uploads/2022/10/04/498225/ana-de-armas-ft-doc.jpeg",
+      "group": "actrices"
+    },
+    {
+      "id": "clara-galle",
+      "name": "Clara Galle",
+      "birthDate": "2002-04-15",
+      "country": "España",
+      "city": "Pamplona",
+      "height": "1,59 m",
+      "photo": "https://i.pinimg.com/736x/e7/d5/27/e7d527f613fc9d40be21e92bd3428a2c.jpg",
+      "group": "actrices"
+    },
+    {
+      "id": "sidney-sweeney",
+      "name": "Sidney Sweeney",
+      "birthDate": "1997-09-12",
+      "country": "Estados Unidos",
+      "city": "Washington",
+      "height": "1,61 m",
+      "photo": "https://imagenes.elpais.com/resizer/v2/H2FJ6NCONVPDNI6W7O5FTK6EM4.jpg?auth=db2c285110e5581c2c769ca99eae1e1d84b45ecedd2dc24f2fd67de00d79abce&width=980&height=980&smart=true",
+      "group": "actrices"
+    },
+    {
+      "id": "anya-olsen",
+      "name": "Anya Olsen",
+      "birthDate": "1994-09-27",
+      "country": "Estados Unidos",
+      "city": "Nueva York",
+      "height": "1,63 m",
+      "photo": "https://m.media-amazon.com/images/M/MV5BNWNhNTc4NzgtNmEyZS00YmM1LThiMGQtMTMyM2U5MjgyNDc5XkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
+      "group": "nsfw"
+    },
+    {
+      "id": "becky-g",
+      "name": "Becky G",
+      "birthDate": "1997-03-02",
+      "country": "Estados Unidos",
+      "city": "California",
+      "height": "1,53 m",
+      "photo": "https://cdn-images.dzcdn.net/images/artist/4592b032de9d1393fcd1c32780755372/1900x1900-000000-80-0-0.jpg",
+      "group": "cantantes"
+    }
+  ]
+}

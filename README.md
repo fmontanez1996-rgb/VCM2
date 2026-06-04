@@ -1,10 +1,25 @@
-# VCM2
-Un album de recuerdos
+# SuperEliteG2
 
-## Cómo ejecutar
-1. Desde la raíz del repositorio (`/workspace/VCM2`), levanta un servidor estático.
-   - Opción Python: `python3 -m http.server 8000`
-   - Opción VSCode: Live Server apuntando a la raíz del repo.
-2. Abre la app en el navegador con `http://localhost:8000/index.html` (ajusta el puerto si usas otro).
-3. **No uses `file://` ni abras `index.html` con doble clic**, porque las peticiones a recursos como `https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson` pueden fallar por políticas del navegador.
-4. Verifica en DevTools > Network que `https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_10m_admin_1_states_provinces.geojson` responde `200`.
+Aplicación web para administrar personajes y su galería multimedia.
+
+## Ejecutar con guardado automático en `characters.json`
+
+Para que al agregar, editar o eliminar personajes desde la página también se actualice el archivo `characters.json`, abre el proyecto con el servidor incluido:
+
+```bash
+node server.js
+```
+
+Luego entra en:
+
+```text
+http://localhost:3000
+```
+
+El navegador por sí solo no puede escribir archivos locales. Por eso `server.js` expone el endpoint `/api/characters`, sirve la página y guarda automáticamente el listado actualizado en `characters.json`.
+
+## Notas
+
+- Los personajes se cargan desde `characters.json`.
+- Las altas, ediciones y eliminaciones de personajes se persisten en `characters.json` cuando la app está corriendo con `node server.js`.
+- La multimedia continúa guardándose en el almacenamiento local del navegador.

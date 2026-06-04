@@ -1,0 +1,36 @@
+{
+  "ariana-grande": {
+    "Facciones": 92.0,
+    "Ojos": 85.0,
+    "Boca": 78.0,
+    "Cabello": 90.0,
+    "Cintura": 88.0,
+    "Cola": 85.0,
+    "Pechos": 95.0,
+    "Piernas": 91.0,
+    "Cuerpo": 93.0,
+    "Talento": 80.0,
+    "Carisma": 96.0,
+    "Elegancia": 87.0,
+    "Sensualidad": 98.0,
+    "Dulzura": 75.0,
+    "Altura": 89.0
+  },
+  "nicki-nicole": {
+    "Facciones": 85.0,
+    "Ojos": 98.0,
+    "Boca": 90.0,
+    "Cabello": 84.0,
+    "Cintura": 79.0,
+    "Cola": 80.0,
+    "Pechos": 85.0,
+    "Piernas": 88.0,
+    "Cuerpo": 86.0,
+    "Talento": 95.0,
+    "Carisma": 89.0,
+    "Elegancia": 94.0,
+    "Sensualidad": 82.0,
+    "Dulzura": 97.0,
+    "Altura": 78.0
+  }
+}

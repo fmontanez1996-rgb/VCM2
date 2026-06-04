@@ -1,69 +1,18 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nuestra Historia - Diario de Viajes</title>
-
-    <!-- Librerías Externas -->
-    <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Fredoka:wght@500;600;700&family=Luckiest+Guy&display=swap" rel="stylesheet">
-
-        <link rel="stylesheet" href="styles.css">
-
-
+    <title>SuperEliteG2</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="contenedor-principal">
-        <aside class="sidebar">
-            <div class="logo-titulo">
-                <i data-lucide="sparkles" class="icono-magia"></i>
-                <h1>Nuestra<br>Historia</h1>
-            </div>
-            <nav class="menu-lateral">
-                <button class="btn-menu activo" data-target="vista-explora" onclick="irAPantalla('vista-explora')">
-                    <i data-lucide="globe"></i> Mundo Entero
-                </button>
-                <button class="btn-menu" data-target="vista-vividas" onclick="irAPantalla('vista-vividas')">
-                    <i data-lucide="camera"></i> Recuerdos
-                </button>
-                <button class="btn-menu" data-target="vista-por-vivir" onclick="irAPantalla('vista-por-vivir')">
-                    <i data-lucide="heart"></i> Destinos
-                </button>
-                <button class="btn-menu" data-target="vista-revivir" onclick="irAPantalla('vista-revivir')">
-                    <i data-lucide="clapperboard"></i> Revivir
-                </button>
-            </nav>
-        </aside>
+    <div id="root"></div>
 
-        <main class="contenido-principal">
-            <div id="vista-explora" class="pantalla pantalla-activa">
-                <div id="world-map"></div>
-                <div id="tooltip" class="tooltip-oculto"><span id="tooltip-nombre"></span></div>
-                <div id="menu-contextual" class="menu-oculto"></div>
-            </div>
-
-            <div id="vista-vividas" class="pantalla"></div>
-            <div id="vista-por-vivir" class="pantalla"></div>
-            <div id="vista-revivir" class="pantalla"></div>
-        </main>
-    </div>
-
-    <div id="media-lightbox" class="media-lightbox" aria-hidden="true">
-        <div class="media-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Visor multimedia">
-            <button type="button" id="media-lightbox-close" class="media-lightbox__close" aria-label="Cerrar visor">×</button>
-            <img id="media-lightbox-image" class="media-lightbox__image" alt="" hidden>
-            <video id="media-lightbox-video" class="media-lightbox__video" controls autoplay playsinline hidden>
-                Tu navegador no puede reproducir este video.
-            </video>
-        </div>
-    </div>
-
-        <script src="script.js"></script>
-
+    <script type="text/babel" src="app.js"></script>
 </body>
 </html>
